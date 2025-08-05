@@ -874,10 +874,12 @@ class _EditConsultationScheduleDialogState
         'updatedAt': DateTime.now().toIso8601String(),
       };
 
-      await FirebaseService().updateJadwalKonsultasi(
-        widget.schedule['id'],
-        scheduleData,
-      );
+      final dataWithId = {
+        'id': widget.schedule['id'],
+        ...scheduleData,
+      };
+      
+      await FirebaseService().updateJadwalKonsultasi(dataWithId);
 
       if (mounted) {
         Navigator.pop(context);
