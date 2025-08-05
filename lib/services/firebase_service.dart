@@ -1,0 +1,1233 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
+import 'package:uuid/uuid.dart';
+import '../models/user_model.dart';
+import '../models/konsultasi_model.dart';
+import '../models/persalinan_model.dart';
+import '../models/chat_model.dart';
+
+class FirebaseService {
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final Uuid _uuid = const Uuid();
+
+  // Authentication
+  Future<UserCredential?> signInWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
+    try {
+      return await _auth.signInWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      print('Error signing in: $e');
+      rethrow;
+    }
+  }
+
+  Future<UserCredential?> createUserWithEmailAndPassword(
+    String email,
+    String password,
+  ) async {
+    try {
+      return await _auth.createUserWithEmailAndPassword(
+        email: email,
+        password: password,
+      );
+    } catch (e) {
+      print('Error creating user: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> signOut() async {
+    try {
+      await _auth.signOut();
+    } catch (e) {
+      print('Error signing out: $e');
+      rethrow;
+    }
+  }
+
+  User? get currentUser => _auth.currentUser;
+
+  // Check if user is authenticated
+  bool get isAuthenticated => _auth.currentUser != null;
+
+  // Get current user ID
+  String? get currentUserId => _auth.currentUser?.uid;
+
+  // Ensure user is authenticated
+  Future<void> ensureAuthenticated() async {
+    try {
+      if (!isFirebaseInitialized()) {
+        throw Exception('Firebase not initialized. Please restart the app.');
+      }
+
+      if (_auth.currentUser == null) {
+        throw Exception('User not authenticated. Please login again.');
+      }
+
+      // Additional check: verify the user document exists
+      try {
+        final userDoc =
+            await _firestore
+                .collection('users')
+                .doc(_auth.currentUser!.uid)
+                .get();
+        if (!userDoc.exists) {
+          print(
+            'Warning: User document does not exist for UID: ${_auth.currentUser!.uid}',
+          );
+          // Don't throw error here, just log warning
+        }
+      } catch (e) {
+        print('Warning: Could not verify user document: $e');
+        // Don't throw error here, just log warning
+      }
+    } catch (e) {
+      print('Error in ensureAuthenticated: $e');
+      rethrow;
+    }
+  }
+
+  // Check if Firebase is initialized
+  bool isFirebaseInitialized() {
+    try {
+      return Firebase.apps.isNotEmpty && Firebase.app() != null;
+    } catch (e) {
+      print('Error checking Firebase initialization: $e');
+      return false;
+    }
+  }
+
+  // User Management
+  Future<void> createUser(UserModel user) async {
+    try {
+      await ensureAuthenticated();
+      final userData = user.toMap();
+      print('Creating user with data: $userData');
+      await _firestore.collection('users').doc(user.id).set(userData);
+      print('User created successfully: ${user.id}');
+    } catch (e) {
+      print('Error creating user: $e');
+      rethrow;
+    }
+  }
+
+  Future<UserModel?> getUserById(String userId) async {
+    try {
+      await ensureAuthenticated();
+      DocumentSnapshot doc =
+          await _firestore.collection('users').doc(userId).get();
+      if (doc.exists) {
+        return UserModel.fromMap(doc.data() as Map<String, dynamic>);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting user by ID: $e');
+      return null;
+    }
+  }
+
+  Future<UserModel?> getUserByEmail(String email) async {
+    try {
+      await ensureAuthenticated();
+      QuerySnapshot query =
+          await _firestore
+              .collection('users')
+              .where('email', isEqualTo: email)
+              .get();
+
+      if (query.docs.isNotEmpty) {
+        final userData = query.docs.first.data() as Map<String, dynamic>;
+        print('Found user data: $userData');
+        return UserModel.fromMap(userData);
+      }
+      print('No user found with email: $email');
+      return null;
+    } catch (e) {
+      print('Error getting user by email: $e');
+      // If permission denied, try to get user by current user ID
+      try {
+        final currentUser = _auth.currentUser;
+        if (currentUser != null) {
+          print('Trying to get user by current user ID: ${currentUser.uid}');
+          return await getUserById(currentUser.uid);
+        }
+      } catch (innerError) {
+        print('Error getting user by current user ID: $innerError');
+      }
+      return null;
+    }
+  }
+
+  Stream<List<UserModel>> getUsersStream() {
+    try {
+      return _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'pasien')
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => UserModel.fromMap(doc.data()))
+                    .toList(),
+          )
+          .handleError((error) {
+            print('Error in getUsersStream: $error');
+            return <UserModel>[];
+          });
+    } catch (e) {
+      print('Error getting users stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Future<void> updateUser(UserModel user) async {
+    try {
+      await ensureAuthenticated();
+      final userData = user.toMap();
+      print('Updating user with data: $userData');
+      await _firestore.collection('users').doc(user.id).update(userData);
+      print('User updated successfully: ${user.id}');
+    } catch (e) {
+      print('Error updating user: $e');
+      // Try to set the document if update fails (document might not exist)
+      try {
+        await _firestore.collection('users').doc(user.id).set(user.toMap());
+        print('User created/updated successfully using set: ${user.id}');
+      } catch (setError) {
+        print('Error setting user document: $setError');
+        rethrow;
+      }
+    }
+  }
+
+  Future<void> deleteUser(String userId) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('users').doc(userId).delete();
+      print('User deleted successfully: $userId');
+    } catch (e) {
+      print('Error deleting user: $e');
+      rethrow;
+    }
+  }
+
+  // Consultation Management
+  Future<void> createKonsultasi(KonsultasiModel konsultasi) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('konsultasi')
+          .doc(konsultasi.id)
+          .set(konsultasi.toMap());
+      print('Konsultasi created successfully: ${konsultasi.id}');
+    } catch (e) {
+      print('Error creating konsultasi: $e');
+      rethrow;
+    }
+  }
+
+  Stream<List<KonsultasiModel>> getKonsultasiStream() {
+    try {
+      return _firestore
+          .collection('konsultasi')
+          .orderBy('tanggalKonsultasi', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => KonsultasiModel.fromMap(doc.data()))
+                    .toList(),
+          )
+          .handleError((error) {
+            print('Error in getKonsultasiStream: $error');
+            return <KonsultasiModel>[];
+          });
+    } catch (e) {
+      print('Error getting konsultasi stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Stream<List<KonsultasiModel>> getKonsultasiByPasienStream(String pasienId) {
+    try {
+      return _firestore
+          .collection('konsultasi')
+          .where('pasienId', isEqualTo: pasienId)
+          .orderBy('tanggalKonsultasi', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => KonsultasiModel.fromMap(doc.data()))
+                    .toList(),
+          )
+          .handleError((error) {
+            print('Error in getKonsultasiByPasienStream: $error');
+            return <KonsultasiModel>[];
+          });
+    } catch (e) {
+      print('Error getting konsultasi by pasien stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Future<void> updateKonsultasi(KonsultasiModel konsultasi) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('konsultasi')
+          .doc(konsultasi.id)
+          .update(konsultasi.toMap());
+      print('Konsultasi updated successfully: ${konsultasi.id}');
+    } catch (e) {
+      print('Error updating konsultasi: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteKonsultasi(String konsultasiId) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('konsultasi').doc(konsultasiId).delete();
+      print('Konsultasi deleted successfully: $konsultasiId');
+    } catch (e) {
+      print('Error deleting konsultasi: $e');
+      rethrow;
+    }
+  }
+
+  // Childbirth Report Management
+  Future<void> createPersalinan(PersalinanModel persalinan) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('persalinan')
+          .doc(persalinan.id)
+          .set(persalinan.toMap());
+      print('Persalinan created successfully: ${persalinan.id}');
+    } catch (e) {
+      print('Error creating persalinan: $e');
+      rethrow;
+    }
+  }
+
+  Stream<List<PersalinanModel>> getPersalinanStream() {
+    try {
+      return _firestore
+          .collection('persalinan')
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => PersalinanModel.fromMap(doc.data()))
+                    .toList(),
+          )
+          .handleError((error) {
+            print('Error in getPersalinanStream: $error');
+            return <PersalinanModel>[];
+          });
+    } catch (e) {
+      print('Error getting persalinan stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Stream<List<PersalinanModel>> getPersalinanByPasienStream(String pasienId) {
+    try {
+      return _firestore
+          .collection('persalinan')
+          .where('pasienId', isEqualTo: pasienId)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => PersalinanModel.fromMap(doc.data()))
+                    .toList(),
+          )
+          .handleError((error) {
+            print('Error in getPersalinanByPasienStream: $error');
+            return <PersalinanModel>[];
+          });
+    } catch (e) {
+      print('Error getting persalinan by pasien stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Future<void> updatePersalinan(PersalinanModel persalinan) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('persalinan')
+          .doc(persalinan.id)
+          .update(persalinan.toMap());
+      print('Persalinan updated successfully: ${persalinan.id}');
+    } catch (e) {
+      print('Error updating persalinan: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deletePersalinan(String persalinanId) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('persalinan').doc(persalinanId).delete();
+      print('Persalinan deleted successfully: $persalinanId');
+    } catch (e) {
+      print('Error deleting persalinan: $e');
+      rethrow;
+    }
+  }
+
+  // Chat Management
+  Future<void> sendMessage(ChatModel message) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('chats').doc(message.id).set(message.toMap());
+      print('Message sent successfully: ${message.id}');
+    } catch (e) {
+      print('Error sending message: $e');
+      rethrow;
+    }
+  }
+
+  Stream<List<ChatModel>> getConversationMessages(String conversationId) {
+    try {
+      return _firestore
+          .collection('chats')
+          .where('conversationId', isEqualTo: conversationId)
+          .orderBy('timestamp', descending: false)
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => ChatModel.fromMap(doc.data()))
+                    .toList(),
+          )
+          .handleError((error) {
+            print('Error in getConversationMessages: $error');
+            return <ChatModel>[];
+          });
+    } catch (e) {
+      print('Error getting conversation messages: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Stream<List<dynamic>> getUserConversations(String userId, String userRole) {
+    try {
+      if (userRole == 'admin') {
+        // For admin, get all conversations
+        return _firestore
+            .collection('chats')
+            .orderBy('timestamp', descending: true)
+            .snapshots()
+            .map((snapshot) {
+              final conversations = <String, Map<String, dynamic>>{};
+
+              for (var doc in snapshot.docs) {
+                final chat = ChatModel.fromMap(doc.data());
+                if (chat.senderRole == 'pasien') {
+                  // Group by patient ID for admin
+                  if (!conversations.containsKey(chat.senderId)) {
+                    conversations[chat.senderId] = {
+                      'conversationId': chat.conversationId,
+                      'patientId': chat.senderId,
+                      'patientName': chat.senderName,
+                      'lastMessage': chat.message,
+                      'lastMessageTime': chat.timestamp,
+                      'unreadCount': 0, // TODO: Implement unread count
+                    };
+                  }
+                }
+              }
+
+              return conversations.values.toList().cast<Map<String, dynamic>>();
+            })
+            .handleError((error) {
+              print('Error in getUserConversations (admin): $error');
+              return <Map<String, dynamic>>[];
+            });
+      } else {
+        // For patient, get their conversation with admin
+        return _firestore
+            .collection('chats')
+            .where('conversationId', isEqualTo: 'admin_$userId')
+            .orderBy('timestamp', descending: true)
+            .limit(1)
+            .snapshots()
+            .map((snapshot) {
+              if (snapshot.docs.isEmpty) {
+                return [];
+              }
+
+              final lastMessage = ChatModel.fromMap(snapshot.docs.first.data());
+              return <Map<String, dynamic>>[
+                {
+                  'conversationId': lastMessage.conversationId,
+                  'adminId': 'admin',
+                  'adminName': 'Admin',
+                  'lastMessage': lastMessage.message,
+                  'lastMessageTime': lastMessage.timestamp,
+                  'unreadCount': 0, // TODO: Implement unread count
+                },
+              ];
+            })
+            .handleError((error) {
+              print('Error in getUserConversations (patient): $error');
+              return <Map<String, dynamic>>[];
+            });
+      }
+    } catch (e) {
+      print('Error getting user conversations: $e');
+      return Stream.value(<dynamic>[]);
+    }
+  }
+
+  // Generate conversation ID
+  String generateConversationId(String patientId) {
+    return 'admin_$patientId';
+  }
+
+  // Get unread message count for a user
+  Stream<int> getUnreadMessageCount(String userId, String userRole) {
+    try {
+      if (userRole == 'admin') {
+        // For admin, count unread messages from patients
+        return _firestore
+            .collection('chats')
+            .where('senderRole', isEqualTo: 'pasien')
+            .where('isRead', isEqualTo: false)
+            .snapshots()
+            .map((snapshot) => snapshot.docs.length)
+            .handleError((error) {
+              print('Error in getUnreadMessageCount (admin): $error');
+              return 0;
+            });
+      } else {
+        // For patient, count unread messages from admin in their conversation
+        final conversationId = generateConversationId(userId);
+        return _firestore
+            .collection('chats')
+            .where('conversationId', isEqualTo: conversationId)
+            .where('senderRole', isEqualTo: 'admin')
+            .where('isRead', isEqualTo: false)
+            .snapshots()
+            .map((snapshot) => snapshot.docs.length)
+            .handleError((error) {
+              print('Error in getUnreadMessageCount (patient): $error');
+              return 0;
+            });
+      }
+    } catch (e) {
+      print('Error getting unread message count: $e');
+      return Stream.value(0);
+    }
+  }
+
+  // Mark messages as read
+  Future<void> markMessagesAsRead(
+    String conversationId,
+    String userId,
+    String userRole,
+  ) async {
+    try {
+      await ensureAuthenticated();
+      final batch = _firestore.batch();
+
+      if (userRole == 'admin') {
+        // Mark messages from patients as read
+        final query =
+            await _firestore
+                .collection('chats')
+                .where('conversationId', isEqualTo: conversationId)
+                .where('senderRole', isEqualTo: 'pasien')
+                .where('isRead', isEqualTo: false)
+                .get();
+
+        for (var doc in query.docs) {
+          batch.update(doc.reference, {'isRead': true});
+        }
+      } else {
+        // Mark messages from admin as read
+        final query =
+            await _firestore
+                .collection('chats')
+                .where('conversationId', isEqualTo: conversationId)
+                .where('senderRole', isEqualTo: 'admin')
+                .where('isRead', isEqualTo: false)
+                .get();
+
+        for (var doc in query.docs) {
+          batch.update(doc.reference, {'isRead': true});
+        }
+      }
+
+      await batch.commit();
+      print('Messages marked as read successfully');
+    } catch (e) {
+      print('Error marking messages as read: $e');
+      rethrow;
+    }
+  }
+
+  // Kehamilanku Management
+  Stream<List<Map<String, dynamic>>> getKehamilankuStream(String pasienId) {
+    try {
+      return _firestore
+          .collection('kehamilanku')
+          .where('pasienId', isEqualTo: pasienId)
+          .orderBy('tanggalPemeriksaan', descending: true)
+          .snapshots()
+          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .handleError((error) {
+            print('Error in getKehamilankuStream: $error');
+            return <Map<String, dynamic>>[];
+          });
+    } catch (e) {
+      print('Error getting kehamilanku stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Future<void> createKehamilanku(Map<String, dynamic> data) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('kehamilanku').doc(data['id']).set(data);
+      print('Kehamilanku created successfully: ${data['id']}');
+    } catch (e) {
+      print('Error creating kehamilanku: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateKehamilanku(Map<String, dynamic> data) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('kehamilanku').doc(data['id']).update(data);
+      print('Kehamilanku updated successfully: ${data['id']}');
+    } catch (e) {
+      print('Error updating kehamilanku: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteKehamilanku(String kehamilankuId) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('kehamilanku').doc(kehamilankuId).delete();
+      print('Kehamilanku deleted successfully: $kehamilankuId');
+    } catch (e) {
+      print('Error deleting kehamilanku: $e');
+      rethrow;
+    }
+  }
+
+  // Pemeriksaan Ibu Hamil Management
+  Stream<List<Map<String, dynamic>>> getPemeriksaanIbuHamilStream() {
+    try {
+      return _firestore
+          .collection('pemeriksaan_ibuhamil')
+          .orderBy('tanggalPemeriksaan', descending: true)
+          .snapshots()
+          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .handleError((error) {
+            print('Error in getPemeriksaanIbuHamilStream: $error');
+            return <Map<String, dynamic>>[];
+          });
+    } catch (e) {
+      print('Error getting pemeriksaan ibuhamil stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Stream<List<Map<String, dynamic>>> getPemeriksaanIbuHamilByPasienStream(
+    String pasienId,
+  ) {
+    try {
+      return _firestore
+          .collection('pemeriksaan_ibuhamil')
+          .where('pasienId', isEqualTo: pasienId)
+          .orderBy('tanggalPemeriksaan', descending: true)
+          .snapshots()
+          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .handleError((error) {
+            print('Error in getPemeriksaanIbuHamilByPasienStream: $error');
+            return <Map<String, dynamic>>[];
+          });
+    } catch (e) {
+      print('Error getting pemeriksaan ibuhamil by pasien stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Future<void> createPemeriksaanIbuHamil(Map<String, dynamic> data) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('pemeriksaan_ibuhamil')
+          .doc(data['id'])
+          .set(data);
+      print('Pemeriksaan ibuhamil created successfully: ${data['id']}');
+    } catch (e) {
+      print('Error creating pemeriksaan ibuhamil: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updatePemeriksaanIbuHamil(Map<String, dynamic> data) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('pemeriksaan_ibuhamil')
+          .doc(data['id'])
+          .update(data);
+      print('Pemeriksaan ibuhamil updated successfully: ${data['id']}');
+    } catch (e) {
+      print('Error updating pemeriksaan ibuhamil: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deletePemeriksaanIbuHamil(String pemeriksaanId) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('pemeriksaan_ibuhamil')
+          .doc(pemeriksaanId)
+          .delete();
+      print('Pemeriksaan ibuhamil deleted successfully: $pemeriksaanId');
+    } catch (e) {
+      print('Error deleting pemeriksaan ibuhamil: $e');
+      rethrow;
+    }
+  }
+
+  // Jadwal Konsultasi Management
+  Stream<List<Map<String, dynamic>>> getJadwalKonsultasiStream() {
+    try {
+      return _firestore
+          .collection('jadwal_konsultasi')
+          .orderBy('tanggalKonsultasi', descending: false)
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => doc.data() as Map<String, dynamic>)
+                    .toList(),
+          )
+          .handleError((error) {
+            print('Error in getJadwalKonsultasiStream: $error');
+            return <Map<String, dynamic>>[];
+          });
+    } catch (e) {
+      print('Error getting jadwal konsultasi stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Stream<List<Map<String, dynamic>>> getJadwalKonsultasiByPasienStream(
+    String pasienId,
+  ) {
+    try {
+      // Check if user is authenticated
+      if (_auth.currentUser == null) {
+        print('User not authenticated for jadwal konsultasi');
+        return Stream.value(<Map<String, dynamic>>[]);
+      }
+
+      return _firestore
+          .collection('jadwal_konsultasi')
+          .where('pasienId', isEqualTo: pasienId)
+          .orderBy('tanggalKonsultasi', descending: false)
+          .limit(30) // Limit untuk performa
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => doc.data() as Map<String, dynamic>)
+                    .toList(),
+          )
+          .handleError((error) {
+            print('Error getting jadwal konsultasi: $error');
+            return <Map<String, dynamic>>[];
+          });
+    } catch (e) {
+      print('Error in getJadwalKonsultasiByPasienStream: $e');
+      return Stream.value(<Map<String, dynamic>>[]);
+    }
+  }
+
+  Future<void> createJadwalKonsultasi(Map<String, dynamic> data) async {
+    try {
+      // Get current user first
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) {
+        throw Exception('User not authenticated. Please login again.');
+      }
+
+      // Validate required fields
+      if (data['pasienId'] == null || data['pasienId'].toString().isEmpty) {
+        throw Exception('Patient ID is required');
+      }
+
+      if (data['tanggalKonsultasi'] == null ||
+          data['tanggalKonsultasi'].toString().isEmpty) {
+        throw Exception('Consultation date is required');
+      }
+
+      if (data['keluhan'] == null ||
+          data['keluhan'].toString().trim().isEmpty) {
+        throw Exception('Complaint is required');
+      }
+
+      // Ensure the pasienId matches the current user's ID for security
+      if (data['pasienId'] != currentUser.uid) {
+        print(
+          'Warning: pasienId mismatch. Expected: ${currentUser.uid}, Got: ${data['pasienId']}',
+        );
+        // Update the pasienId to match the current user
+        data['pasienId'] = currentUser.uid;
+      }
+
+      // Check for duplicate appointments on the same date
+      final selectedDateTime = DateTime.parse(data['tanggalKonsultasi']);
+      final startOfDay = DateTime(
+        selectedDateTime.year,
+        selectedDateTime.month,
+        selectedDateTime.day,
+      );
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+
+      try {
+        final existingAppointments =
+            await _firestore
+                .collection('jadwal_konsultasi')
+                .where('pasienId', isEqualTo: data['pasienId'])
+                .where(
+                  'tanggalKonsultasi',
+                  isGreaterThanOrEqualTo: startOfDay.toIso8601String(),
+                )
+                .where(
+                  'tanggalKonsultasi',
+                  isLessThan: endOfDay.toIso8601String(),
+                )
+                .get();
+
+        if (existingAppointments.docs.isNotEmpty) {
+          throw Exception(
+            'You already have an appointment scheduled for this date',
+          );
+        }
+      } catch (e) {
+        // If the query fails due to missing indexes, we'll skip the duplicate check
+        // but log the issue for debugging
+        print('Warning: Could not check for duplicate appointments: $e');
+        print('This might be due to missing Firestore indexes');
+        // Continue with the creation process
+      }
+
+      // Add additional metadata
+      data['createdAt'] = DateTime.now().toIso8601String();
+      data['updatedAt'] = DateTime.now().toIso8601String();
+
+      await _firestore
+          .collection('jadwal_konsultasi')
+          .doc(data['id'])
+          .set(data);
+      print('Jadwal konsultasi created successfully: ${data['id']}');
+    } catch (e) {
+      print('Error creating jadwal konsultasi: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateJadwalKonsultasi(Map<String, dynamic> data) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('jadwal_konsultasi')
+          .doc(data['id'])
+          .update(data);
+      print('Jadwal konsultasi updated successfully: ${data['id']}');
+    } catch (e) {
+      print('Error updating jadwal konsultasi: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteJadwalKonsultasi(String jadwalId) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('jadwal_konsultasi').doc(jadwalId).delete();
+      print('Jadwal konsultasi deleted successfully: $jadwalId');
+    } catch (e) {
+      print('Error deleting jadwal konsultasi: $e');
+      rethrow;
+    }
+  }
+
+  // Darurat Management
+  Stream<List<Map<String, dynamic>>> getDaruratStream(String userId) {
+    try {
+      return _firestore
+          .collection('darurat')
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .handleError((error) {
+            print('Error in getDaruratStream: $error');
+            return <Map<String, dynamic>>[];
+          });
+    } catch (e) {
+      print('Error in getDaruratStream: $e');
+      return Stream.value(<Map<String, dynamic>>[]);
+    }
+  }
+
+  Future<void> createDarurat(Map<String, dynamic> data) async {
+    try {
+      // Check if user is authenticated
+      if (_auth.currentUser == null) {
+        throw Exception('User not authenticated. Please login again.');
+      }
+
+      // Add authentication info to data
+      data['createdBy'] = _auth.currentUser!.uid;
+      data['createdAt'] = FieldValue.serverTimestamp();
+
+      await _firestore.collection('darurat').doc(data['id']).set(data);
+      print('Darurat created successfully: ${data['id']}');
+    } catch (e) {
+      print('Error creating darurat: $e');
+      if (e.toString().contains('permission-denied')) {
+        throw Exception(
+          'Permission denied. Please check your authentication status.',
+        );
+      }
+      rethrow;
+    }
+  }
+
+  Future<void> updateDarurat(Map<String, dynamic> data) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('darurat').doc(data['id']).update(data);
+      print('Darurat updated successfully: ${data['id']}');
+    } catch (e) {
+      print('Error updating darurat: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteDarurat(String daruratId) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('darurat').doc(daruratId).delete();
+      print('Darurat deleted successfully: $daruratId');
+    } catch (e) {
+      print('Error deleting darurat: $e');
+      rethrow;
+    }
+  }
+
+  // Children Management
+  Stream<List<Map<String, dynamic>>> getChildrenStream(String userId) {
+    try {
+      return _firestore
+          .collection('children')
+          .where('userId', isEqualTo: userId)
+          .orderBy('createdAt', descending: true)
+          .snapshots()
+          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .handleError((error) {
+            print('Error in getChildrenStream: $error');
+            return <Map<String, dynamic>>[];
+          });
+    } catch (e) {
+      print('Error getting children stream: $e');
+      return Stream.value([]);
+    }
+  }
+
+  Future<void> createChild(Map<String, dynamic> data) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('children').doc(data['id']).set(data);
+      print('Child created successfully: ${data['id']}');
+    } catch (e) {
+      print('Error creating child: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> updateChild(Map<String, dynamic> data) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('children').doc(data['id']).update(data);
+      print('Child updated successfully: ${data['id']}');
+    } catch (e) {
+      print('Error updating child: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> deleteChild(String childId) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('children').doc(childId).delete();
+      print('Child deleted successfully: $childId');
+    } catch (e) {
+      print('Error deleting child: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> createChildFromHPHT(String userId, DateTime hpht) async {
+    try {
+      await ensureAuthenticated();
+      // Calculate estimated due date (40 weeks from HPHT)
+      final dueDate = hpht.add(const Duration(days: 280));
+
+      // Create child data
+      final childData = {
+        'id': generateId(),
+        'userId': userId,
+        'nama': 'Anak dari HPHT',
+        'tanggalLahir': dueDate.toIso8601String(),
+        'jenisKelamin': 'Belum diketahui',
+        'beratLahir': 0.0,
+        'panjangLahir': 0.0,
+        'hpht': hpht.toIso8601String(),
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
+      await _firestore
+          .collection('children')
+          .doc(childData['id'] as String)
+          .set(childData);
+      print('Child created from HPHT successfully: ${childData['id']}');
+    } catch (e) {
+      print('Error creating child from HPHT: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> markMessageAsRead(String messageId) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore.collection('chats').doc(messageId).update({
+        'isRead': true,
+      });
+      print('Message marked as read: $messageId');
+    } catch (e) {
+      print('Error marking message as read: $e');
+      rethrow;
+    }
+  }
+
+  // Get available time slots for a specific date
+  Future<List<String>> getAvailableTimeSlots(DateTime date) async {
+    try {
+      final startOfDay = DateTime(date.year, date.month, date.day);
+      final endOfDay = startOfDay.add(const Duration(days: 1));
+
+      // Get all appointments for this date
+      final appointments =
+          await _firestore
+              .collection('jadwal_konsultasi')
+              .where(
+                'tanggalKonsultasi',
+                isGreaterThanOrEqualTo: startOfDay.toIso8601String(),
+              )
+              .where(
+                'tanggalKonsultasi',
+                isLessThan: endOfDay.toIso8601String(),
+              )
+              .get();
+
+      // Create list of all possible time slots (8:00-19:00, every 30 minutes)
+      final allTimeSlots = <String>[];
+      for (int hour = 8; hour < 19; hour++) {
+        allTimeSlots.add('${hour.toString().padLeft(2, '0')}:00');
+        allTimeSlots.add('${hour.toString().padLeft(2, '0')}:30');
+      }
+
+      // Remove booked time slots
+      final bookedSlots = <String>[];
+      for (var doc in appointments.docs) {
+        final data = doc.data();
+        if (data['waktuKonsultasi'] != null) {
+          bookedSlots.add(data['waktuKonsultasi']);
+        }
+      }
+
+      return allTimeSlots.where((slot) => !bookedSlots.contains(slot)).toList();
+    } catch (e) {
+      print('Error getting available time slots: $e');
+      // Return default time slots if there's an error
+      return [
+        '09:00',
+        '09:30',
+        '10:00',
+        '10:30',
+        '11:00',
+        '11:30',
+        '14:00',
+        '14:30',
+        '15:00',
+        '15:30',
+        '16:00',
+        '16:30',
+      ];
+    }
+  }
+
+  // Utility methods
+  String generateId() => _uuid.v4();
+
+  int calculateAge(DateTime birthDate) {
+    DateTime now = DateTime.now();
+    int age = now.year - birthDate.year;
+    if (now.month < birthDate.month ||
+        (now.month == birthDate.month && now.day < birthDate.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  // Security and validation methods
+  Future<bool> validateUserPermissions(String userId) async {
+    try {
+      await ensureAuthenticated();
+      final currentUser = _auth.currentUser;
+      if (currentUser == null) return false;
+
+      // Admin can access all data
+      final userDoc =
+          await _firestore.collection('users').doc(currentUser.uid).get();
+      if (userDoc.exists) {
+        final userData = userDoc.data() as Map<String, dynamic>;
+        if (userData['role'] == 'admin') return true;
+      }
+
+      // Users can only access their own data
+      return currentUser.uid == userId;
+    } catch (e) {
+      print('Error validating user permissions: $e');
+      return false;
+    }
+  }
+
+  // Performance optimization methods
+  Future<void> enableOfflinePersistence() async {
+    try {
+      if (!isFirebaseInitialized()) {
+        print('Firebase not initialized, skipping offline persistence setup');
+        return;
+      }
+
+      // For web, we need to handle offline persistence differently
+      if (kIsWeb) {
+        print('Web platform detected, using web-specific offline settings');
+        _firestore.settings = const Settings(
+          persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        );
+      } else {
+        _firestore.settings = const Settings(
+          persistenceEnabled: true,
+          cacheSizeBytes: Settings.CACHE_SIZE_UNLIMITED,
+        );
+      }
+      print('Offline persistence enabled');
+    } catch (e) {
+      print('Error enabling offline persistence: $e');
+    }
+  }
+
+  Future<void> clearCache() async {
+    try {
+      await _firestore.clearPersistence();
+      print('Firestore cache cleared');
+    } catch (e) {
+      print('Error clearing cache: $e');
+    }
+  }
+
+  // Debug method to create test user
+  Future<void> createTestUser() async {
+    try {
+      await ensureAuthenticated();
+      final testUser = UserModel(
+        id: 'test-user-123',
+        email: 'test@example.com',
+        password: 'password123',
+        nama: 'Test User',
+        noHp: '08123456789',
+        alamat: 'Test Address',
+        tanggalLahir: DateTime(1990, 1, 1),
+        umur: 33,
+        role: 'pasien',
+        createdAt: DateTime.now(),
+      );
+
+      await createUser(testUser);
+      print('Test user created successfully');
+    } catch (e) {
+      print('Error creating test user: $e');
+    }
+  }
+
+  // Debug method to list all users
+  Future<void> listAllUsers() async {
+    try {
+      await ensureAuthenticated();
+      final users = await _firestore.collection('users').get();
+      print('Total users in database: ${users.docs.length}');
+      for (var doc in users.docs) {
+        print('User: ${doc.data()}');
+      }
+    } catch (e) {
+      print('Error listing users: $e');
+    }
+  }
+
+  // Health check method
+  Future<bool> checkFirebaseConnection() async {
+    try {
+      if (!isFirebaseInitialized()) {
+        print('Firebase not initialized');
+        return false;
+      }
+
+      // For web, we'll do a simpler connection check
+      if (kIsWeb) {
+        print('Web platform detected, using simplified connection check');
+        // Just check if we can access Firestore
+        await _firestore.collection('health_check').limit(1).get();
+        print('Firebase connection is healthy (web)');
+        return true;
+      } else {
+        await _firestore.collection('health_check').doc('test').get();
+        print('Firebase connection is healthy');
+        return true;
+      }
+    } catch (e) {
+      print('Firebase connection error: $e');
+      return false;
+    }
+  }
+}

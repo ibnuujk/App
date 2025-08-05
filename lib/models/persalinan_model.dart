@@ -1,0 +1,125 @@
+class PersalinanModel {
+  final String id;
+  final String pasienId;
+  final String pasienNama;
+  final String pasienNoHp;
+  final int pasienUmur;
+  final String pasienAlamat;
+
+  // Data tambahan persalinan
+  final String namaSuami;
+  final String pekerjaan;
+  final DateTime tanggalMasuk;
+  final String fasilitas; // 'umum' atau 'bpjs'
+  final DateTime tanggalPartes;
+  final DateTime tanggalKeluar;
+  final String diagnosaKebidanan;
+  final String tindakan;
+  final String? rujukan; // opsional
+  final String penolongPersalinan;
+  final DateTime createdAt;
+
+  PersalinanModel({
+    required this.id,
+    required this.pasienId,
+    required this.pasienNama,
+    required this.pasienNoHp,
+    required this.pasienUmur,
+    required this.pasienAlamat,
+    required this.namaSuami,
+    required this.pekerjaan,
+    required this.tanggalMasuk,
+    required this.fasilitas,
+    required this.tanggalPartes,
+    required this.tanggalKeluar,
+    required this.diagnosaKebidanan,
+    required this.tindakan,
+    this.rujukan,
+    required this.penolongPersalinan,
+    required this.createdAt,
+  });
+
+  Map<String, dynamic> toMap() {
+    return {
+      'id': id,
+      'pasienId': pasienId,
+      'pasienNama': pasienNama,
+      'pasienNoHp': pasienNoHp,
+      'pasienUmur': pasienUmur,
+      'pasienAlamat': pasienAlamat,
+      'namaSuami': namaSuami,
+      'pekerjaan': pekerjaan,
+      'tanggalMasuk': tanggalMasuk.toIso8601String(),
+      'fasilitas': fasilitas,
+      'tanggalPartes': tanggalPartes.toIso8601String(),
+      'tanggalKeluar': tanggalKeluar.toIso8601String(),
+      'diagnosaKebidanan': diagnosaKebidanan,
+      'tindakan': tindakan,
+      'rujukan': rujukan,
+      'penolongPersalinan': penolongPersalinan,
+      'createdAt': createdAt.toIso8601String(),
+    };
+  }
+
+  factory PersalinanModel.fromMap(Map<String, dynamic> map) {
+    return PersalinanModel(
+      id: map['id'] ?? '',
+      pasienId: map['pasienId'] ?? '',
+      pasienNama: map['pasienNama'] ?? '',
+      pasienNoHp: map['pasienNoHp'] ?? '',
+      pasienUmur: map['pasienUmur']?.toInt() ?? 0,
+      pasienAlamat: map['pasienAlamat'] ?? '',
+      namaSuami: map['namaSuami'] ?? '',
+      pekerjaan: map['pekerjaan'] ?? '',
+      tanggalMasuk: DateTime.parse(map['tanggalMasuk']),
+      fasilitas: map['fasilitas'] ?? '',
+      tanggalPartes: DateTime.parse(map['tanggalPartes']),
+      tanggalKeluar: DateTime.parse(map['tanggalKeluar']),
+      diagnosaKebidanan: map['diagnosaKebidanan'] ?? '',
+      tindakan: map['tindakan'] ?? '',
+      rujukan: map['rujukan'],
+      penolongPersalinan: map['penolongPersalinan'] ?? '',
+      createdAt: DateTime.parse(map['createdAt']),
+    );
+  }
+
+  PersalinanModel copyWith({
+    String? id,
+    String? pasienId,
+    String? pasienNama,
+    String? pasienNoHp,
+    int? pasienUmur,
+    String? pasienAlamat,
+    String? namaSuami,
+    String? pekerjaan,
+    DateTime? tanggalMasuk,
+    String? fasilitas,
+    DateTime? tanggalPartes,
+    DateTime? tanggalKeluar,
+    String? diagnosaKebidanan,
+    String? tindakan,
+    String? rujukan,
+    String? penolongPersalinan,
+    DateTime? createdAt,
+  }) {
+    return PersalinanModel(
+      id: id ?? this.id,
+      pasienId: pasienId ?? this.pasienId,
+      pasienNama: pasienNama ?? this.pasienNama,
+      pasienNoHp: pasienNoHp ?? this.pasienNoHp,
+      pasienUmur: pasienUmur ?? this.pasienUmur,
+      pasienAlamat: pasienAlamat ?? this.pasienAlamat,
+      namaSuami: namaSuami ?? this.namaSuami,
+      pekerjaan: pekerjaan ?? this.pekerjaan,
+      tanggalMasuk: tanggalMasuk ?? this.tanggalMasuk,
+      fasilitas: fasilitas ?? this.fasilitas,
+      tanggalPartes: tanggalPartes ?? this.tanggalPartes,
+      tanggalKeluar: tanggalKeluar ?? this.tanggalKeluar,
+      diagnosaKebidanan: diagnosaKebidanan ?? this.diagnosaKebidanan,
+      tindakan: tindakan ?? this.tindakan,
+      rujukan: rujukan ?? this.rujukan,
+      penolongPersalinan: penolongPersalinan ?? this.penolongPersalinan,
+      createdAt: createdAt ?? this.createdAt,
+    );
+  }
+}

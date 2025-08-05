@@ -1,0 +1,175 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+    
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+    
+    function isPatient() {
+      return isAuthenticated() && 
+        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'pasien';
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow create: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // Konsultasi collection
+    match /konsultasi/{konsultasiId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.pasienId)
+      );
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(request.resource.data.pasienId)
+      );
+      allow update: if isAuthenticated() && isAdmin();
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // Persalinan collection
+    match /persalinan/{persalinanId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.pasienId)
+      );
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(request.resource.data.pasienId)
+      );
+      allow update: if isAuthenticated() && isAdmin();
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // Chats collection
+    match /chats/{chatId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.senderId) ||
+        isOwner(resource.data.recipientId)
+      );
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(request.resource.data.senderId)
+      );
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.senderId)
+      );
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // Kehamilanku collection
+    match /kehamilanku/{kehamilankuId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.pasienId)
+      );
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(request.resource.data.pasienId)
+      );
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.pasienId)
+      );
+      allow delete: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.pasienId)
+      );
+    }
+    
+    // Pemeriksaan Ibu Hamil collection
+    match /pemeriksaan_ibuhamil/{pemeriksaanId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.pasienId)
+      );
+      allow create: if isAuthenticated() && isAdmin();
+      allow update: if isAuthenticated() && isAdmin();
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // Jadwal Konsultasi collection
+    match /jadwal_konsultasi/{jadwalId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.pasienId)
+      );
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(request.resource.data.pasienId)
+      );
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.pasienId)
+      );
+      allow delete: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.pasienId)
+      );
+    }
+    
+    // Darurat collection
+    match /darurat/{daruratId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.userId)
+      );
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(request.resource.data.userId)
+      );
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.userId)
+      );
+      allow delete: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.userId)
+      );
+    }
+    
+    // Children collection
+    match /children/{childId} {
+      allow read: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.userId)
+      );
+      allow create: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(request.resource.data.userId)
+      );
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.userId)
+      );
+      allow delete: if isAuthenticated() && (
+        isAdmin() || 
+        isOwner(resource.data.userId)
+      );
+    }
+    
+    // Health check collection (for connection testing)
+    match /health_check/{docId} {
+      allow read, write: if isAuthenticated();
+    }
+  }
+} 

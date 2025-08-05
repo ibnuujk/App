@@ -1,0 +1,145 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "jadwal_konsultasi",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "pasienId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "tanggalKonsultasi",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "jadwal_konsultasi",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "tanggalKonsultasi",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "pasienId",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "konsultasi",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "pasienId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "tanggalKonsultasi",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "persalinan",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "pasienId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "kehamilanku",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "pasienId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "tanggalPemeriksaan",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "pemeriksaan_ibuhamil",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "pasienId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "tanggalPemeriksaan",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "darurat",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "children",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "chats",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "conversationId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "timestamp",
+          "order": "ASCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "chats",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "senderRole",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isRead",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+} 
