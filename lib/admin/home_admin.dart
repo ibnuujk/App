@@ -295,7 +295,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                     ),
                     _buildActionButton(
                       Icons.question_answer_rounded,
-                      'Konsultasi\nPasien',
+                      'Catatan\nMedis',
                       () => setState(() => _selectedIndex = 2),
                     ),
                     _buildActionButton(
@@ -318,7 +318,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                     ),
                     _buildActionButton(
                       Icons.schedule_rounded,
-                      'Jadwal\nKonsultasi',
+                      'Jadwal\Temu Janji',
                       () => RouteHelper.navigateToJadwalKonsultasi(
                         context,
                         widget.user,
@@ -328,39 +328,6 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                 ),
                 const SizedBox(height: 32),
 
-                // Quick Stats Section
-                Text(
-                  'Statistik Cepat',
-                  style: GoogleFonts.poppins(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF2D3748),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 140,
-                  child: ListView.builder(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: 3,
-                    itemBuilder: (context, index) {
-                      final stats = [
-                        {
-                          'title': 'Total Pasien',
-                          'value': '24',
-                          'icon': Icons.people_rounded,
-                        },
-                        {
-                          'title': 'Konsultasi Hari Ini',
-                          'value': '8',
-                          'icon': Icons.question_answer_rounded,
-                        },
-                        {
-                          'title': 'Pemeriksaan',
-                          'value': '12',
-                          'icon': Icons.medical_services_rounded,
-                        },
-                      ];
 
                       return Container(
                         width: 220,
