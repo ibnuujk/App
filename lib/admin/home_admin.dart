@@ -145,7 +145,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
             padding: const EdgeInsets.all(16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+              children: <Widget>[
                 // Header Section with enhanced design
                 Container(
                   width: double.infinity,
@@ -318,7 +318,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                     ),
                     _buildActionButton(
                       Icons.schedule_rounded,
-                      'Jadwal\Temu Janji',
+                      'Jadwal\nTemu Janji',
                       () => RouteHelper.navigateToJadwalKonsultasi(
                         context,
                         widget.user,
@@ -327,69 +327,6 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                   ],
                 ),
                 const SizedBox(height: 32),
-
-
-                      return Container(
-                        width: 220,
-                        margin: const EdgeInsets.only(right: 16),
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.1),
-                              blurRadius: 10,
-                              offset: const Offset(0, 5),
-                            ),
-                          ],
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFFEC407A,
-                                    ).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Icon(
-                                    stats[index]['icon'] as IconData,
-                                    color: const Color(0xFFEC407A),
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  stats[index]['title'] as String,
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF2D3748),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              stats[index]['value'] as String,
-                              style: GoogleFonts.poppins(
-                                fontSize: 28,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFFEC407A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                ),
-                const SizedBox(height: 20),
               ],
             ),
           ),
