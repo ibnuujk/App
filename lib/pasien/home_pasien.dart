@@ -692,9 +692,9 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                         RouteHelper.navigateToTemuJanji(context, widget.user);
                       },
                     ),
-                    // _buildActionButton(Icons.emergency_rounded, 'Darurat', () {
-                    //   RouteHelper.navigateToDarurat(context, widget.user);
-                    // }),
+                    _buildActionButton(Icons.emergency_rounded, 'Darurat', () {
+                      RouteHelper.navigateToDarurat(context, widget.user);
+                    }),
                     _buildActionButton(
                       Icons.chat_rounded,
                       'Chat dengan\nBidan',

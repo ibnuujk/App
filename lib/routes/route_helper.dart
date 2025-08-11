@@ -20,6 +20,7 @@ import '../pasien/chat_pasien.dart';
 import '../pasien/temu_janji.dart';
 import '../pasien/edukasi.dart';
 import '../pasien/jadwal_pasien.dart';
+import '../pasien/emergency_screen.dart';
 
 class RouteHelper {
   static const String login = '/login';
@@ -36,7 +37,7 @@ class RouteHelper {
 
   static const String kehamilanku = '/kehamilanku';
   static const String pemeriksaan = '/pemeriksaan';
-  // static const String darurat = '/darurat';
+  static const String darurat = '/darurat';
   static const String konsultasiPasien = '/konsultasi-pasien';
   static const String chatPasien = '/chat-pasien';
   static const String profile = '/profile';
@@ -100,9 +101,9 @@ class RouteHelper {
         final user = settings.arguments as UserModel;
         return MaterialPageRoute(builder: (_) => PemeriksaanScreen(user: user));
 
-      // case darurat:
-      //   final user = settings.arguments as UserModel;
-      //   return MaterialPageRoute(builder: (_) => DaruratScreen(user: user));
+      case darurat:
+        final user = settings.arguments as UserModel;
+        return MaterialPageRoute(builder: (_) => EmergencyScreen(user: user));
 
       case profile:
         final user = settings.arguments as UserModel;
@@ -224,6 +225,10 @@ class RouteHelper {
 
   static void navigateToEdukasi(BuildContext context, UserModel user) {
     Navigator.pushNamed(context, edukasi, arguments: user);
+  }
+
+  static void navigateToDarurat(BuildContext context, UserModel user) {
+    Navigator.pushNamed(context, darurat, arguments: user);
   }
 
   static void navigateToJadwalPasien(BuildContext context, UserModel user) {

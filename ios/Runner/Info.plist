@@ -45,5 +45,19 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	
+	<!-- Calendar permissions for add_2_calendar -->
+	<key>NSCalendarsUsageDescription</key>
+	<string>Aplikasi ini membutuhkan akses kalender untuk menambahkan jadwal temu janji Anda</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Aplikasi ini membutuhkan akses kontak untuk mengatur acara kalender</string>
+	
+	<!-- Emergency feature permissions -->
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>tel</string>
+		<string>whatsapp</string>
+		<string>https</string>
+	</array>
 </dict>
 </plist>

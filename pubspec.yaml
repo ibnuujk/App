@@ -57,6 +57,10 @@ dependencies:
   uuid: ^4.5.1
   shared_preferences: ^2.3.2
   add_2_calendar: ^3.0.1
+  
+  # Emergency & Communication
+  url_launcher: ^6.3.1
+  permission_handler: ^11.3.1
 
 dev_dependencies:
   flutter_test:
