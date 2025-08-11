@@ -991,6 +991,21 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: Text(
+          'Laporan Persalinan',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: const Color(0xFFEC407A),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -999,14 +1014,21 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFEC407A),
+                    const Color(0xFFEC407A).withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: const Color(0xFFEC407A).withOpacity(0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -1020,12 +1042,12 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC407A).withOpacity(0.1),
+                          color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          Icons.medical_services_rounded,
-                          color: const Color(0xFFEC407A),
+                          Icons.assignment_rounded,
+                          color: Colors.white,
                           size: 24,
                         ),
                       ),
@@ -1035,18 +1057,18 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Laporan Persalinan',
+                              'Kelola Laporan Persalinan',
                               style: GoogleFonts.poppins(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF2D3748),
+                                color: Colors.white,
                               ),
                             ),
                             Text(
-                              'Kelola data laporan persalinan',
+                              'Input dan kelola data persalinan',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: Colors.white.withOpacity(0.9),
                               ),
                             ),
                           ],
@@ -1055,6 +1077,29 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                     ],
                   ),
                   const SizedBox(height: 16),
+                  // Status Summary
+                  Row(
+                    children: [
+                      _buildStatusCard(
+                        'Total',
+                        _allReports.length,
+                        Colors.white,
+                      ),
+                      const SizedBox(width: 12),
+                      _buildStatusCard(
+                        'UMUM',
+                        _allReports.where((r) => r.fasilitas == 'umum').length,
+                        Colors.green,
+                      ),
+                      const SizedBox(width: 12),
+                      _buildStatusCard(
+                        'BPJS',
+                        _allReports.where((r) => r.fasilitas == 'bpjs').length,
+                        Colors.orange,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
                   // Search Bar
                   TextField(
                     controller: _searchController,
@@ -1384,6 +1429,41 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildStatusCard(String title, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3), width: 1),
+        ),
+        child: Column(
+          children: [
+            Text(
+              count.toString(),
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color == Colors.white ? Colors.white : color,
+              ),
+            ),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color:
+                    color == Colors.white
+                        ? Colors.white.withOpacity(0.9)
+                        : color.withOpacity(0.8),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

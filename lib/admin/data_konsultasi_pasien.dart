@@ -459,6 +459,21 @@ class _DataKonsultasiPasienScreenState
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: Text(
+          'Data Konsultasi Pasien',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: const Color(0xFFEC407A),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -467,14 +482,21 @@ class _DataKonsultasiPasienScreenState
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFEC407A),
+                    const Color(0xFFEC407A).withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: const Color(0xFFEC407A).withOpacity(0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -488,12 +510,12 @@ class _DataKonsultasiPasienScreenState
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC407A).withOpacity(0.1),
+                          color: Colors.white.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
                           Icons.question_answer_rounded,
-                          color: const Color(0xFFEC407A),
+                          color: Colors.white,
                           size: 24,
                         ),
                       ),
@@ -503,22 +525,49 @@ class _DataKonsultasiPasienScreenState
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Data Konsultasi',
+                              'Kelola Data Konsultasi',
                               style: GoogleFonts.poppins(
                                 fontSize: 20,
                                 fontWeight: FontWeight.w700,
-                                color: const Color(0xFF2D3748),
+                                color: Colors.white,
                               ),
                             ),
                             Text(
-                              'Kelola konsultasi pasien dengan mudah',
+                              'Input dan kelola konsultasi pasien',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.grey[600],
+                                color: Colors.white.withOpacity(0.9),
                               ),
                             ),
                           ],
                         ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Status Summary
+                  Row(
+                    children: [
+                      _buildStatusCard(
+                        'Total',
+                        _allConsultations.length,
+                        Colors.white,
+                      ),
+                      const SizedBox(width: 12),
+                      _buildStatusCard(
+                        'Pending',
+                        _allConsultations
+                            .where((c) => c.status == 'pending')
+                            .length,
+                        Colors.orange,
+                      ),
+                      const SizedBox(width: 12),
+                      _buildStatusCard(
+                        'Answered',
+                        _allConsultations
+                            .where((c) => c.status == 'answered')
+                            .length,
+                        Colors.green,
                       ),
                     ],
                   ),
@@ -877,6 +926,41 @@ class _DataKonsultasiPasienScreenState
             fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
             color: isSelected ? Colors.white : Colors.grey[700],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusCard(String title, int count, Color color) {
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: color.withOpacity(0.3), width: 1),
+        ),
+        child: Column(
+          children: [
+            Text(
+              count.toString(),
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: color == Colors.white ? Colors.white : color,
+              ),
+            ),
+            Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontSize: 12,
+                color:
+                    color == Colors.white
+                        ? Colors.white.withOpacity(0.9)
+                        : color.withOpacity(0.8),
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../../models/user_model.dart';
-import '../../services/firebase_service.dart';
+import 'dart:async';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../models/user_model.dart';
+import '../services/firebase_service.dart';
+import 'laporan_persalinan_form.dart';
 
 class PemeriksaanIbuHamilScreen extends StatefulWidget {
   final UserModel user;
@@ -24,7 +27,8 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   List<Map<String, dynamic>> _pregnancyExaminations = [];
   bool _isLoading = true;
-  bool _showForm = false; // Untuk menampilkan form pemeriksaan
+
+  StreamSubscription<List<Map<String, dynamic>>>? _examinationsSubscription;
 
   @override
   void initState() {
@@ -45,23 +49,63 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
     });
 
     try {
-      _firebaseService.getPemeriksaanIbuHamilStream().listen((examinations) {
+      // Cancel existing subscription
+      _examinationsSubscription?.cancel();
+
+      // Create new subscription
+      _examinationsSubscription = _firebaseService
+          .getPemeriksaanIbuHamilStream()
+          .listen(
+            (examinations) {
+              if (mounted) {
+                setState(() {
+                  _pregnancyExaminations = examinations;
+                  _isLoading = false;
+                });
+                print(
+                  'Loaded ${examinations.length} examinations',
+                ); // Debug log
+              }
+            },
+            onError: (e) {
+              if (mounted) {
+                setState(() {
+                  _isLoading = false;
+                });
+                print('Error loading examinations: $e'); // Debug log
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Gagal memuat data pemeriksaan: ${e.toString()}',
+                    ),
+                    backgroundColor: Colors.red,
+                    duration: const Duration(seconds: 3),
+                  ),
+                );
+              }
+            },
+          );
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _pregnancyExaminations = examinations;
           _isLoading = false;
         });
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: const Color(0xFFEC407A),
-        ),
-      );
+        print('Exception loading examinations: $e'); // Debug log
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat data pemeriksaan: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     }
+  }
+
+  @override
+  void dispose() {
+    _examinationsSubscription?.cancel();
+    super.dispose();
   }
 
   void _showAddExaminationDialog() {
@@ -71,7 +115,10 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
           (context) => AddPregnancyExaminationDialog(
             consultationSchedule: widget.consultationSchedule,
           ),
-    ).then((_) => _loadPregnancyExaminations());
+    ).then((_) {
+      // Reload data after dialog closes
+      _loadPregnancyExaminations();
+    });
   }
 
   void _showFormFromConsultation() {
@@ -84,9 +131,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
               consultationSchedule: widget.consultationSchedule,
             ),
       ).then((_) {
-        setState(() {
-          _showForm = false; // Hide form after dialog is closed
-        });
+        // Reload data after dialog closes
         _loadPregnancyExaminations();
       });
     }
@@ -98,6 +143,15 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
       builder:
           (context) =>
               PregnancyExaminationDetailDialog(examination: examination),
+    );
+  }
+
+  void _navigateToLaporanPersalinan(Map<String, dynamic> examination) {
+    showDialog(
+      context: context,
+      builder:
+          (context) =>
+              LaporanPersalinanFormDialog(examinationData: examination),
     );
   }
 
@@ -305,35 +359,35 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                     child: Column(
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
-                                children: [
-                                  Row(
-                                    children: [
-                                      Container(
+                                      children: [
+                                        Row(
+                                          children: [
+                                            Container(
                                               width: 50,
                                               height: 50,
-                                        decoration: BoxDecoration(
+                                              decoration: BoxDecoration(
                                                 color: Colors.white.withOpacity(
                                                   0.2,
                                                 ),
                                                 borderRadius:
                                                     BorderRadius.circular(12),
-                                        ),
-                                        child: Icon(
-                                          Icons.pregnant_woman_rounded,
+                                              ),
+                                              child: Icon(
+                                                Icons.pregnant_woman_rounded,
                                                 color: Colors.white,
                                                 size: 24,
-                                        ),
-                                      ),
+                                              ),
+                                            ),
                                             const SizedBox(width: 12),
-                                      Expanded(
-                                        child: Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            Text(
-                                              examination['namaPasien'] ??
-                                                  'Nama tidak tersedia',
-                                              style: GoogleFonts.poppins(
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    examination['namaPasien'] ??
+                                                        'Nama tidak tersedia',
+                                                    style: GoogleFonts.poppins(
                                                       fontWeight:
                                                           FontWeight.w600,
                                                       fontSize: 18,
@@ -360,30 +414,30 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                           children: [
                                             Expanded(
                                               child: _buildPatientDetailItem(
-                                              Icons.phone_rounded,
+                                                Icons.phone_rounded,
                                                 'No HP',
-                                              examination['noHp'] ?? '-',
-                                            ),
+                                                examination['noHp'] ?? '-',
+                                              ),
                                             ),
                                             const SizedBox(width: 12),
                                             Expanded(
                                               child: _buildPatientDetailItem(
-                                              Icons.cake_rounded,
+                                                Icons.cake_rounded,
                                                 'Umur',
-                                              '${examination['umur'] ?? '-'} tahun',
-                                            ),
+                                                '${examination['umur'] ?? '-'} tahun',
+                                              ),
                                             ),
                                           ],
                                         ),
                                         const SizedBox(height: 12),
                                         _buildPatientDetailItem(
-                                              Icons.location_on_rounded,
+                                          Icons.location_on_rounded,
                                           'Alamat',
-                                              examination['alamat'] ?? '-',
-                                            ),
-                                          ],
+                                          examination['alamat'] ?? '-',
                                         ),
-                                      ),
+                                      ],
+                                    ),
+                                  ),
                                   const SizedBox(height: 16),
                                   // Examination Overview Container
                                   Container(
@@ -478,14 +532,62 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-                                  // Action Menu
+                                  // Action Buttons
                                   Row(
-                                    mainAxisAlignment: MainAxisAlignment.end,
                                     children: [
+                                      Expanded(
+                                        child: ElevatedButton.icon(
+                                          onPressed:
+                                              () =>
+                                                  _navigateToLaporanPersalinan(
+                                                    examination,
+                                                  ),
+                                          icon: Icon(
+                                            Icons.assignment_add,
+                                            size: 18,
+                                            color: Colors.white,
+                                          ),
+                                          label: Text(
+                                            'Lakukan Pemeriksaan Persalinan',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(
+                                              0xFF4CAF50,
+                                            ),
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 12,
+                                              horizontal: 16,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: 12),
                                       PopupMenuButton<String>(
-                                        icon: Icon(
-                                          Icons.more_vert_rounded,
-                                          color: const Color(0xFFEC407A),
+                                        icon: Container(
+                                          padding: const EdgeInsets.all(8),
+                                          decoration: BoxDecoration(
+                                            color: const Color(
+                                              0xFFEC407A,
+                                            ).withOpacity(0.1),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                          ),
+                                          child: Icon(
+                                            Icons.more_vert_rounded,
+                                            color: const Color(0xFFEC407A),
+                                            size: 20,
+                                          ),
                                         ),
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
@@ -603,7 +705,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          DateFormat('dd MMM yyyy').format(
+                                          _formatExaminationDate(
                                             examination['tanggalPemeriksaan'],
                                           ),
                                           style: GoogleFonts.poppins(
@@ -649,12 +751,17 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
   }
 
   void _showEditDialog(Map<String, dynamic> examination) {
-    // TODO: Implement edit dialog
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Edit pemeriksaan untuk ${examination['namaPasien']}'),
-        backgroundColor: const Color(0xFFEC407A),
-      ),
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return EditExaminationDialog(
+          examination: examination,
+          firebaseService: _firebaseService,
+          onSaved: () {
+            _loadPregnancyExaminations(); // Refresh the list
+          },
+        );
+      },
     );
   }
 
@@ -704,28 +811,14 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
         );
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('Gagal menghapus pemeriksaan: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
         );
       }
     }
-  }
-
-  Widget _buildInfoRow(IconData icon, String text, {int maxLines = 1}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Icon(icon, size: 16, color: Colors.grey[600]),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: GoogleFonts.poppins(color: Colors.grey[600], fontSize: 12),
-            maxLines: maxLines,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildOverviewRow(String label, String value) {
@@ -803,13 +896,25 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
     final today = DateTime.now();
     return _pregnancyExaminations.where((examination) {
       final examinationDate = examination['tanggalPemeriksaan'];
-      if (examinationDate is String) {
-        final date = DateTime.parse(examinationDate);
-        return date.year == today.year &&
-            date.month == today.month &&
-            date.day == today.day;
+      DateTime? date;
+
+      if (examinationDate is Timestamp) {
+        date = examinationDate.toDate();
+      } else if (examinationDate is String) {
+        try {
+          date = DateTime.parse(examinationDate);
+        } catch (e) {
+          return false;
+        }
+      } else if (examinationDate is DateTime) {
+        date = examinationDate;
+      } else {
+        return false;
       }
-      return false;
+
+      return date.year == today.year &&
+          date.month == today.month &&
+          date.day == today.day;
     }).length;
   }
 
@@ -820,13 +925,50 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
 
     return _pregnancyExaminations.where((examination) {
       final examinationDate = examination['tanggalPemeriksaan'];
-      if (examinationDate is String) {
-        final date = DateTime.parse(examinationDate);
-        return date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
-            date.isBefore(endOfWeek.add(const Duration(days: 1)));
+      DateTime? date;
+
+      if (examinationDate is Timestamp) {
+        date = examinationDate.toDate();
+      } else if (examinationDate is String) {
+        try {
+          date = DateTime.parse(examinationDate);
+        } catch (e) {
+          return false;
+        }
+      } else if (examinationDate is DateTime) {
+        date = examinationDate;
+      } else {
+        return false;
       }
-      return false;
+
+      return date.isAfter(startOfWeek.subtract(const Duration(days: 1))) &&
+          date.isBefore(endOfWeek.add(const Duration(days: 1)));
     }).length;
+  }
+
+  // Helper method to format examination date safely
+  String _formatExaminationDate(
+    dynamic dateValue, [
+    String format = 'dd MMM yyyy',
+  ]) {
+    try {
+      DateTime date;
+
+      if (dateValue is Timestamp) {
+        date = dateValue.toDate();
+      } else if (dateValue is String) {
+        date = DateTime.parse(dateValue);
+      } else if (dateValue is DateTime) {
+        date = dateValue;
+      } else {
+        return '-';
+      }
+
+      return DateFormat(format).format(date);
+    } catch (e) {
+      print('Error formatting date: $e');
+      return 'Format tanggal tidak valid';
+    }
   }
 
   // Status card widget
@@ -976,7 +1118,6 @@ class _AddPregnancyExaminationDialogState
 
   bool _isLoading = false;
   bool _isLoadingPatientData = false;
-  DateTime? _selectedDate;
 
   @override
   void initState() {
@@ -1040,6 +1181,13 @@ class _AddPregnancyExaminationDialogState
       }
     } catch (e) {
       print('Error loading patient data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memuat data pasien: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     } finally {
       setState(() {
         _isLoadingPatientData = false;
@@ -1256,6 +1404,7 @@ class _AddPregnancyExaminationDialogState
         'catatan': _catatanController.text,
 
         'screeningQuestions': _screeningQuestions,
+        'tanggalPemeriksaan': DateTime.now(), // Required for Firebase orderBy
         'createdAt': DateTime.now(),
       };
 
@@ -1270,7 +1419,11 @@ class _AddPregnancyExaminationDialogState
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        SnackBar(
+          content: Text('Gagal menyimpan pemeriksaan: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
       );
     } finally {
       setState(() {
@@ -1337,8 +1490,8 @@ class _AddPregnancyExaminationDialogState
                             Row(
                               children: [
                                 Icon(
-                            Icons.person_rounded,
-                            color: const Color(0xFFEC407A),
+                                  Icons.person_rounded,
+                                  color: const Color(0xFFEC407A),
                                   size: 20,
                                 ),
                                 const SizedBox(width: 8),
@@ -1356,8 +1509,8 @@ class _AddPregnancyExaminationDialogState
                               controller: _namaController,
                               decoration: InputDecoration(
                                 labelText: 'Nama Pasien',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabled: false,
                                 filled: true,
@@ -1370,7 +1523,7 @@ class _AddPregnancyExaminationDialogState
                               decoration: InputDecoration(
                                 labelText: 'No HP',
                                 border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabled: false,
                                 filled: true,
@@ -1383,7 +1536,7 @@ class _AddPregnancyExaminationDialogState
                               decoration: InputDecoration(
                                 labelText: 'Umur',
                                 border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabled: false,
                                 filled: true,
@@ -1399,7 +1552,7 @@ class _AddPregnancyExaminationDialogState
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 enabled: false,
-                          filled: true,
+                                filled: true,
                                 fillColor: Colors.grey[100],
                               ),
                             ),
@@ -1635,7 +1788,7 @@ class _AddPregnancyExaminationDialogState
                       Row(
                         children: [
                           Expanded(
-                        child: TextFormField(
+                            child: TextFormField(
                               controller: _tekananDarahController,
                               decoration: InputDecoration(
                                 labelText: 'Tekanan Darah (mmHg) *',
@@ -1647,19 +1800,19 @@ class _AddPregnancyExaminationDialogState
                                   color: const Color(0xFFEC407A),
                                 ),
                               ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
                                   return 'Masukkan tekanan darah';
-                            }
-                            return null;
-                          },
-                        ),
-                      ),
+                                }
+                                return null;
+                              },
+                            ),
+                          ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: TextFormField(
                               controller: _suhuBadanController,
-                        keyboardType: TextInputType.number,
+                              keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 labelText: 'Suhu Badan (°C) *',
                                 border: OutlineInputBorder(
@@ -1669,13 +1822,13 @@ class _AddPregnancyExaminationDialogState
                                   Icons.thermostat_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
                                   return 'Masukkan suhu badan';
-                          }
-                          return null;
-                        },
+                                }
+                                return null;
+                              },
                             ),
                           ),
                         ],
@@ -1709,10 +1862,10 @@ class _AddPregnancyExaminationDialogState
                           const SizedBox(width: 12),
                           Expanded(
                             child: TextFormField(
-                        controller: _beratBadanController,
-                        keyboardType: TextInputType.number,
+                              controller: _beratBadanController,
+                              keyboardType: TextInputType.number,
                               decoration: InputDecoration(
-                          labelText: 'Berat Badan (kg) *',
+                                labelText: 'Berat Badan (kg) *',
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1720,13 +1873,13 @@ class _AddPregnancyExaminationDialogState
                                   Icons.monitor_weight_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Masukkan berat badan';
-                          }
-                          return null;
-                        },
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Masukkan berat badan';
+                                }
+                                return null;
+                              },
                             ),
                           ),
                         ],
@@ -1748,22 +1901,22 @@ class _AddPregnancyExaminationDialogState
                                   Icons.air_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
                                   return 'Masukkan pernafasan';
-                          }
-                          return null;
-                        },
-                      ),
+                                }
+                                return null;
+                              },
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
                             child: TextFormField(
-                        controller: _tinggiBadanController,
-                        keyboardType: TextInputType.number,
+                              controller: _tinggiBadanController,
+                              keyboardType: TextInputType.number,
                               decoration: InputDecoration(
-                          labelText: 'Tinggi Badan (cm) *',
+                                labelText: 'Tinggi Badan (cm) *',
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
@@ -1771,13 +1924,13 @@ class _AddPregnancyExaminationDialogState
                                   Icons.height_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Masukkan tinggi badan';
-                          }
-                          return null;
-                        },
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Masukkan tinggi badan';
+                                }
+                                return null;
+                              },
                             ),
                           ),
                         ],
@@ -1817,7 +1970,7 @@ class _AddPregnancyExaminationDialogState
                           Expanded(
                             child: TextFormField(
                               controller: _umurPenanggungController,
-                        keyboardType: TextInputType.number,
+                              keyboardType: TextInputType.number,
                               decoration: InputDecoration(
                                 labelText: 'Umur *',
                                 border: OutlineInputBorder(
@@ -1827,14 +1980,14 @@ class _AddPregnancyExaminationDialogState
                                   Icons.cake_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
                                   return 'Masukkan umur';
-                          }
-                          return null;
-                        },
-                      ),
+                                }
+                                return null;
+                              },
+                            ),
                           ),
                           const SizedBox(width: 12),
                           Expanded(
@@ -1849,13 +2002,13 @@ class _AddPregnancyExaminationDialogState
                                   Icons.church_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
                                   return 'Masukkan agama';
-                          }
-                          return null;
-                        },
+                                }
+                                return null;
+                              },
                             ),
                           ),
                         ],
@@ -2199,10 +2352,10 @@ class _AddPregnancyExaminationDialogState
                                     );
                                   }).toList(),
                               onChanged: (String? newValue) {
-                            setState(() {
+                                setState(() {
                                   _djjIrama = newValue!;
-                            });
-                          },
+                                });
+                              },
                             ),
                           ),
                         ],
@@ -2231,8 +2384,8 @@ class _AddPregnancyExaminationDialogState
                                     return DropdownMenuItem<String>(
                                       value: value,
                                       child: Text(value.toUpperCase()),
-                        );
-                      }).toList(),
+                                    );
+                                  }).toList(),
                               onChanged: (String? newValue) {
                                 setState(() {
                                   _letakJanin = newValue!;
@@ -2486,9 +2639,9 @@ class _AddPregnancyExaminationDialogState
                       style: GoogleFonts.poppins(
                         fontWeight: FontWeight.w600,
                         color: Colors.grey,
+                      ),
                     ),
                   ),
-                ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -2536,6 +2689,31 @@ class PregnancyExaminationDetailDialog extends StatelessWidget {
     super.key,
     required this.examination,
   });
+
+  // Helper method to format examination date safely
+  String _formatExaminationDate(
+    dynamic dateValue, [
+    String format = 'dd/MM/yyyy',
+  ]) {
+    try {
+      DateTime date;
+
+      if (dateValue is Timestamp) {
+        date = dateValue.toDate();
+      } else if (dateValue is String) {
+        date = DateTime.parse(dateValue);
+      } else if (dateValue is DateTime) {
+        date = dateValue;
+      } else {
+        return '-';
+      }
+
+      return DateFormat(format).format(date);
+    } catch (e) {
+      print('Error formatting date: $e');
+      return 'Format tanggal tidak valid';
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -2593,9 +2771,9 @@ class PregnancyExaminationDetailDialog extends StatelessWidget {
                     _buildDetailSection('Data Pemeriksaan', [
                       _buildDetailRow(
                         'Tanggal',
-                        DateFormat(
-                          'dd/MM/yyyy',
-                        ).format(examination['tanggalPemeriksaan']),
+                        _formatExaminationDate(
+                          examination['tanggalPemeriksaan'],
+                        ),
                       ),
                       _buildDetailRow(
                         'Usia Kehamilan',
@@ -2776,5 +2954,456 @@ class PregnancyExaminationDetailDialog extends StatelessWidget {
       default:
         return key;
     }
+  }
+}
+
+class EditExaminationDialog extends StatefulWidget {
+  final Map<String, dynamic> examination;
+  final FirebaseService firebaseService;
+  final VoidCallback onSaved;
+
+  const EditExaminationDialog({
+    super.key,
+    required this.examination,
+    required this.firebaseService,
+    required this.onSaved,
+  });
+
+  @override
+  State<EditExaminationDialog> createState() => _EditExaminationDialogState();
+}
+
+class _EditExaminationDialogState extends State<EditExaminationDialog> {
+  final _formKey = GlobalKey<FormState>();
+  bool _isLoading = false;
+
+  // Controllers for text fields
+  late TextEditingController _namaPasienController;
+  late TextEditingController _noHpController;
+  late TextEditingController _umurController;
+  late TextEditingController _alamatController;
+  late TextEditingController _usiaKehamilanController;
+  late TextEditingController _tekananDarahController;
+  late TextEditingController _suhuBadanController;
+  late TextEditingController _nadiController;
+  late TextEditingController _beratBadanController;
+  late TextEditingController _pernafasanController;
+  late TextEditingController _tinggiBadanController;
+  late TextEditingController _catatanController;
+
+  // Dropdown values
+  String _kesadaran = 'NORMAL';
+  String _kepala = 'NORMAL';
+  String _mata = 'NORMAL';
+  String _leher = 'NORMAL';
+  String _tangan = 'NORMAL';
+  String _dada = 'NORMAL';
+  String _hidung = 'NORMAL';
+  String _kulit = 'NORMAL';
+  String _mulut = 'NORMAL';
+  String _kaki = 'NORMAL';
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeControllers();
+  }
+
+  void _initializeControllers() {
+    final exam = widget.examination;
+
+    _namaPasienController = TextEditingController(
+      text: exam['namaPasien'] ?? '',
+    );
+    _noHpController = TextEditingController(text: exam['noHp'] ?? '');
+    _umurController = TextEditingController(
+      text: exam['umur']?.toString() ?? '',
+    );
+    _alamatController = TextEditingController(text: exam['alamat'] ?? '');
+    _usiaKehamilanController = TextEditingController(
+      text: exam['usiaKehamilan']?.toString() ?? '',
+    );
+    _tekananDarahController = TextEditingController(
+      text: exam['tekananDarah'] ?? '',
+    );
+    _suhuBadanController = TextEditingController(text: exam['suhuBadan'] ?? '');
+    _nadiController = TextEditingController(text: exam['nadi'] ?? '');
+    _beratBadanController = TextEditingController(
+      text: exam['beratBadan']?.toString() ?? '',
+    );
+    _pernafasanController = TextEditingController(
+      text: exam['pernafasan'] ?? '',
+    );
+    _tinggiBadanController = TextEditingController(
+      text: exam['tinggiBadan']?.toString() ?? '',
+    );
+    _catatanController = TextEditingController(text: exam['catatan'] ?? '');
+
+    // Initialize dropdown values
+    _kesadaran = exam['kesadaran'] ?? 'NORMAL';
+    _kepala = exam['kepala'] ?? 'NORMAL';
+    _mata = exam['mata'] ?? 'NORMAL';
+    _leher = exam['leher'] ?? 'NORMAL';
+    _tangan = exam['tangan'] ?? 'NORMAL';
+    _dada = exam['dada'] ?? 'NORMAL';
+    _hidung = exam['hidung'] ?? 'NORMAL';
+    _kulit = exam['kulit'] ?? 'NORMAL';
+    _mulut = exam['mulut'] ?? 'NORMAL';
+    _kaki = exam['kaki'] ?? 'NORMAL';
+  }
+
+  @override
+  void dispose() {
+    _namaPasienController.dispose();
+    _noHpController.dispose();
+    _umurController.dispose();
+    _alamatController.dispose();
+    _usiaKehamilanController.dispose();
+    _tekananDarahController.dispose();
+    _suhuBadanController.dispose();
+    _nadiController.dispose();
+    _beratBadanController.dispose();
+    _pernafasanController.dispose();
+    _tinggiBadanController.dispose();
+    _catatanController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _updateExamination() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      final updatedData = {
+        ...widget.examination, // Keep existing data
+        // Update with new values
+        'namaPasien': _namaPasienController.text,
+        'noHp': _noHpController.text,
+        'umur': int.tryParse(_umurController.text) ?? 0,
+        'alamat': _alamatController.text,
+        'usiaKehamilan': int.tryParse(_usiaKehamilanController.text) ?? 0,
+        'tekananDarah': _tekananDarahController.text,
+        'suhuBadan': _suhuBadanController.text,
+        'nadi': _nadiController.text,
+        'beratBadan': double.tryParse(_beratBadanController.text) ?? 0.0,
+        'pernafasan': _pernafasanController.text,
+        'tinggiBadan': double.tryParse(_tinggiBadanController.text) ?? 0.0,
+        'catatan': _catatanController.text,
+        'kesadaran': _kesadaran,
+        'kepala': _kepala,
+        'mata': _mata,
+        'leher': _leher,
+        'tangan': _tangan,
+        'dada': _dada,
+        'hidung': _hidung,
+        'kulit': _kulit,
+        'mulut': _mulut,
+        'kaki': _kaki,
+        'updatedAt': DateTime.now(),
+      };
+
+      await widget.firebaseService.updatePemeriksaanIbuHamil(updatedData);
+
+      Navigator.pop(context);
+      widget.onSaved();
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Pemeriksaan berhasil diperbarui'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error memperbarui pemeriksaan: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Widget _buildTextField(
+    String label,
+    TextEditingController controller, {
+    bool required = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: TextFormField(
+        controller: controller,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: Icon(Icons.edit, color: const Color(0xFFEC407A)),
+        ),
+        validator:
+            required
+                ? (value) {
+                  if (value == null || value.isEmpty) {
+                    return '$label tidak boleh kosong';
+                  }
+                  return null;
+                }
+                : null,
+      ),
+    );
+  }
+
+  Widget _buildDropdown(
+    String label,
+    String value,
+    Function(String?) onChanged,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: DropdownButtonFormField<String>(
+        value: value,
+        decoration: InputDecoration(
+          labelText: label,
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+          prefixIcon: Icon(
+            Icons.health_and_safety_rounded,
+            color: const Color(0xFFEC407A),
+          ),
+        ),
+        items:
+            ['NORMAL', 'ADA KELAINAN'].map((String val) {
+              return DropdownMenuItem<String>(value: val, child: Text(val));
+            }).toList(),
+        onChanged: onChanged,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+      child: Container(
+        width: double.maxFinite,
+        height: MediaQuery.of(context).size.height * 0.9,
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Edit Pemeriksaan',
+                  style: GoogleFonts.poppins(
+                    fontSize: 24,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFFEC407A),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const Divider(),
+            Expanded(
+              child: Form(
+                key: _formKey,
+                child: SingleChildScrollView(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Data Pasien',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFEC407A),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField(
+                        'Nama Pasien',
+                        _namaPasienController,
+                        required: true,
+                      ),
+                      _buildTextField('No HP', _noHpController),
+                      _buildTextField('Umur', _umurController),
+                      _buildTextField('Alamat', _alamatController),
+                      _buildTextField(
+                        'Usia Kehamilan (minggu)',
+                        _usiaKehamilanController,
+                      ),
+
+                      const SizedBox(height: 24),
+                      Text(
+                        'Tanda Vital',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFEC407A),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildTextField('Tekanan Darah', _tekananDarahController),
+                      _buildTextField('Suhu Badan', _suhuBadanController),
+                      _buildTextField('Nadi', _nadiController),
+                      _buildTextField(
+                        'Berat Badan (kg)',
+                        _beratBadanController,
+                      ),
+                      _buildTextField('Pernafasan', _pernafasanController),
+                      _buildTextField(
+                        'Tinggi Badan (cm)',
+                        _tinggiBadanController,
+                      ),
+
+                      const SizedBox(height: 24),
+                      Text(
+                        'Kondisi Umum',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFEC407A),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      _buildDropdown(
+                        'Kesadaran',
+                        _kesadaran,
+                        (value) => setState(() => _kesadaran = value!),
+                      ),
+                      _buildDropdown(
+                        'Kepala',
+                        _kepala,
+                        (value) => setState(() => _kepala = value!),
+                      ),
+                      _buildDropdown(
+                        'Mata',
+                        _mata,
+                        (value) => setState(() => _mata = value!),
+                      ),
+                      _buildDropdown(
+                        'Leher',
+                        _leher,
+                        (value) => setState(() => _leher = value!),
+                      ),
+                      _buildDropdown(
+                        'Tangan',
+                        _tangan,
+                        (value) => setState(() => _tangan = value!),
+                      ),
+                      _buildDropdown(
+                        'Dada',
+                        _dada,
+                        (value) => setState(() => _dada = value!),
+                      ),
+                      _buildDropdown(
+                        'Hidung',
+                        _hidung,
+                        (value) => setState(() => _hidung = value!),
+                      ),
+                      _buildDropdown(
+                        'Kulit',
+                        _kulit,
+                        (value) => setState(() => _kulit = value!),
+                      ),
+                      _buildDropdown(
+                        'Mulut',
+                        _mulut,
+                        (value) => setState(() => _mulut = value!),
+                      ),
+                      _buildDropdown(
+                        'Kaki',
+                        _kaki,
+                        (value) => setState(() => _kaki = value!),
+                      ),
+
+                      const SizedBox(height: 24),
+                      Text(
+                        'Catatan',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFFEC407A),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      TextFormField(
+                        controller: _catatanController,
+                        maxLines: 4,
+                        decoration: InputDecoration(
+                          labelText: 'Catatan Pemeriksaan',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.note_add,
+                            color: const Color(0xFFEC407A),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text(
+                    'Batal',
+                    style: GoogleFonts.poppins(color: Colors.grey[600]),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                ElevatedButton(
+                  onPressed: _isLoading ? null : _updateExamination,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFEC407A),
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child:
+                      _isLoading
+                          ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                              strokeWidth: 2,
+                            ),
+                          )
+                          : Text(
+                            'Simpan Perubahan',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -98,7 +98,7 @@ class FirebaseService {
   // Check if Firebase is initialized
   bool isFirebaseInitialized() {
     try {
-      return Firebase.apps.isNotEmpty && Firebase.app() != null;
+      return Firebase.apps.isNotEmpty;
     } catch (e) {
       print('Error checking Firebase initialization: $e');
       return false;
@@ -166,13 +166,15 @@ class FirebaseService {
     }
   }
 
-  Stream<List<UserModel>> getUsersStream() {
+  Stream<List<UserModel>> getUsersStream({int limit = 50}) {
     try {
       return _firestore
           .collection('users')
           .where('role', isEqualTo: 'pasien')
           .orderBy('createdAt', descending: true)
+          .limit(limit)
           .snapshots()
+          .timeout(const Duration(seconds: 10))
           .map(
             (snapshot) =>
                 snapshot.docs
@@ -186,6 +188,35 @@ class FirebaseService {
     } catch (e) {
       print('Error getting users stream: $e');
       return Stream.value([]);
+    }
+  }
+
+  // Method for pagination
+  Future<List<UserModel>> getUsersPaginated({
+    int limit = 20,
+    DocumentSnapshot? lastDocument,
+  }) async {
+    try {
+      await ensureAuthenticated();
+
+      Query query = _firestore
+          .collection('users')
+          .where('role', isEqualTo: 'pasien')
+          .orderBy('createdAt', descending: true)
+          .limit(limit);
+
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
+
+      final snapshot = await query.get().timeout(const Duration(seconds: 10));
+
+      return snapshot.docs
+          .map((doc) => UserModel.fromMap(doc.data() as Map<String, dynamic>))
+          .toList();
+    } catch (e) {
+      print('Error getting users paginated: $e');
+      return [];
     }
   }
 
@@ -721,12 +752,7 @@ class FirebaseService {
           .collection('jadwal_konsultasi')
           .orderBy('tanggalKonsultasi', descending: false)
           .snapshots()
-          .map(
-            (snapshot) =>
-                snapshot.docs
-                    .map((doc) => doc.data() as Map<String, dynamic>)
-                    .toList(),
-          )
+          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
           .handleError((error) {
             print('Error in getJadwalKonsultasiStream: $error');
             return <Map<String, dynamic>>[];
@@ -753,12 +779,7 @@ class FirebaseService {
           .orderBy('tanggalKonsultasi', descending: false)
           .limit(30) // Limit untuk performa
           .snapshots()
-          .map(
-            (snapshot) =>
-                snapshot.docs
-                    .map((doc) => doc.data() as Map<String, dynamic>)
-                    .toList(),
-          )
+          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
           .handleError((error) {
             print('Error getting jadwal konsultasi: $error');
             return <Map<String, dynamic>>[];

@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
-import '../../models/chat_model.dart';
-import '../../models/user_model.dart';
-import '../../services/firebase_service.dart';
+import 'dart:async';
+import '../models/chat_model.dart';
+import '../models/user_model.dart';
+import '../services/firebase_service.dart';
 
 class ChatAdminScreen extends StatefulWidget {
   const ChatAdminScreen({super.key});
@@ -22,6 +23,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
   UserModel? _selectedPatient;
   String _currentConversationId = '';
   bool _isLoading = true;
+  StreamSubscription<List<UserModel>>? _patientsSubscription;
+  StreamSubscription<List<ChatModel>>? _messagesSubscription;
+  Map<String, int> _unreadCounts = {};
 
   @override
   void initState() {
@@ -33,6 +37,8 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
   void dispose() {
     _messageController.dispose();
     _scrollController.dispose();
+    _patientsSubscription?.cancel();
+    _messagesSubscription?.cancel();
     super.dispose();
   }
 
@@ -42,61 +48,51 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
     });
 
     try {
-      // Load patients
-      _firebaseService.getUsersStream().listen((patients) {
-        setState(() {
-          _patients = patients;
-        });
-      });
-
-      // Load messages for selected patient
-      if (_selectedPatient != null) {
-        _currentConversationId = _firebaseService.generateConversationId(
-          _selectedPatient!.id,
-        );
-        _firebaseService.getConversationMessages(_currentConversationId).listen(
-          (messages) {
-            setState(() {
-              _messages = messages;
-              _isLoading = false;
-            });
-
-            // Mark messages as read when admin opens chat
-            if (messages.isNotEmpty) {
-              _firebaseService.markMessagesAsRead(
-                _currentConversationId,
-                'admin',
-                'admin',
-              );
-            }
-
-            // Auto scroll to bottom when new messages arrive
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              if (_scrollController.hasClients && _messages.isNotEmpty) {
-                _scrollController.animateTo(
-                  _scrollController.position.maxScrollExtent,
-                  duration: const Duration(milliseconds: 300),
-                  curve: Curves.easeOut,
-                );
+      // Load patients with proper subscription management
+      _patientsSubscription?.cancel();
+      _patientsSubscription = _firebaseService
+          .getUsersStream(limit: 100)
+          .listen(
+            (patients) {
+              if (mounted) {
+                setState(() {
+                  _patients = patients;
+                  _isLoading = false;
+                });
+                _loadUnreadCounts();
               }
-            });
-          },
-        );
-      } else {
+            },
+            onError: (e) {
+              if (mounted) {
+                setState(() {
+                  _isLoading = false;
+                });
+                print('Error loading patients: $e');
+              }
+            },
+          );
+    } catch (e) {
+      if (mounted) {
         setState(() {
           _isLoading = false;
         });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
       }
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
+    }
+  }
+
+  Future<void> _loadUnreadCounts() async {
+    // Load unread message counts for each patient
+    for (var patient in _patients) {
+      _firebaseService.getUnreadMessageCount('admin', 'admin').listen((count) {
+        if (mounted) {
+          setState(() {
+            _unreadCounts[patient.id] = count;
+          });
+        }
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: const Color(0xFFEC407A),
-        ),
-      );
     }
   }
 
@@ -150,35 +146,50 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
       _isLoading = true;
     });
 
+    // Cancel previous message subscription
+    _messagesSubscription?.cancel();
+
     // Load messages for selected patient
-    _firebaseService.getConversationMessages(_currentConversationId).listen((
-      messages,
-    ) {
-      setState(() {
-        _messages = messages;
-        _isLoading = false;
-      });
+    _messagesSubscription = _firebaseService
+        .getConversationMessages(_currentConversationId)
+        .listen(
+          (messages) {
+            if (mounted) {
+              setState(() {
+                _messages = messages;
+                _isLoading = false;
+              });
 
-      // Mark messages as read when admin opens chat
-      if (messages.isNotEmpty) {
-        _firebaseService.markMessagesAsRead(
-          _currentConversationId,
-          'admin',
-          'admin',
+              // Mark messages as read when admin opens chat
+              if (messages.isNotEmpty) {
+                _firebaseService.markMessagesAsRead(
+                  _currentConversationId,
+                  'admin',
+                  'admin',
+                );
+              }
+
+              // Auto scroll to bottom when new messages arrive
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                if (_scrollController.hasClients && _messages.isNotEmpty) {
+                  _scrollController.animateTo(
+                    _scrollController.position.maxScrollExtent,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  );
+                }
+              });
+            }
+          },
+          onError: (e) {
+            if (mounted) {
+              setState(() {
+                _isLoading = false;
+              });
+              print('Error loading messages: $e');
+            }
+          },
         );
-      }
-
-      // Auto scroll to bottom when new messages arrive
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (_scrollController.hasClients && _messages.isNotEmpty) {
-          _scrollController.animateTo(
-            _scrollController.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeOut,
-          );
-        }
-      });
-    });
   }
 
   void _showPatientSelector() {
@@ -298,18 +309,59 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                                         ),
                                       ),
                                     ),
-                                    title: Text(
-                                      patient.nama,
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        color: const Color(0xFF2D3748),
-                                      ),
+                                    title: Row(
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            patient.nama,
+                                            style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(0xFF2D3748),
+                                            ),
+                                          ),
+                                        ),
+                                        if (_unreadCounts[patient.id] != null &&
+                                            _unreadCounts[patient.id]! > 0)
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 6,
+                                              vertical: 2,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: const Color(0xFFEC407A),
+                                              borderRadius:
+                                                  BorderRadius.circular(10),
+                                            ),
+                                            child: Text(
+                                              '${_unreadCounts[patient.id]}',
+                                              style: GoogleFonts.poppins(
+                                                color: Colors.white,
+                                                fontSize: 10,
+                                                fontWeight: FontWeight.bold,
+                                              ),
+                                            ),
+                                          ),
+                                      ],
                                     ),
-                                    subtitle: Text(
-                                      patient.noHp,
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.grey[600],
-                                      ),
+                                    subtitle: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          patient.noHp,
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                        Text(
+                                          'Umur: ${patient.umur} tahun',
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.grey[500],
+                                            fontSize: 11,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                     onTap: () {
                                       Navigator.pop(context);
@@ -342,6 +394,57 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
+      appBar: AppBar(
+        title: Text(
+          'Chat Admin',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        backgroundColor: const Color(0xFFEC407A),
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => Navigator.pop(context),
+        ),
+        actions: [
+          IconButton(
+            icon: Stack(
+              children: [
+                const Icon(Icons.people_rounded, color: Colors.white),
+                if (_unreadCounts.values.any((count) => count > 0))
+                  Positioned(
+                    right: 0,
+                    top: 0,
+                    child: Container(
+                      padding: const EdgeInsets.all(2),
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 12,
+                        minHeight: 12,
+                      ),
+                      child: Text(
+                        '${_unreadCounts.values.fold(0, (a, b) => a + b)}',
+                        style: GoogleFonts.poppins(
+                          color: Colors.white,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            onPressed: _showPatientSelector,
+            tooltip: 'Pilih Pasien',
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: [
@@ -350,14 +453,21 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
               width: double.infinity,
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.white,
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFEC407A),
+                    const Color(0xFFEC407A).withOpacity(0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(20),
                   bottomRight: Radius.circular(20),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: const Color(0xFFEC407A).withOpacity(0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -368,12 +478,12 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC407A).withOpacity(0.1),
+                      color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
                       Icons.chat_rounded,
-                      color: const Color(0xFFEC407A),
+                      color: Colors.white,
                       size: 24,
                     ),
                   ),
@@ -387,7 +497,7 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                           style: GoogleFonts.poppins(
                             fontSize: 20,
                             fontWeight: FontWeight.w700,
-                            color: const Color(0xFF2D3748),
+                            color: Colors.white,
                           ),
                         ),
                         if (_selectedPatient != null)
@@ -395,7 +505,7 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                             'Chat dengan ${_selectedPatient!.nama}',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: Colors.white.withOpacity(0.9),
                             ),
                           )
                         else
@@ -403,7 +513,7 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                             'Pilih pasien untuk memulai chat',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: Colors.grey[600],
+                              color: Colors.white.withOpacity(0.9),
                             ),
                           ),
                       ],
@@ -411,19 +521,16 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                   ),
                   Container(
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC407A).withOpacity(0.1),
+                      color: Colors.white.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: const Color(0xFFEC407A).withOpacity(0.2),
+                        color: Colors.white.withOpacity(0.3),
                         width: 2,
                       ),
                     ),
                     child: IconButton(
                       onPressed: _showPatientSelector,
-                      icon: Icon(
-                        Icons.people_rounded,
-                        color: const Color(0xFFEC407A),
-                      ),
+                      icon: Icon(Icons.people_rounded, color: Colors.white),
                       tooltip: 'Pilih Pasien',
                     ),
                   ),
