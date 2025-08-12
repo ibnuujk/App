@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
+import 'dart:async';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
 import 'pemeriksaan_ibuhamil.dart';
@@ -18,6 +19,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   List<Map<String, dynamic>> _consultationSchedules = [];
   bool _isLoading = true;
+  StreamSubscription<List<Map<String, dynamic>>>? _schedulesSubscription;
 
   @override
   void initState() {
@@ -25,22 +27,83 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
     _loadConsultationSchedules();
   }
 
+  @override
+  void dispose() {
+    _schedulesSubscription?.cancel();
+    super.dispose();
+  }
+
   Future<void> _loadConsultationSchedules() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     try {
-      _firebaseService.getJadwalKonsultasiStream().listen((schedules) {
+      _schedulesSubscription?.cancel();
+      _schedulesSubscription = _firebaseService.getJadwalKonsultasiStream().listen(
+        (schedules) {
+          if (mounted) {
+            // Sort schedules: upcoming appointments first, then by date
+            schedules.sort((a, b) {
+              final dateA = a['tanggalKonsultasi'] as String?;
+              final dateB = b['tanggalKonsultasi'] as String?;
+
+              if (dateA == null || dateB == null) return 0;
+
+              try {
+                final parsedDateA = DateTime.parse(dateA);
+                final parsedDateB = DateTime.parse(dateB);
+
+                final now = DateTime.now();
+                final isUpcomingA = parsedDateA.isAfter(now);
+                final isUpcomingB = parsedDateB.isAfter(now);
+
+                // Upcoming appointments first
+                if (isUpcomingA && !isUpcomingB) return -1;
+                if (!isUpcomingA && isUpcomingB) return 1;
+
+                // Then sort by date (nearest first for upcoming, most recent first for past)
+                if (isUpcomingA && isUpcomingB) {
+                  return parsedDateA.compareTo(parsedDateB);
+                } else {
+                  return parsedDateB.compareTo(parsedDateA);
+                }
+              } catch (e) {
+                return 0;
+              }
+            });
+
+            setState(() {
+              _consultationSchedules = schedules;
+              _isLoading = false;
+            });
+          }
+        },
+        onError: (e) {
+          if (mounted) {
+            setState(() {
+              _isLoading = false;
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Error loading schedules: $e'),
+                backgroundColor: Colors.red,
+              ),
+            );
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _consultationSchedules = schedules;
           _isLoading = false;
         });
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Error loading schedules: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error loading schedules: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -121,15 +184,50 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
       await _firebaseService.deleteJadwalKonsultasi(scheduleId);
       _loadConsultationSchedules();
       if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Schedule deleted successfully')),
-      );
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(SnackBar(content: Text('Error deleting schedule: $e')));
+      }
+    }
+  }
+
+  Future<void> _markExaminationCompleted(String scheduleId) async {
+    try {
+      await _firebaseService.updateJadwalKonsultasi({
+        'id': scheduleId,
+        'hasExamination': true,
+        'examinationDate': DateTime.now().toIso8601String(),
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Pemeriksaan telah ditandai sebagai selesai',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Error marking examination as completed: $e',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
     }
   }
@@ -242,18 +340,25 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
               ),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 Navigator.of(context).pop();
                 // Navigate to pemeriksaan screen with schedule data
-                Navigator.push(
+                final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => PemeriksaanIbuHamilScreen(
-                      user: widget.user, // Admin user
-                      consultationSchedule: schedule, // Pass schedule data for context
-                    ),
+                    builder:
+                        (context) => PemeriksaanIbuHamilScreen(
+                          user: widget.user, // Admin user
+                          consultationSchedule:
+                              schedule, // Pass schedule data for context
+                        ),
                   ),
                 );
+
+                // If examination was completed, mark schedule as having examination
+                if (result == true) {
+                  await _markExaminationCompleted(schedule['id']);
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFEC407A),
@@ -289,6 +394,341 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
     return _consultationSchedules
         .where((schedule) => schedule['status'] == 'rejected')
         .length;
+  }
+
+  // Helper method to build popup menu items based on schedule status
+  List<PopupMenuEntry<String>> _buildPopupMenuItems(
+    Map<String, dynamic> schedule,
+  ) {
+    final status = schedule['status'] as String?;
+    final hasExamination =
+        schedule['hasExamination'] ==
+        true; // Check if examination has been performed
+
+    List<PopupMenuEntry<String>> items = [];
+
+    // Always show detail option
+    items.add(
+      const PopupMenuItem<String>(
+        value: 'view',
+        child: Row(
+          children: [
+            Icon(Icons.visibility, size: 16),
+            SizedBox(width: 8),
+            Text('Lihat Detail'),
+          ],
+        ),
+      ),
+    );
+
+    if (status == 'pending') {
+      // For pending appointments, show all options
+      items.addAll([
+        const PopupMenuItem<String>(
+          value: 'edit',
+          child: Row(
+            children: [
+              Icon(Icons.edit, size: 16),
+              SizedBox(width: 8),
+              Text('Edit'),
+            ],
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: 'approve',
+          child: Row(
+            children: [
+              Icon(Icons.check, size: 16, color: Colors.green),
+              SizedBox(width: 8),
+              Text('Terima'),
+            ],
+          ),
+        ),
+        const PopupMenuItem<String>(
+          value: 'reject',
+          child: Row(
+            children: [
+              Icon(Icons.close, size: 16, color: Colors.red),
+              SizedBox(width: 8),
+              Text('Tolak'),
+            ],
+          ),
+        ),
+      ]);
+    } else if (status == 'confirmed') {
+      if (!hasExamination) {
+        // If confirmed but no examination yet, show edit and examination options
+        items.addAll([
+          const PopupMenuItem<String>(
+            value: 'edit',
+            child: Row(
+              children: [
+                Icon(Icons.edit, size: 16),
+                SizedBox(width: 8),
+                Text('Edit'),
+              ],
+            ),
+          ),
+          const PopupMenuItem<String>(
+            value: 'pemeriksaan',
+            child: Row(
+              children: [
+                Icon(Icons.medical_services, size: 16, color: Colors.blue),
+                SizedBox(width: 8),
+                Text('Pemeriksaan'),
+              ],
+            ),
+          ),
+        ]);
+      }
+      // If examination has been performed, only show status info (handled by status display)
+    }
+    // For rejected appointments, only show status info (handled by status display)
+
+    // Always show delete option
+    items.add(
+      const PopupMenuItem<String>(
+        value: 'delete',
+        child: Row(
+          children: [
+            Icon(Icons.delete, size: 16, color: Colors.red),
+            SizedBox(width: 8),
+            Text('Hapus'),
+          ],
+        ),
+      ),
+    );
+
+    return items;
+  }
+
+  Widget _buildUpcomingAppointments() {
+    final upcomingAppointments =
+        _consultationSchedules
+            .where((schedule) {
+              final dateStr = schedule['tanggalKonsultasi'] as String?;
+              if (dateStr == null) return false;
+
+              try {
+                final appointmentDate = DateTime.parse(dateStr);
+                final now = DateTime.now();
+                // Show appointments for today and future
+                return appointmentDate.isAfter(
+                  now.subtract(const Duration(days: 1)),
+                );
+              } catch (e) {
+                return false;
+              }
+            })
+            .take(3)
+            .toList(); // Show max 3 upcoming appointments
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Jadwal Temu Janji Terdekat',
+              style: GoogleFonts.poppins(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: const Color(0xFF2D3748),
+              ),
+            ),
+            if (upcomingAppointments.isNotEmpty)
+              TextButton(
+                onPressed: () {
+                  // Scroll to all schedules section
+                },
+                child: Text(
+                  'Lihat Semua',
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: const Color(0xFFEC407A),
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        upcomingAppointments.isEmpty
+            ? Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  Icon(
+                    Icons.schedule_outlined,
+                    size: 48,
+                    color: Colors.grey[400],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'Tidak ada jadwal temu janji terdekat',
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.grey[600],
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+                ],
+              ),
+            )
+            : Column(
+              children:
+                  upcomingAppointments.map((schedule) {
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFFEC407A).withOpacity(0.2),
+                          width: 1,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 10,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                      ),
+                      child: ListTile(
+                        contentPadding: const EdgeInsets.all(16),
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEC407A).withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.schedule_rounded,
+                            color: Color(0xFFEC407A),
+                            size: 24,
+                          ),
+                        ),
+                        title: Text(
+                          schedule['namaPasien'] ?? 'Unknown Patient',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                            color: const Color(0xFF2D3748),
+                          ),
+                        ),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.calendar_today,
+                                  size: 14,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _formatDate(schedule['tanggalKonsultasi']),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 14,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  schedule['jamKonsultasi'] ?? 'N/A',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: _getStatusColor(
+                                  schedule['status'],
+                                ).withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text(
+                                _getStatusText(schedule['status']),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w500,
+                                  color: _getStatusColor(schedule['status']),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            PopupMenuButton<String>(
+                              onSelected: (value) {
+                                switch (value) {
+                                  case 'view':
+                                    _showScheduleDetailDialog(schedule);
+                                    break;
+                                  case 'edit':
+                                    _showEditScheduleDialog(schedule);
+                                    break;
+                                  case 'approve':
+                                    _approveSchedule(schedule['id']);
+                                    break;
+                                  case 'reject':
+                                    _rejectSchedule(schedule['id']);
+                                    break;
+                                  case 'delete':
+                                    _deleteSchedule(schedule['id']);
+                                    break;
+                                  case 'pemeriksaan':
+                                    _navigateToPemeriksaan(schedule);
+                                    break;
+                                }
+                              },
+                              itemBuilder:
+                                  (context) => _buildPopupMenuItems(schedule),
+                            ),
+                          ],
+                        ),
+                        onTap: () => _showScheduleDetailDialog(schedule),
+                      ),
+                    );
+                  }).toList(),
+            ),
+      ],
+    );
   }
 
   String _getStatusText(String status) {
@@ -446,6 +886,10 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
             ),
             const SizedBox(height: 24),
 
+            // Upcoming appointments section
+            _buildUpcomingAppointments(),
+            const SizedBox(height: 24),
+
             // Status summary cards
             Row(
               children: [
@@ -476,6 +920,22 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
             ),
             const SizedBox(height: 24),
 
+            // All schedules section header
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  'Semua Jadwal',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF2D3748),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+
             // Schedule list
             Expanded(
               child:
@@ -487,10 +947,10 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
-                                Icons.schedule_outlined,
+                              Icons.schedule_outlined,
                               size: 64,
                               color: Colors.grey[400],
-                              ),
+                            ),
                             const SizedBox(height: 16),
                             Text(
                               'Belum ada jadwal konsultasi',
@@ -508,7 +968,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                           final schedule = _consultationSchedules[index];
                           final isConfirmed = schedule['status'] == 'confirmed';
                           final isRejected = schedule['status'] == 'rejected';
-                          
+
                           return Container(
                             margin: const EdgeInsets.only(bottom: 12),
                             decoration: BoxDecoration(
@@ -536,7 +996,9 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                     ),
                                     child: Icon(
                                       Icons.schedule_rounded,
-                                      color: _getStatusColor(schedule['status']),
+                                      color: _getStatusColor(
+                                        schedule['status'],
+                                      ),
                                       size: 24,
                                     ),
                                   ),
@@ -548,16 +1010,21 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                     ),
                                   ),
                                   subtitle: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       const SizedBox(height: 4),
                                       Text(
                                         'Tanggal: ${_formatDate(schedule['tanggalKonsultasi'])}',
-                                        style: GoogleFonts.poppins(fontSize: 12),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                        ),
                                       ),
                                       Text(
                                         'Waktu: ${schedule['waktuKonsultasi'] ?? 'N/A'}',
-                                        style: GoogleFonts.poppins(fontSize: 12),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                        ),
                                       ),
                                       const SizedBox(height: 8),
                                       Container(
@@ -569,7 +1036,9 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                           color: _getStatusColor(
                                             schedule['status'],
                                           ).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(12),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Text(
                                           _getStatusText(schedule['status']),
@@ -587,7 +1056,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                   trailing: PopupMenuButton<String>(
                                     onSelected: (value) {
                                       switch (value) {
-                                        case 'detail':
+                                        case 'view':
                                           _showScheduleDetailDialog(schedule);
                                           break;
                                         case 'edit':
@@ -602,81 +1071,32 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                         case 'delete':
                                           _deleteSchedule(schedule['id']);
                                           break;
+                                        case 'pemeriksaan':
+                                          _navigateToPemeriksaan(schedule);
+                                          break;
                                       }
                                     },
-                                    itemBuilder: (context) => [
-                                      const PopupMenuItem(
-                                        value: 'detail',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.info_outline),
-                                            SizedBox(width: 8),
-                                            Text('Detail'),
-                                          ],
-                                        ),
-                                      ),
-                                      const PopupMenuItem(
-                                        value: 'edit',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.edit),
-                                            SizedBox(width: 8),
-                                            Text('Edit'),
-                                          ],
-                                        ),
-                                      ),
-                                      if (schedule['status'] == 'pending') ...[
-                                        const PopupMenuItem(
-                                          value: 'approve',
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.check,
-                                                color: Colors.green,
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text('Terima'),
-                                            ],
-                                          ),
-                                        ),
-                                        const PopupMenuItem(
-                                          value: 'reject',
-                                          child: Row(
-                                            children: [
-                                              Icon(
-                                                Icons.close,
-                                                color: Colors.red,
-                                              ),
-                                              SizedBox(width: 8),
-                                              Text('Tolak'),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                      const PopupMenuItem(
-                                        value: 'delete',
-                                        child: Row(
-                                          children: [
-                                            Icon(
-                                              Icons.delete,
-                                              color: Colors.red,
-                                            ),
-                                            SizedBox(width: 8),
-                                            Text('Hapus'),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                    itemBuilder:
+                                        (context) =>
+                                            _buildPopupMenuItems(schedule),
                                   ),
                                 ),
-                                
-                                // Kondisi jika diterima - muncul button lakukan pemeriksaan
-                                if (isConfirmed)
+
+                                // Kondisi jika diterima dan belum pemeriksaan - muncul button lakukan pemeriksaan
+                                if (isConfirmed &&
+                                    schedule['hasExamination'] != true)
                                   Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      0,
+                                      16,
+                                      16,
+                                    ),
                                     child: ElevatedButton.icon(
-                                      onPressed: () => _navigateToPemeriksaan(schedule),
+                                      onPressed:
+                                          () =>
+                                              _navigateToPemeriksaan(schedule),
                                       icon: const Icon(
                                         Icons.medical_services_rounded,
                                         size: 20,
@@ -689,25 +1109,75 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                         ),
                                       ),
                                       style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(0xFFEC407A),
+                                        backgroundColor: const Color(
+                                          0xFFEC407A,
+                                        ),
                                         foregroundColor: Colors.white,
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 24,
                                           vertical: 12,
                                         ),
                                         shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         elevation: 2,
                                       ),
                                     ),
                                   ),
-                                
+
+                                // Kondisi jika sudah pemeriksaan - tampilkan info
+                                if (isConfirmed &&
+                                    schedule['hasExamination'] == true)
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      0,
+                                      16,
+                                      16,
+                                    ),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: Colors.green.withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: Colors.green.withOpacity(0.3),
+                                        ),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Icon(
+                                            Icons.check_circle,
+                                            color: Colors.green,
+                                            size: 20,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            'Pemeriksaan telah dilakukan',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.green[700],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+
                                 // Kondisi jika ditolak - tidak muncul button, hanya status
                                 if (isRejected)
                                   Container(
                                     width: double.infinity,
-                                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                                    padding: const EdgeInsets.fromLTRB(
+                                      16,
+                                      0,
+                                      16,
+                                      16,
+                                    ),
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
@@ -748,8 +1218,8 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
         ),
       ),
       floatingActionButton: FloatingActionButton(
-          onPressed: _showAddScheduleDialog,
-          backgroundColor: const Color(0xFFEC407A),
+        onPressed: _showAddScheduleDialog,
+        backgroundColor: const Color(0xFFEC407A),
         child: const Icon(Icons.add, color: Colors.white),
       ),
     );
@@ -833,11 +1303,11 @@ class _AddConsultationScheduleDialogState
       await FirebaseService().createJadwalKonsultasi(scheduleData);
 
       if (mounted) {
-      Navigator.pop(context);
+        Navigator.pop(context);
         widget.onScheduleAdded();
-      ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Schedule added successfully')),
-      );
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -847,9 +1317,9 @@ class _AddConsultationScheduleDialogState
       }
     } finally {
       if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -858,29 +1328,29 @@ class _AddConsultationScheduleDialogState
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-                  'Tambah Jadwal Konsultasi',
+        'Tambah Jadwal Konsultasi',
         style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
       ),
       content: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
-                        controller: _namaController,
-                        decoration: const InputDecoration(
-                          labelText: 'Nama Pasien',
-                          border: OutlineInputBorder(),
+            children: [
+              TextFormField(
+                controller: _namaController,
+                decoration: const InputDecoration(
+                  labelText: 'Nama Pasien',
+                  border: OutlineInputBorder(),
                 ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
                     return 'Nama pasien harus diisi';
-                            }
-                            return null;
-                          },
-                      ),
-                      const SizedBox(height: 16),
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _tanggalController,
                 decoration: InputDecoration(
@@ -890,17 +1360,17 @@ class _AddConsultationScheduleDialogState
                     icon: const Icon(Icons.calendar_today),
                     onPressed: _selectDate,
                   ),
-                          ),
-                          readOnly: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
+                ),
+                readOnly: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
                     return 'Tanggal konsultasi harus dipilih';
-                            }
-                            return null;
-                          },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
                 controller: _waktuController,
                 decoration: InputDecoration(
                   labelText: 'Waktu Konsultasi',
@@ -911,27 +1381,27 @@ class _AddConsultationScheduleDialogState
                   ),
                 ),
                 readOnly: true,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
                     return 'Waktu konsultasi harus dipilih';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
                 controller: _keluhanController,
-                        decoration: const InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Keluhan',
-                          border: OutlineInputBorder(),
+                  border: OutlineInputBorder(),
                 ),
                 maxLines: 3,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
                     return 'Keluhan harus diisi';
-                          }
-                          return null;
-                        },
+                  }
+                  return null;
+                },
               ),
             ],
           ),
@@ -943,12 +1413,12 @@ class _AddConsultationScheduleDialogState
           child: const Text('Batal'),
         ),
         ElevatedButton(
-                    onPressed: _isLoading ? null : _saveSchedule,
-                    child:
-                        _isLoading
-                            ? const SizedBox(
-                              width: 20,
-                              height: 20,
+          onPressed: _isLoading ? null : _saveSchedule,
+          child:
+              _isLoading
+                  ? const SizedBox(
+                    width: 20,
+                    height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                   : const Text('Simpan'),
@@ -1053,17 +1523,16 @@ class _EditConsultationScheduleDialogState
         'updatedAt': DateTime.now().toIso8601String(),
       };
 
-      final dataWithId = {
-        'id' : widget.schedule['id'],
-        ...scheduleData,
-      };
+      final dataWithId = {'id': widget.schedule['id'], ...scheduleData};
+
+      await FirebaseService().updateJadwalKonsultasi(dataWithId);
 
       if (mounted) {
-      Navigator.pop(context);
+        Navigator.pop(context);
         widget.onScheduleUpdated();
-      ScaffoldMessenger.of(context).showSnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Schedule updated successfully')),
-      );
+        );
       }
     } catch (e) {
       if (mounted) {
@@ -1073,9 +1542,9 @@ class _EditConsultationScheduleDialogState
       }
     } finally {
       if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -1084,29 +1553,29 @@ class _EditConsultationScheduleDialogState
   Widget build(BuildContext context) {
     return AlertDialog(
       title: Text(
-                  'Edit Jadwal Konsultasi',
+        'Edit Jadwal Konsultasi',
         style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
       ),
       content: Form(
-                key: _formKey,
-                child: SingleChildScrollView(
-                  child: Column(
+        key: _formKey,
+        child: SingleChildScrollView(
+          child: Column(
             mainAxisSize: MainAxisSize.min,
-                    children: [
-                      TextFormField(
+            children: [
+              TextFormField(
                 controller: _namaController,
-                        decoration: const InputDecoration(
-                          labelText: 'Nama Pasien',
-                          border: OutlineInputBorder(),
+                decoration: const InputDecoration(
+                  labelText: 'Nama Pasien',
+                  border: OutlineInputBorder(),
                 ),
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
                     return 'Nama pasien harus diisi';
-                            }
-                            return null;
-                          },
-                      ),
-                      const SizedBox(height: 16),
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
               TextFormField(
                 controller: _tanggalController,
                 decoration: InputDecoration(
@@ -1116,17 +1585,17 @@ class _EditConsultationScheduleDialogState
                     icon: const Icon(Icons.calendar_today),
                     onPressed: _selectDate,
                   ),
-                          ),
-                          readOnly: true,
-                          validator: (value) {
-                            if (value == null || value.isEmpty) {
+                ),
+                readOnly: true,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
                     return 'Tanggal konsultasi harus dipilih';
-                            }
-                            return null;
-                          },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
                 controller: _waktuController,
                 decoration: InputDecoration(
                   labelText: 'Waktu Konsultasi',
@@ -1137,62 +1606,62 @@ class _EditConsultationScheduleDialogState
                   ),
                 ),
                 readOnly: true,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
                     return 'Waktu konsultasi harus dipilih';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      TextFormField(
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              TextFormField(
                 controller: _keluhanController,
-                        decoration: const InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Keluhan',
-                          border: OutlineInputBorder(),
-                        ),
+                  border: OutlineInputBorder(),
+                ),
                 maxLines: 3,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
                     return 'Keluhan harus diisi';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      DropdownButtonFormField<String>(
-                        value: _selectedStatus,
-                        decoration: const InputDecoration(
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: _selectedStatus,
+                decoration: const InputDecoration(
                   labelText: 'Status',
-                          border: OutlineInputBorder(),
-                        ),
+                  border: OutlineInputBorder(),
+                ),
                 items: const [
                   DropdownMenuItem(value: 'pending', child: Text('Menunggu')),
                   DropdownMenuItem(value: 'confirmed', child: Text('Diterima')),
                   DropdownMenuItem(value: 'rejected', child: Text('Ditolak')),
                 ],
                 onChanged: (value) {
-                            setState(() {
+                  setState(() {
                     _selectedStatus = value!;
-                            });
-                        },
-                      ),
-                    ],
-                  ),
-                ),
+                  });
+                },
               ),
+            ],
+          ),
+        ),
+      ),
       actions: [
         TextButton(
           onPressed: _isLoading ? null : () => Navigator.pop(context),
           child: const Text('Batal'),
         ),
         ElevatedButton(
-                    onPressed: _isLoading ? null : _updateSchedule,
-                    child:
-                        _isLoading
-                            ? const SizedBox(
-                              width: 20,
-                              height: 20,
+          onPressed: _isLoading ? null : _updateSchedule,
+          child:
+              _isLoading
+                  ? const SizedBox(
+                    width: 20,
+                    height: 20,
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                   : const Text('Update'),
@@ -1256,21 +1725,21 @@ class ConsultationScheduleDetailDialog extends StatelessWidget {
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        children: [
           _buildInfoRow('Nama Pasien', schedule['namaPasien'] ?? 'N/A'),
           _buildInfoRow('Tanggal', _formatDate(schedule['tanggalKonsultasi'])),
           _buildInfoRow('Waktu', schedule['waktuKonsultasi'] ?? 'N/A'),
           _buildInfoRow('Keluhan', schedule['keluhan'] ?? 'N/A'),
           const SizedBox(height: 8),
-            Row(
-              children: [
+          Row(
+            children: [
               Text(
                 'Status: ',
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
               ),
-                Container(
+              Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
+                decoration: BoxDecoration(
                   color: _getStatusColor(schedule['status']).withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -1281,20 +1750,21 @@ class ConsultationScheduleDetailDialog extends StatelessWidget {
                     fontWeight: FontWeight.w500,
                     color: _getStatusColor(schedule['status']),
                   ),
-                  ),
                 ),
-              ],
-            ),
+              ),
+            ],
+          ),
         ],
       ),
       actions: [
         TextButton(
-                onPressed: () => Navigator.pop(context),
+          onPressed: () => Navigator.pop(context),
           child: const Text('Tutup'),
         ),
       ],
     );
   }
+
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),

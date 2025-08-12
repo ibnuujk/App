@@ -39,25 +39,54 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
     });
 
     try {
-      _firebaseService.getUsersStream().listen((patients) {
+      // Use optimized stream with role filter and increased limit
+      _firebaseService
+          .getUsersStream(limit: 1000, role: 'pasien')
+          .listen(
+            (patients) {
+              if (mounted) {
+                setState(() {
+                  _allPatients = patients;
+                  _filteredPatients = _allPatients;
+                  _isLoading = false;
+                });
+                _filterPatients();
+              }
+            },
+            onError: (e) {
+              if (mounted) {
+                setState(() {
+                  _isLoading = false;
+                });
+                print('Error loading patients: $e');
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Gagal memuat data pasien. Silakan coba lagi.',
+                    ),
+                    backgroundColor: const Color(0xFFEC407A),
+                    action: SnackBarAction(
+                      label: 'Retry',
+                      textColor: Colors.white,
+                      onPressed: _loadPatients,
+                    ),
+                  ),
+                );
+              }
+            },
+          );
+    } catch (e) {
+      if (mounted) {
         setState(() {
-          _allPatients =
-              patients.where((patient) => patient.role == 'pasien').toList();
-          _filteredPatients = _allPatients;
           _isLoading = false;
         });
-        _filterPatients();
-      });
-    } catch (e) {
-      setState(() {
-        _isLoading = false;
-      });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal memuat data pasien: $e'),
-          backgroundColor: const Color(0xFFEC407A),
-        ),
-      );
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat data pasien: $e'),
+            backgroundColor: const Color(0xFFEC407A),
+          ),
+        );
+      }
     }
   }
 

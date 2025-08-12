@@ -6,170 +6,57 @@ service cloud.firestore {
       return request.auth != null;
     }
     
-    function isAdmin() {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-    
-    function isOwner(userId) {
-      return isAuthenticated() && request.auth.uid == userId;
-    }
-    
-    function isPatient() {
-      return isAuthenticated() && 
-        exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'pasien';
-    }
-    
-    // Users collection
+    // Users collection - allow authenticated users to read and manage
     match /users/{userId} {
-      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow create: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow update: if isAuthenticated() && (isOwner(userId) || isAdmin());
-      allow delete: if isAuthenticated() && isAdmin();
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated();
+      allow delete: if isAuthenticated();
     }
     
     // Konsultasi collection
     match /konsultasi/{konsultasiId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.pasienId)
-      );
-      allow create: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(request.resource.data.pasienId)
-      );
-      allow update: if isAuthenticated() && isAdmin();
-      allow delete: if isAuthenticated() && isAdmin();
+      allow read, write, create, update, delete: if isAuthenticated();
     }
     
     // Persalinan collection
     match /persalinan/{persalinanId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.pasienId)
-      );
-      allow create: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(request.resource.data.pasienId)
-      );
-      allow update: if isAuthenticated() && isAdmin();
-      allow delete: if isAuthenticated() && isAdmin();
+      allow read, write, create, update, delete: if isAuthenticated();
     }
     
     // Chats collection
     match /chats/{chatId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.senderId) ||
-        isOwner(resource.data.recipientId)
-      );
-      allow create: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(request.resource.data.senderId)
-      );
-      allow update: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.senderId)
-      );
-      allow delete: if isAuthenticated() && isAdmin();
+      allow read, write, create, update, delete: if isAuthenticated();
     }
     
     // Kehamilanku collection
-    match /kehamilanku/{kehamilankuId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.pasienId)
-      );
-      allow create: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(request.resource.data.pasienId)
-      );
-      allow update: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.pasienId)
-      );
-      allow delete: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.pasienId)
-      );
+    match /kehamilanku/{kehamilanId} {
+      allow read, write, create, update, delete: if isAuthenticated();
     }
     
     // Pemeriksaan Ibu Hamil collection
-    match /pemeriksaan_ibuhamil/{pemeriksaanId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.pasienId)
-      );
-      allow create: if isAuthenticated() && isAdmin();
-      allow update: if isAuthenticated() && isAdmin();
-      allow delete: if isAuthenticated() && isAdmin();
+    match /pemeriksaan_ibuhamil/{examId} {
+      allow read, write, create, update, delete: if isAuthenticated();
     }
     
     // Jadwal Konsultasi collection
-    match /jadwal_konsultasi/{jadwalId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.pasienId)
-      );
-      allow create: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(request.resource.data.pasienId)
-      );
-      allow update: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.pasienId)
-      );
-      allow delete: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.pasienId)
-      );
-    }
-    
-    // Darurat collection
-    match /darurat/{daruratId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.userId)
-      );
-      allow create: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(request.resource.data.userId)
-      );
-      allow update: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.userId)
-      );
-      allow delete: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.userId)
-      );
+    match /jadwal_konsultasi/{scheduleId} {
+      allow read, write, create, update, delete: if isAuthenticated();
     }
     
     // Children collection
     match /children/{childId} {
-      allow read: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.userId)
-      );
-      allow create: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(request.resource.data.userId)
-      );
-      allow update: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.userId)
-      );
-      allow delete: if isAuthenticated() && (
-        isAdmin() || 
-        isOwner(resource.data.userId)
-      );
+      allow read, write, create, update, delete: if isAuthenticated();
     }
     
-    // Health check collection (for connection testing)
-    match /health_check/{docId} {
-      allow read, write: if isAuthenticated();
+    // Emergency reports collection
+    match /darurat/{reportId} {
+      allow read, write, create, update, delete: if isAuthenticated();
+    }
+    
+    // Default rule for other collections
+    match /{document=**} {
+      allow read, write, create, update, delete: if isAuthenticated();
     }
   }
-} 
+}

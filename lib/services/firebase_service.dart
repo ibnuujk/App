@@ -166,25 +166,75 @@ class FirebaseService {
     }
   }
 
-  Stream<List<UserModel>> getUsersStream({int limit = 50}) {
+  Stream<List<UserModel>> getUsersStream({int limit = 50, String? role}) {
     try {
-      return _firestore
-          .collection('users')
-          .where('role', isEqualTo: 'pasien')
-          .orderBy('createdAt', descending: true)
-          .limit(limit)
-          .snapshots()
-          .timeout(const Duration(seconds: 10))
-          .map(
-            (snapshot) =>
-                snapshot.docs
-                    .map((doc) => UserModel.fromMap(doc.data()))
-                    .toList(),
-          )
-          .handleError((error) {
-            print('Error in getUsersStream: $error');
-            return <UserModel>[];
-          });
+      Query query = _firestore.collection('users');
+
+      // Add role filter if specified
+      if (role != null) {
+        query = query.where('role', isEqualTo: role);
+      }
+
+      // For better performance, try simple ordering first
+      try {
+        return query
+            .orderBy('createdAt', descending: true)
+            .limit(limit)
+            .snapshots()
+            .timeout(const Duration(seconds: 15))
+            .map(
+              (snapshot) =>
+                  snapshot.docs
+                      .map(
+                        (doc) => UserModel.fromMap(
+                          doc.data() as Map<String, dynamic>,
+                        ),
+                      )
+                      .toList(),
+            )
+            .handleError((error) {
+              print('Error in getUsersStream with orderBy: $error');
+              // Fallback to simple query without orderBy if index doesn't exist
+              return _firestore
+                  .collection('users')
+                  .where('role', isEqualTo: role ?? 'pasien')
+                  .limit(limit)
+                  .snapshots()
+                  .map(
+                    (snapshot) =>
+                        snapshot.docs
+                            .map(
+                              (doc) => UserModel.fromMap(
+                                doc.data() as Map<String, dynamic>,
+                              ),
+                            )
+                            .toList(),
+                  );
+            });
+      } catch (e) {
+        print('Fallback to simple query: $e');
+        // Fallback query without complex ordering
+        return _firestore
+            .collection('users')
+            .where('role', isEqualTo: role ?? 'pasien')
+            .limit(limit)
+            .snapshots()
+            .timeout(const Duration(seconds: 15))
+            .map(
+              (snapshot) =>
+                  snapshot.docs
+                      .map(
+                        (doc) => UserModel.fromMap(
+                          doc.data() as Map<String, dynamic>,
+                        ),
+                      )
+                      .toList(),
+            )
+            .handleError((error) {
+              print('Error in fallback getUsersStream: $error');
+              return <UserModel>[];
+            });
+      }
     } catch (e) {
       print('Error getting users stream: $e');
       return Stream.value([]);
@@ -541,6 +591,7 @@ class FirebaseService {
             .where('senderRole', isEqualTo: 'pasien')
             .where('isRead', isEqualTo: false)
             .snapshots()
+            .timeout(const Duration(seconds: 10))
             .map((snapshot) => snapshot.docs.length)
             .handleError((error) {
               print('Error in getUnreadMessageCount (admin): $error');
@@ -555,6 +606,7 @@ class FirebaseService {
             .where('senderRole', isEqualTo: 'admin')
             .where('isRead', isEqualTo: false)
             .snapshots()
+            .timeout(const Duration(seconds: 10))
             .map((snapshot) => snapshot.docs.length)
             .handleError((error) {
               print('Error in getUnreadMessageCount (patient): $error');
@@ -564,6 +616,36 @@ class FirebaseService {
     } catch (e) {
       print('Error getting unread message count: $e');
       return Stream.value(0);
+    }
+  }
+
+  // Get all unread counts for admin in batch
+  Stream<Map<String, int>> getAllUnreadCounts() {
+    try {
+      return _firestore
+          .collection('chats')
+          .where('senderRole', isEqualTo: 'pasien')
+          .where('isRead', isEqualTo: false)
+          .snapshots()
+          .timeout(const Duration(seconds: 10))
+          .map((snapshot) {
+            final counts = <String, int>{};
+            for (var doc in snapshot.docs) {
+              final data = doc.data();
+              final senderId = data['senderId'] as String?;
+              if (senderId != null) {
+                counts[senderId] = (counts[senderId] ?? 0) + 1;
+              }
+            }
+            return counts;
+          })
+          .handleError((error) {
+            print('Error in getAllUnreadCounts: $error');
+            return <String, int>{};
+          });
+    } catch (e) {
+      print('Error getting all unread counts: $e');
+      return Stream.value(<String, int>{});
     }
   }
 

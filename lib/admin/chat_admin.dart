@@ -51,7 +51,7 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
       // Load patients with proper subscription management
       _patientsSubscription?.cancel();
       _patientsSubscription = _firebaseService
-          .getUsersStream(limit: 100)
+          .getUsersStream(limit: 100, role: 'pasien')
           .listen(
             (patients) {
               if (mounted) {
@@ -68,6 +68,19 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                   _isLoading = false;
                 });
                 print('Error loading patients: $e');
+                // Show user-friendly error message
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Gagal memuat data pasien. Silakan coba lagi.',
+                    ),
+                    backgroundColor: Colors.orange,
+                    action: SnackBarAction(
+                      label: 'Retry',
+                      onPressed: _loadData,
+                    ),
+                  ),
+                );
               }
             },
           );
@@ -84,16 +97,14 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
   }
 
   Future<void> _loadUnreadCounts() async {
-    // Load unread message counts for each patient
-    for (var patient in _patients) {
-      _firebaseService.getUnreadMessageCount('admin', 'admin').listen((count) {
-        if (mounted) {
-          setState(() {
-            _unreadCounts[patient.id] = count;
-          });
-        }
-      });
-    }
+    // Load unread message counts for all patients in batch
+    _firebaseService.getAllUnreadCounts().listen((counts) {
+      if (mounted) {
+        setState(() {
+          _unreadCounts = counts;
+        });
+      }
+    });
   }
 
   Future<void> _sendMessage() async {
