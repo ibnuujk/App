@@ -101,6 +101,48 @@
           "order": "ASCENDING"
         }
       ]
+    },
+    {
+      "collectionGroup": "laporan_persalinan",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "registrasiPersalinanId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "laporan_pasca_persalinan",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "laporanPersalinanId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
+    },
+    {
+      "collectionGroup": "keterangan_kelahiran",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "laporanPascaPersalinanId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "createdAt",
+          "order": "DESCENDING"
+        }
+      ]
     }
   ],
   "fieldOverrides": []

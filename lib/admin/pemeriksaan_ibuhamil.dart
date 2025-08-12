@@ -5,7 +5,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
-import 'laporan_persalinan_form.dart';
+import 'registrasi_persalinan_form.dart';
 
 class PemeriksaanIbuHamilScreen extends StatefulWidget {
   final UserModel user;
@@ -146,12 +146,12 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
     );
   }
 
-  void _navigateToLaporanPersalinan(Map<String, dynamic> examination) {
+  void _navigateToRegistrasiPersalinan(Map<String, dynamic> examination) {
     showDialog(
       context: context,
       builder:
           (context) =>
-              LaporanPersalinanFormDialog(examinationData: examination),
+              RegistrasiPersalinanFormDialog(examinationData: examination),
     );
   }
 
@@ -160,13 +160,6 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(
-          'Pemeriksaan Ibu Hamil',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
         backgroundColor: const Color(0xFFEC407A),
         elevation: 0,
         leading: IconButton(
@@ -175,556 +168,566 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
         ),
       ),
       body: SafeArea(
-        child: Column(
-          children: [
-            // Header Section
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  colors: [
-                    const Color(0xFFEC407A),
-                    const Color(0xFFEC407A).withOpacity(0.8),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Header Section
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFEC407A),
+                      const Color(0xFFEC407A).withOpacity(0.8),
+                    ],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFEC407A).withOpacity(0.3),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
                   ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
                 ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: const Color(0xFFEC407A).withOpacity(0.3),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Icon(
+                            Icons.medical_services_rounded,
+                            color: Colors.white,
+                            size: 24,
+                          ),
                         ),
-                        child: Icon(
-                          Icons.medical_services_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Kelola Pemeriksaan Ibu Hamil',
-                              style: GoogleFonts.poppins(
-                                fontSize: 20,
-                                fontWeight: FontWeight.w700,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              'Input dan kelola data pemeriksaan kehamilan',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.white.withOpacity(0.9),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // Status Summary
-                  Row(
-                    children: [
-                      _buildStatusCard(
-                        'Total',
-                        _pregnancyExaminations.length,
-                        Colors.white,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildStatusCard(
-                        'Hari Ini',
-                        _getTodayCount(),
-                        Colors.white,
-                      ),
-                      const SizedBox(width: 12),
-                      _buildStatusCard(
-                        'Minggu Ini',
-                        _getThisWeekCount(),
-                        Colors.white,
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            // Examinations List
-            Expanded(
-              child:
-                  _isLoading
-                      ? const Center(
-                        child: CircularProgressIndicator(
-                          color: Color(0xFFEC407A),
-                        ),
-                      )
-                      : _pregnancyExaminations.isEmpty
-                      ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEC407A).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(60),
-                              ),
-                              child: Icon(
-                                Icons.pregnant_woman_outlined,
-                                size: 60,
-                                color: const Color(0xFFEC407A),
-                              ),
-                            ),
-                            const SizedBox(height: 24),
-                            Text(
-                              'Belum ada data pemeriksaan',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFF2D3748),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              'Tambahkan pemeriksaan pertama Anda',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                      : ListView.builder(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: _pregnancyExaminations.length,
-                        itemBuilder: (context, index) {
-                          final examination = _pregnancyExaminations[index];
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.1),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 8),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Kelola Pemeriksaan Ibu Hamil',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
                                 ),
-                              ],
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.all(20),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  // Patient Information Container
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      gradient: const LinearGradient(
-                                        colors: [
-                                          Color(0xFFEC407A),
-                                          Color(0xFFE91E63),
-                                        ],
-                                        begin: Alignment.topLeft,
-                                        end: Alignment.bottomRight,
+                              ),
+                              Text(
+                                'Input dan kelola data pemeriksaan kehamilan',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: Colors.white.withOpacity(0.9),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Status Summary
+                    Row(
+                      children: [
+                        _buildStatusCard(
+                          'Total',
+                          _pregnancyExaminations.length,
+                          Colors.white,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildStatusCard(
+                          'Hari Ini',
+                          _getTodayCount(),
+                          Colors.white,
+                        ),
+                        const SizedBox(width: 12),
+                        _buildStatusCard(
+                          'Minggu Ini',
+                          _getThisWeekCount(),
+                          Colors.white,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              // Examinations List
+              Expanded(
+                child:
+                    _isLoading
+                        ? const Center(
+                          child: CircularProgressIndicator(
+                            color: Color(0xFFEC407A),
+                          ),
+                        )
+                        : _pregnancyExaminations.isEmpty
+                        ? Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 120,
+                                height: 120,
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFFEC407A,
+                                  ).withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(60),
+                                ),
+                                child: Icon(
+                                  Icons.pregnant_woman_outlined,
+                                  size: 60,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Text(
+                                'Belum ada data pemeriksaan',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF2D3748),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                'Tambahkan pemeriksaan pertama Anda',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                        : ListView.builder(
+                          padding: const EdgeInsets.all(16),
+                          itemCount: _pregnancyExaminations.length,
+                          itemBuilder: (context, index) {
+                            final examination = _pregnancyExaminations[index];
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.1),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                              ),
+                              child: Padding(
+                                padding: const EdgeInsets.all(20),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Patient Information Container
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFFEC407A),
+                                            Color(0xFFE91E63),
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
-                                      borderRadius: BorderRadius.circular(16),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Container(
-                                              width: 50,
-                                              height: 50,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(
-                                                  0.2,
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Container(
+                                                width: 50,
+                                                height: 50,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white
+                                                      .withOpacity(0.2),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
                                                 ),
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
+                                                child: Icon(
+                                                  Icons.pregnant_woman_rounded,
+                                                  color: Colors.white,
+                                                  size: 24,
+                                                ),
                                               ),
-                                              child: Icon(
-                                                Icons.pregnant_woman_rounded,
-                                                color: Colors.white,
-                                                size: 24,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    examination['namaPasien'] ??
-                                                        'Nama tidak tersedia',
-                                                    style: GoogleFonts.poppins(
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      fontSize: 18,
-                                                      color: Colors.white,
-                                                    ),
-                                                  ),
-                                                  const SizedBox(height: 4),
-                                                  Text(
-                                                    'Pasien Ibu Hamil',
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 12,
-                                                      color: Colors.white
-                                                          .withOpacity(0.8),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 16),
-                                        // Patient Details Grid
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildPatientDetailItem(
-                                                Icons.phone_rounded,
-                                                'No HP',
-                                                examination['noHp'] ?? '-',
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Expanded(
-                                              child: _buildPatientDetailItem(
-                                                Icons.cake_rounded,
-                                                'Umur',
-                                                '${examination['umur'] ?? '-'} tahun',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 12),
-                                        _buildPatientDetailItem(
-                                          Icons.location_on_rounded,
-                                          'Alamat',
-                                          examination['alamat'] ?? '-',
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Examination Overview Container
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.grey[50],
-                                      borderRadius: BorderRadius.circular(12),
-                                      border: Border.all(
-                                        color: Colors.grey[200]!,
-                                      ),
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Row(
-                                          children: [
-                                            Icon(
-                                              Icons.medical_services_rounded,
-                                              color: const Color(0xFFEC407A),
-                                              size: 20,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'Data Pemeriksaan',
-                                              style: GoogleFonts.poppins(
-                                                fontWeight: FontWeight.w600,
-                                                fontSize: 14,
-                                                color: const Color(0xFF2D3748),
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 12),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildOverviewRow(
-                                                'Usia Kehamilan',
-                                                '${examination['usiaKehamilan'] ?? '-'} minggu',
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: _buildOverviewRow(
-                                                'HPHT',
-                                                examination['hpht'] ?? '-',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildOverviewRow(
-                                                'Tekanan Darah',
-                                                examination['tekananDarah'] ??
-                                                    '-',
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: _buildOverviewRow(
-                                                'Berat Badan',
-                                                '${examination['beratBadan'] ?? '-'} kg',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            Expanded(
-                                              child: _buildOverviewRow(
-                                                'Tinggi Badan',
-                                                '${examination['tinggiBadan'] ?? '-'} cm',
-                                              ),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: _buildOverviewRow(
-                                                'Tanggal Masuk',
-                                                examination['tanggalMasuk'] ??
-                                                    '-',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Action Buttons
-                                  Row(
-                                    children: [
-                                      Expanded(
-                                        child: ElevatedButton.icon(
-                                          onPressed:
-                                              () =>
-                                                  _navigateToLaporanPersalinan(
-                                                    examination,
-                                                  ),
-                                          icon: Icon(
-                                            Icons.assignment_add,
-                                            size: 18,
-                                            color: Colors.white,
-                                          ),
-                                          label: Text(
-                                            'Lakukan Pemeriksaan Persalinan',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: Colors.white,
-                                            ),
-                                          ),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: const Color(
-                                              0xFF4CAF50,
-                                            ),
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(12),
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                              vertical: 12,
-                                              horizontal: 16,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-                                      const SizedBox(width: 12),
-                                      PopupMenuButton<String>(
-                                        icon: Container(
-                                          padding: const EdgeInsets.all(8),
-                                          decoration: BoxDecoration(
-                                            color: const Color(
-                                              0xFFEC407A,
-                                            ).withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                          ),
-                                          child: Icon(
-                                            Icons.more_vert_rounded,
-                                            color: const Color(0xFFEC407A),
-                                            size: 20,
-                                          ),
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        onSelected: (value) {
-                                          if (value == 'detail') {
-                                            _showDetailDialog(examination);
-                                          } else if (value == 'edit') {
-                                            _showEditDialog(examination);
-                                          } else if (value == 'delete') {
-                                            _deleteExamination(
-                                              examination['id'],
-                                            );
-                                          }
-                                        },
-                                        itemBuilder:
-                                            (context) => [
-                                              PopupMenuItem(
-                                                value: 'detail',
-                                                child: Row(
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
                                                   children: [
-                                                    Icon(
-                                                      Icons.visibility_rounded,
-                                                      color: const Color(
-                                                        0xFFEC407A,
-                                                      ),
-                                                      size: 20,
-                                                    ),
-                                                    const SizedBox(width: 12),
                                                     Text(
-                                                      'Detail',
+                                                      examination['namaPasien'] ??
+                                                          'Nama tidak tersedia',
                                                       style:
                                                           GoogleFonts.poppins(
-                                                            color: const Color(
-                                                              0xFFEC407A,
-                                                            ),
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            fontSize: 18,
+                                                            color: Colors.white,
                                                           ),
                                                     ),
-                                                  ],
-                                                ),
-                                              ),
-                                              PopupMenuItem(
-                                                value: 'edit',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.edit_rounded,
-                                                      color: Colors.orange,
-                                                      size: 20,
-                                                    ),
-                                                    const SizedBox(width: 12),
+                                                    const SizedBox(height: 4),
                                                     Text(
-                                                      'Edit',
+                                                      'Pasien Ibu Hamil',
                                                       style:
                                                           GoogleFonts.poppins(
-                                                            color:
-                                                                Colors.orange,
-                                                          ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              PopupMenuItem(
-                                                value: 'delete',
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      Icons.delete_rounded,
-                                                      color: Colors.red,
-                                                      size: 20,
-                                                    ),
-                                                    const SizedBox(width: 12),
-                                                    Text(
-                                                      'Hapus',
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                            color: Colors.red,
+                                                            fontSize: 12,
+                                                            color: Colors.white
+                                                                .withOpacity(
+                                                                  0.8,
+                                                                ),
                                                           ),
                                                     ),
                                                   ],
                                                 ),
                                               ),
                                             ],
+                                          ),
+                                          const SizedBox(height: 16),
+                                          // Patient Details Grid
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: _buildPatientDetailItem(
+                                                  Icons.phone_rounded,
+                                                  'No HP',
+                                                  examination['noHp'] ?? '-',
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Expanded(
+                                                child: _buildPatientDetailItem(
+                                                  Icons.cake_rounded,
+                                                  'Umur',
+                                                  '${examination['umur'] ?? '-'} tahun',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 12),
+                                          _buildPatientDetailItem(
+                                            Icons.location_on_rounded,
+                                            'Alamat',
+                                            examination['alamat'] ?? '-',
+                                          ),
+                                        ],
                                       ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 16),
-                                  // Examination Date
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
                                     ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFFEC407A,
-                                      ).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: const Color(
-                                          0xFFEC407A,
-                                        ).withOpacity(0.3),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Icon(
-                                          Icons.calendar_today_rounded,
-                                          color: const Color(0xFFEC407A),
-                                          size: 16,
+                                    const SizedBox(height: 16),
+                                    // Examination Overview Container
+                                    Container(
+                                      width: double.infinity,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: Colors.grey[50],
+                                        borderRadius: BorderRadius.circular(12),
+                                        border: Border.all(
+                                          color: Colors.grey[200]!,
                                         ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          _formatExaminationDate(
-                                            examination['tanggalPemeriksaan'],
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Row(
+                                            children: [
+                                              Icon(
+                                                Icons.medical_services_rounded,
+                                                color: const Color(0xFFEC407A),
+                                                size: 20,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'Data Pemeriksaan',
+                                                style: GoogleFonts.poppins(
+                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 14,
+                                                  color: const Color(
+                                                    0xFF2D3748,
+                                                  ),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            color: const Color(0xFFEC407A),
-                                            fontWeight: FontWeight.w600,
+                                          const SizedBox(height: 12),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: _buildOverviewRow(
+                                                  'Usia Kehamilan',
+                                                  '${examination['usiaKehamilan'] ?? '-'} minggu',
+                                                ),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: _buildOverviewRow(
+                                                  'HPHT',
+                                                  examination['hpht'] ?? '-',
+                                                ),
+                                              ),
+                                            ],
                                           ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: _buildOverviewRow(
+                                                  'Tekanan Darah',
+                                                  examination['tekananDarah'] ??
+                                                      '-',
+                                                ),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: _buildOverviewRow(
+                                                  'Berat Badan',
+                                                  '${examination['beratBadan'] ?? '-'} kg',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              Expanded(
+                                                child: _buildOverviewRow(
+                                                  'Tinggi Badan',
+                                                  '${examination['tinggiBadan'] ?? '-'} cm',
+                                                ),
+                                              ),
+                                              const SizedBox(width: 16),
+                                              Expanded(
+                                                child: _buildOverviewRow(
+                                                  'Tanggal Masuk',
+                                                  examination['tanggalMasuk'] ??
+                                                      '-',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    const SizedBox(height: 16),
+                                    // Action Buttons
+                                    Row(
+                                      children: [
+                                        Expanded(
+                                          child: ElevatedButton.icon(
+                                            onPressed:
+                                                () =>
+                                                    _navigateToRegistrasiPersalinan(
+                                                      examination,
+                                                    ),
+                                            icon: Icon(
+                                              Icons.assignment_add,
+                                              size: 18,
+                                              color: Colors.white,
+                                            ),
+                                            label: Text(
+                                              'Lakukan Registrasi Persalinan',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: Colors.white,
+                                              ),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFF4CAF50,
+                                              ),
+                                              foregroundColor: Colors.white,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(12),
+                                              ),
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 12,
+                                                    horizontal: 16,
+                                                  ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        PopupMenuButton<String>(
+                                          icon: Container(
+                                            padding: const EdgeInsets.all(8),
+                                            decoration: BoxDecoration(
+                                              color: const Color(
+                                                0xFFEC407A,
+                                              ).withOpacity(0.1),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                            child: Icon(
+                                              Icons.more_vert_rounded,
+                                              color: const Color(0xFFEC407A),
+                                              size: 20,
+                                            ),
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              12,
+                                            ),
+                                          ),
+                                          onSelected: (value) {
+                                            if (value == 'detail') {
+                                              _showDetailDialog(examination);
+                                            } else if (value == 'edit') {
+                                              _showEditDialog(examination);
+                                            } else if (value == 'delete') {
+                                              _deleteExamination(
+                                                examination['id'],
+                                              );
+                                            }
+                                          },
+                                          itemBuilder:
+                                              (context) => [
+                                                PopupMenuItem(
+                                                  value: 'detail',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons
+                                                            .visibility_rounded,
+                                                        color: const Color(
+                                                          0xFFEC407A,
+                                                        ),
+                                                        size: 20,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        'Detail',
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                              color:
+                                                                  const Color(
+                                                                    0xFFEC407A,
+                                                                  ),
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'edit',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.edit_rounded,
+                                                        color: Colors.orange,
+                                                        size: 20,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        'Edit',
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                              color:
+                                                                  Colors.orange,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                                PopupMenuItem(
+                                                  value: 'delete',
+                                                  child: Row(
+                                                    children: [
+                                                      Icon(
+                                                        Icons.delete_rounded,
+                                                        color: Colors.red,
+                                                        size: 20,
+                                                      ),
+                                                      const SizedBox(width: 12),
+                                                      Text(
+                                                        'Hapus',
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                              color: Colors.red,
+                                                            ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ],
                                         ),
                                       ],
                                     ),
-                                  ),
-                                ],
+                                    const SizedBox(height: 16),
+                                    // Examination Date
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                          0xFFEC407A,
+                                        ).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: const Color(
+                                            0xFFEC407A,
+                                          ).withOpacity(0.3),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Row(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          Icon(
+                                            Icons.calendar_today_rounded,
+                                            color: const Color(0xFFEC407A),
+                                            size: 16,
+                                          ),
+                                          const SizedBox(width: 8),
+                                          Text(
+                                            _formatExaminationDate(
+                                              examination['tanggalPemeriksaan'],
+                                            ),
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              color: const Color(0xFFEC407A),
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
-                            ),
-                          );
-                        },
-                      ),
-            ),
-          ],
+                            );
+                          },
+                        ),
+              ),
+            ],
+          ),
         ),
       ),
       floatingActionButton: Container(

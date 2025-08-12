@@ -48,13 +48,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(
-          'Edukasi Kehamilan',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
         backgroundColor: const Color(0xFFEC407A),
         elevation: 0,
         leading: IconButton(

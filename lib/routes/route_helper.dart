@@ -6,7 +6,7 @@ import '../screens/hpht_form.dart';
 import '../admin/home_admin.dart';
 import '../admin/data_pasien.dart';
 import '../admin/data_konsultasi_pasien.dart';
-import '../admin/laporan_persalinan.dart';
+import '../admin/registrasi_persalinan.dart';
 import '../admin/chat_admin.dart';
 import '../admin/pemeriksaan_ibuhamil.dart';
 import '../admin/jadwal_konsultasi.dart';
@@ -30,7 +30,7 @@ class RouteHelper {
   static const String homePasien = '/home-pasien';
   static const String dataPasien = '/data-pasien';
   static const String dataKonsultasi = '/data-konsultasi';
-  static const String laporanPersalinan = '/laporan-persalinan';
+  static const String registrasiPersalinan = '/registrasi-persalinan';
   static const String chatAdmin = '/chat-admin';
   static const String pemeriksaanIbuHamil = '/pemeriksaan-ibuhamil';
   static const String jadwalKonsultasi = '/jadwal-konsultasi';
@@ -73,9 +73,9 @@ class RouteHelper {
           builder: (_) => const DataKonsultasiPasienScreen(),
         );
 
-      case laporanPersalinan:
+      case registrasiPersalinan:
         return MaterialPageRoute(
-          builder: (_) => const LaporanPersalinanScreen(),
+          builder: (_) => const RegistrasiPersalinanScreen(),
         );
 
       case chatAdmin:
@@ -177,11 +177,11 @@ class RouteHelper {
     Navigator.pushNamed(context, dataKonsultasi, arguments: user);
   }
 
-  static void navigateToLaporanPersalinan(
+  static void navigateToRegistrasiPersalinan(
     BuildContext context,
     UserModel user,
   ) {
-    Navigator.pushNamed(context, laporanPersalinan, arguments: user);
+    Navigator.pushNamed(context, registrasiPersalinan, arguments: user);
   }
 
   static void navigateToChatAdmin(BuildContext context, UserModel user) {

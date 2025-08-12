@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
-import '../../services/firebase_service.dart';
+
 import '../../routes/route_helper.dart';
 import 'data_pasien.dart';
 import 'data_konsultasi_pasien.dart';
-import 'laporan_persalinan.dart';
+import 'registrasi_persalinan.dart';
 import 'chat_admin.dart';
-import 'pemeriksaan_ibuhamil.dart';
-import 'jadwal_konsultasi.dart';
 
 class HomeAdminScreen extends StatefulWidget {
   final UserModel user;
@@ -21,7 +19,6 @@ class HomeAdminScreen extends StatefulWidget {
 
 class _HomeAdminScreenState extends State<HomeAdminScreen>
     with TickerProviderStateMixin {
-  final FirebaseService _firebaseService = FirebaseService();
   int _selectedIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -63,7 +60,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
           _buildDashboard(),
           const DataPasienScreen(),
           const DataKonsultasiPasienScreen(),
-          const LaporanPersalinanScreen(),
+          const RegistrasiPersalinanScreen(),
           const ChatAdminScreen(),
         ],
       ),
@@ -88,7 +85,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
               _buildNavItem(Icons.dashboard_rounded, 'Dashboard', 0),
               _buildNavItem(Icons.people_rounded, 'Pasien', 1),
               _buildNavItem(Icons.question_answer_rounded, 'Konsultasi', 2),
-              _buildNavItem(Icons.medical_services_rounded, 'Laporan', 3),
+              _buildNavItem(Icons.medical_services_rounded, 'Registrasi', 3),
               _buildNavItem(Icons.chat_rounded, 'Chat', 4),
             ],
           ),
@@ -300,7 +297,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                     ),
                     _buildActionButton(
                       Icons.medical_services_rounded,
-                      'Laporan\nPersalinan',
+                      'Registrasi\nPersalinan',
                       () => setState(() => _selectedIndex = 3),
                     ),
                     _buildActionButton(

@@ -398,7 +398,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-            shape: RoundedRectangleBorder(
+              shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
               title: Row(
@@ -447,11 +447,11 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop();
-        // Clear form
-        _alergiController.clear();
-        _keluhanController.clear();
-        setState(() {
-          _selectedTime = null;
+                    // Clear form
+                    _alergiController.clear();
+                    _keluhanController.clear();
+                    setState(() {
+                      _selectedTime = null;
                       // Keep the selected date for convenience
                     });
                   },
@@ -524,13 +524,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(
-          'Temu Janji',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
         backgroundColor: const Color(0xFFEC407A),
         elevation: 0,
         leading: IconButton(
