@@ -7,6 +7,9 @@ import '../models/user_model.dart';
 import '../models/konsultasi_model.dart';
 import '../models/persalinan_model.dart';
 import '../models/chat_model.dart';
+import '../models/laporan_persalinan_model.dart';
+import '../models/laporan_pasca_persalinan_model.dart';
+import '../models/keterangan_kelahiran_model.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -1305,6 +1308,170 @@ class FirebaseService {
       }
     } catch (e) {
       print('Error listing users: $e');
+    }
+  }
+
+  // ============ LAPORAN PERSALINAN METHODS ============
+
+  // Create laporan persalinan
+  Future<void> createLaporanPersalinan(dynamic laporan) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('laporan_persalinan')
+          .doc(laporan.id)
+          .set(laporan.toMap());
+      print('Laporan persalinan created successfully');
+    } catch (e) {
+      print('Error creating laporan persalinan: $e');
+      rethrow;
+    }
+  }
+
+  // Get laporan persalinan by registrasi ID
+  Stream<List<LaporanPersalinanModel>> getLaporanPersalinanByRegistrasiId(
+    String registrasiId,
+  ) {
+    try {
+      print('Loading laporan persalinan for registrasi ID: $registrasiId');
+      return _firestore
+          .collection('laporan_persalinan')
+          .where('registrasiPersalinanId', isEqualTo: registrasiId)
+          .orderBy('createdAt', descending: true)
+          .limit(50) // Add limit to improve performance
+          .snapshots()
+          .timeout(const Duration(seconds: 20)) // Increase timeout
+          .map((snapshot) {
+            print(
+              'Received ${snapshot.docs.length} laporan persalinan documents',
+            );
+            return snapshot.docs.map((doc) {
+              final data = doc.data();
+              return LaporanPersalinanModel.fromMap(data);
+            }).toList();
+          })
+          .handleError((error) {
+            print('Error getting laporan persalinan: $error');
+            // Return empty stream on error instead of empty list
+            return <LaporanPersalinanModel>[];
+          });
+    } catch (e) {
+      print('Error setting up laporan persalinan stream: $e');
+      return Stream.value(<LaporanPersalinanModel>[]);
+    }
+  }
+
+  // ============ LAPORAN PASCA PERSALINAN METHODS ============
+
+  // Create laporan pasca persalinan
+  Future<void> createLaporanPascaPersalinan(dynamic laporanPasca) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('laporan_pasca_persalinan')
+          .doc(laporanPasca.id)
+          .set(laporanPasca.toMap());
+      print('Laporan pasca persalinan created successfully');
+    } catch (e) {
+      print('Error creating laporan pasca persalinan: $e');
+      rethrow;
+    }
+  }
+
+  // Get laporan pasca persalinan by laporan persalinan ID
+  Stream<List<LaporanPascaPersalinanModel>>
+  getLaporanPascaPersalinanByLaporanId(String laporanId) {
+    try {
+      print('Loading laporan pasca persalinan for laporan ID: $laporanId');
+      return _firestore
+          .collection('laporan_pasca_persalinan')
+          .where('laporanPersalinanId', isEqualTo: laporanId)
+          .orderBy('createdAt', descending: true)
+          .limit(50) // Add limit to improve performance
+          .snapshots()
+          .timeout(const Duration(seconds: 20)) // Increase timeout
+          .map((snapshot) {
+            print(
+              'Received ${snapshot.docs.length} laporan pasca persalinan documents',
+            );
+            return snapshot.docs.map((doc) {
+              final data = doc.data();
+              return LaporanPascaPersalinanModel.fromMap(data);
+            }).toList();
+          })
+          .handleError((error) {
+            print('Error getting laporan pasca persalinan: $error');
+            return <LaporanPascaPersalinanModel>[];
+          });
+    } catch (e) {
+      print('Error setting up laporan pasca persalinan stream: $e');
+      return Stream.value(<LaporanPascaPersalinanModel>[]);
+    }
+  }
+
+  // ============ KETERANGAN KELAHIRAN METHODS ============
+
+  // Create keterangan kelahiran
+  Future<void> createKeteranganKelahiran(dynamic keterangan) async {
+    try {
+      await ensureAuthenticated();
+      await _firestore
+          .collection('keterangan_kelahiran')
+          .doc(keterangan.id)
+          .set(keterangan.toMap());
+      print('Keterangan kelahiran created successfully');
+    } catch (e) {
+      print('Error creating keterangan kelahiran: $e');
+      rethrow;
+    }
+  }
+
+  // Get keterangan kelahiran by laporan pasca persalinan ID
+  Stream<List<KeteranganKelahiranModel>> getKeteranganKelahiranByLaporanPascaId(
+    String laporanPascaId,
+  ) {
+    try {
+      print(
+        'Loading keterangan kelahiran for laporan pasca ID: $laporanPascaId',
+      );
+      return _firestore
+          .collection('keterangan_kelahiran')
+          .where('laporanPascaPersalinanId', isEqualTo: laporanPascaId)
+          .orderBy('createdAt', descending: true)
+          .limit(50) // Add limit to improve performance
+          .snapshots()
+          .timeout(const Duration(seconds: 20)) // Increase timeout
+          .map((snapshot) {
+            print(
+              'Received ${snapshot.docs.length} keterangan kelahiran documents',
+            );
+            return snapshot.docs.map((doc) {
+              final data = doc.data();
+              return KeteranganKelahiranModel.fromMap(data);
+            }).toList();
+          })
+          .handleError((error) {
+            print('Error getting keterangan kelahiran: $error');
+            return <KeteranganKelahiranModel>[];
+          });
+    } catch (e) {
+      print('Error setting up keterangan kelahiran stream: $e');
+      return Stream.value(<KeteranganKelahiranModel>[]);
+    }
+  }
+
+  // Get persalinan by ID (for loading parent data)
+  Future<PersalinanModel?> getPersalinanById(String id) async {
+    try {
+      await ensureAuthenticated();
+      final doc = await _firestore.collection('persalinan').doc(id).get();
+      if (doc.exists && doc.data() != null) {
+        return PersalinanModel.fromMap(doc.data()!);
+      }
+      return null;
+    } catch (e) {
+      print('Error getting persalinan by ID: $e');
+      return null;
     }
   }
 

@@ -9,11 +9,7 @@ class PregnancyCalculator {
     final int weeks = totalDays ~/ 7;
     final int days = totalDays % 7;
 
-    return {
-      'weeks': weeks,
-      'days': days,
-      'totalDays': totalDays,
-    };
+    return {'weeks': weeks, 'days': days, 'totalDays': totalDays};
   }
 
   // Calculate estimated due date (40 weeks from HPHT)
