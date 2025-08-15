@@ -714,7 +714,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                           _buildDevelopmentTimelineItem(
                             'Minggu ${_gestationalAgeWeeks! - 2}',
                             _getPreviousWeekInfo(_gestationalAgeWeeks! - 2),
-                            const Color(0xFFE91E63),
+                            const Color(0xFFF48FB1),
                           ),
                         ],
                       ],

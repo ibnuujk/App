@@ -10,6 +10,7 @@ import '../admin/registrasi_persalinan.dart';
 import '../admin/chat_admin.dart';
 import '../admin/pemeriksaan_ibuhamil.dart';
 import '../admin/jadwal_konsultasi.dart';
+import '../admin/analytics_screen.dart';
 import '../pasien/home_pasien.dart';
 import '../pasien/kehamilanku.dart';
 import '../pasien/pemeriksaan.dart';
@@ -34,6 +35,8 @@ class RouteHelper {
   static const String chatAdmin = '/chat-admin';
   static const String pemeriksaanIbuHamil = '/pemeriksaan-ibuhamil';
   static const String jadwalKonsultasi = '/jadwal-konsultasi';
+  static const String analytics = '/analytics';
+  static const String educationManagement = '/education-management';
 
   static const String kehamilanku = '/kehamilanku';
   static const String pemeriksaan = '/pemeriksaan';
@@ -91,6 +94,26 @@ class RouteHelper {
         final user = settings.arguments as UserModel;
         return MaterialPageRoute(
           builder: (_) => JadwalKonsultasiScreen(user: user),
+        );
+
+      case analytics:
+        final user = settings.arguments as UserModel;
+        return MaterialPageRoute(builder: (_) => AnalyticsScreen(user: user));
+
+      case educationManagement:
+        final user = settings.arguments as UserModel;
+        return MaterialPageRoute(
+          builder:
+              (_) => Scaffold(
+                appBar: AppBar(
+                  title: const Text('Education Management'),
+                  backgroundColor: const Color(0xFFEC407A),
+                  foregroundColor: Colors.white,
+                ),
+                body: const Center(
+                  child: Text('Education Management - Coming Soon'),
+                ),
+              ),
         );
 
       case kehamilanku:
@@ -197,6 +220,17 @@ class RouteHelper {
 
   static void navigateToJadwalKonsultasi(BuildContext context, UserModel user) {
     Navigator.pushNamed(context, jadwalKonsultasi, arguments: user);
+  }
+
+  static void navigateToAnalytics(BuildContext context, UserModel user) {
+    Navigator.pushNamed(context, analytics, arguments: user);
+  }
+
+  static void navigateToEducationManagement(
+    BuildContext context,
+    UserModel user,
+  ) {
+    Navigator.pushNamed(context, educationManagement, arguments: user);
   }
 
   static void navigateToKehamilanku(BuildContext context, UserModel user) {

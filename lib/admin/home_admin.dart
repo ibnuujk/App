@@ -286,6 +286,12 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                   childAspectRatio: 1.2,
                   children: [
                     _buildActionButton(
+                      Icons.analytics_rounded,
+                      'Dashboard\nAnalytics',
+                      () =>
+                          RouteHelper.navigateToAnalytics(context, widget.user),
+                    ),
+                    _buildActionButton(
                       Icons.people_rounded,
                       'Data Pasien',
                       () => setState(() => _selectedIndex = 1),
@@ -317,6 +323,14 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                       Icons.schedule_rounded,
                       'Jadwal\nTemu Janji',
                       () => RouteHelper.navigateToJadwalKonsultasi(
+                        context,
+                        widget.user,
+                      ),
+                    ),
+                    _buildActionButton(
+                      Icons.school_rounded,
+                      'Edukasi\nManagement',
+                      () => RouteHelper.navigateToEducationManagement(
                         context,
                         widget.user,
                       ),
