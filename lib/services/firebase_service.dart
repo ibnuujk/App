@@ -56,6 +56,16 @@ class FirebaseService {
     }
   }
 
+  // Password reset functionality
+  Future<void> sendPasswordResetEmail(String email) async {
+    try {
+      await _auth.sendPasswordResetEmail(email: email);
+    } catch (e) {
+      print('Error sending password reset email: $e');
+      rethrow;
+    }
+  }
+
   User? get currentUser => _auth.currentUser;
 
   // Check if user is authenticated
@@ -1408,8 +1418,6 @@ class FirebaseService {
       return Stream.value(<LaporanPascaPersalinanModel>[]);
     }
   }
-
-  // ============ KETERANGAN KELAHIRAN METHODS ============
 
   // Create keterangan kelahiran
   Future<void> createKeteranganKelahiran(dynamic keterangan) async {

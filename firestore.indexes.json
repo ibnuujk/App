@@ -1,145 +1,15 @@
 {
   "indexes": [
     {
-      "collectionGroup": "users",
+      "collectionGroup": "notifications",
       "queryScope": "COLLECTION",
       "fields": [
         {
-          "fieldPath": "role",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "chats",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "conversationId",
+          "fieldPath": "userId",
           "order": "ASCENDING"
         },
         {
           "fieldPath": "timestamp",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "chats",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "senderRole",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isRead",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "chats",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "conversationId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "senderRole",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "isRead",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "pemeriksaan_ibuhamil",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "pasienId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "tanggalPemeriksaan",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "konsultasi",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "pasienId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "tanggalKonsultasi",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "jadwal_konsultasi",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "pasienId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "tanggalJadwal",
-          "order": "ASCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "laporan_persalinan",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "registrasiPersalinanId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "laporan_pasca_persalinan",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "laporanPersalinanId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
-          "order": "DESCENDING"
-        }
-      ]
-    },
-    {
-      "collectionGroup": "keterangan_kelahiran",
-      "queryScope": "COLLECTION",
-      "fields": [
-        {
-          "fieldPath": "laporanPascaPersalinanId",
-          "order": "ASCENDING"
-        },
-        {
-          "fieldPath": "createdAt",
           "order": "DESCENDING"
         }
       ]

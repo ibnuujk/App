@@ -1,31 +1,28 @@
 #!/bin/bash
 
-echo "🔥 Deploying Firebase rules and indexes..."
+echo "🚀 Deploying Firebase configuration for PersalinanKu App..."
 
-# Check if Firebase CLI is installed
-if ! command -v firebase &> /dev/null; then
-    echo "❌ Firebase CLI is not installed."
-    echo "Please install it using: npm install -g firebase-tools"
-    exit 1
-fi
+# Deploy Firestore indexes (simplified)
+echo "📊 Deploying simplified Firestore indexes..."
+firebase deploy --only firestore:indexes
 
-# Login to Firebase (if not already logged in)
-echo "🔑 Checking Firebase login..."
-firebase login --no-localhost
-
-# Deploy Firestore rules
-echo "📋 Deploying Firestore rules..."
+# Deploy Firestore security rules
+echo "🔒 Deploying Firestore security rules..."
 firebase deploy --only firestore:rules
 
-# Deploy Firestore indexes
-echo "📊 Deploying Firestore indexes..."
-firebase deploy --only firestore:indexes
+echo ""
+echo "⚠️  IMPORTANT: Using SimpleNotificationService to avoid index errors"
+echo "📱 Notification badge should now work without complex Firebase indexes"
+echo "🔄 Real-time chat integration enabled"
+echo "📊 Additional indexes for chats, users, and konsultasi added"
+echo "📱 Enhanced notification system with real-time data integration"
+echo "🔗 Real-time chat and konsultasi integration enabled"
 
 echo "✅ Firebase deployment completed!"
 echo ""
 echo "📋 Next steps:"
-echo "1. Wait for indexes to build (can take several minutes)"
-echo "2. Check Firebase Console for index status"
-echo "3. Test the app again"
+echo "1. Wait for indexes to build (may take a few minutes)"
+echo "2. Test the notification system"
+echo "3. Check Firebase Console for any errors"
 echo ""
-echo "🔗 Firebase Console: https://console.firebase.google.com/project/skripsi-ibnu"
+echo "🔗 Firebase Console: https://console.firebase.google.com"

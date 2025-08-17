@@ -3,6 +3,7 @@ import '../models/user_model.dart';
 import '../screens/login_screen.dart';
 import '../screens/register.dart';
 import '../screens/hpht_form.dart';
+import '../screens/forgot_password_screen.dart';
 import '../admin/home_admin.dart';
 import '../admin/data_pasien.dart';
 import '../admin/data_konsultasi_pasien.dart';
@@ -14,7 +15,6 @@ import '../admin/analytics_screen.dart';
 import '../pasien/home_pasien.dart';
 import '../pasien/kehamilanku.dart';
 import '../pasien/pemeriksaan.dart';
-// import '../pasien/darurat.dart';
 import '../pasien/profile.dart';
 import '../pasien/konsultasi_pasien.dart';
 import '../pasien/chat_pasien.dart';
@@ -27,6 +27,7 @@ class RouteHelper {
   static const String login = '/login';
   static const String register = '/register';
   static const String hphtForm = '/hpht-form';
+  static const String forgotPassword = '/forgot-password';
   static const String homeAdmin = '/home-admin';
   static const String homePasien = '/home-pasien';
   static const String dataPasien = '/data-pasien';
@@ -55,6 +56,9 @@ class RouteHelper {
 
       case register:
         return MaterialPageRoute(builder: (_) => const RegisterScreen());
+
+      case forgotPassword:
+        return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
 
       case hphtForm:
         final user = settings.arguments as UserModel;
@@ -168,6 +172,10 @@ class RouteHelper {
 
   static void navigateToRegister(BuildContext context) {
     Navigator.pushNamed(context, register);
+  }
+
+  static void navigateToForgotPassword(BuildContext context) {
+    Navigator.pushNamed(context, forgotPassword);
   }
 
   static void navigateToHPHTForm(BuildContext context, UserModel user) {

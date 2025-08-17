@@ -54,6 +54,14 @@ service cloud.firestore {
       allow read, write, create, update, delete: if isAuthenticated();
     }
     
+    // Notifications collection
+    match /notifications/{notificationId} {
+      allow read: if isAuthenticated() && 
+        (resource.data.userId == request.auth.uid || 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
+      allow write: if isAuthenticated();
+    }
+    
     // Default rule for other collections
     match /{document=**} {
       allow read, write, create, update, delete: if isAuthenticated();
