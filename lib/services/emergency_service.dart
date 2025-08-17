@@ -9,8 +9,8 @@ class EmergencyService {
   // Emergency hotline numbers
   static const String ambulanceNumber = '118';
   static const String policeNumber = '110';
-  static const String bidanNumber = '0811-1234-567'; // Default bidan number
-  static const String bidanWhatsApp = '628111234567'; // Default bidan WhatsApp
+  static const String bidanNumber = '+6289666712042'; // Bidan phone number
+  static const String bidanWhatsApp = '+6282323216060'; // Bidan WhatsApp number
 
   // Get emergency contacts from local storage
   Future<List<EmergencyContact>> getEmergencyContacts() async {
