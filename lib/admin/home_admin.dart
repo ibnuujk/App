@@ -4,7 +4,6 @@ import '../../models/user_model.dart';
 
 import '../../routes/route_helper.dart';
 import 'data_pasien.dart';
-import 'data_konsultasi_pasien.dart';
 import 'registrasi_persalinan.dart';
 import 'chat_admin.dart';
 
@@ -59,7 +58,6 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
         children: [
           _buildDashboard(),
           const DataPasienScreen(),
-          const DataKonsultasiPasienScreen(),
           const RegistrasiPersalinanScreen(),
           const ChatAdminScreen(),
         ],
@@ -84,9 +82,8 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
             children: [
               _buildNavItem(Icons.dashboard_rounded, 'Dashboard', 0),
               _buildNavItem(Icons.people_rounded, 'Pasien', 1),
-              _buildNavItem(Icons.question_answer_rounded, 'Konsultasi', 2),
-              _buildNavItem(Icons.medical_services_rounded, 'Registrasi', 3),
-              _buildNavItem(Icons.chat_rounded, 'Chat', 4),
+              _buildNavItem(Icons.medical_services_rounded, 'Registrasi', 2),
+              _buildNavItem(Icons.chat_rounded, 'Chat', 3),
             ],
           ),
         ),
@@ -297,19 +294,14 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                       () => setState(() => _selectedIndex = 1),
                     ),
                     _buildActionButton(
-                      Icons.question_answer_rounded,
-                      'Catatan\nMedis',
-                      () => setState(() => _selectedIndex = 2),
-                    ),
-                    _buildActionButton(
                       Icons.medical_services_rounded,
                       'Registrasi\nPersalinan',
-                      () => setState(() => _selectedIndex = 3),
+                      () => setState(() => _selectedIndex = 2),
                     ),
                     _buildActionButton(
                       Icons.chat_rounded,
                       'Chat dengan\nPasien',
-                      () => setState(() => _selectedIndex = 4),
+                      () => setState(() => _selectedIndex = 3),
                     ),
                     _buildActionButton(
                       Icons.pregnant_woman_rounded,
@@ -330,7 +322,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                     _buildActionButton(
                       Icons.school_rounded,
                       'Edukasi\nManagement',
-                      () => RouteHelper.navigateToEducationManagement(
+                      () => RouteHelper.navigateToPanelEdukasi(
                         context,
                         widget.user,
                       ),

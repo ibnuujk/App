@@ -313,21 +313,6 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       const SizedBox(height: 20),
 
-                      // Forgot Password Link
-                      Align(
-                        alignment: Alignment.centerRight,
-                        child: TextButton(
-                          onPressed: _navigateToForgotPassword,
-                          child: Text(
-                            'Lupa Password?',
-                            style: GoogleFonts.poppins(
-                              color: const Color(0xFF20B2AA),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ),
-                      ),
-
                       // Login Button
                       SizedBox(
                         height: 50,
@@ -383,6 +368,19 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                         ],
+                      ),
+                      Align(
+                        alignment: Alignment.center,
+                        child: TextButton(
+                          onPressed: _navigateToForgotPassword,
+                          child: Text(
+                            'Lupa Password?',
+                            style: GoogleFonts.poppins(
+                              color: const Color(0xFF20B2AA),
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
                       ),
                     ],
                   ),

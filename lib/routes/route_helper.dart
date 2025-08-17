@@ -6,7 +6,6 @@ import '../screens/hpht_form.dart';
 import '../screens/forgot_password_screen.dart';
 import '../admin/home_admin.dart';
 import '../admin/data_pasien.dart';
-import '../admin/data_konsultasi_pasien.dart';
 import '../admin/registrasi_persalinan.dart';
 import '../admin/chat_admin.dart';
 import '../admin/pemeriksaan_ibuhamil.dart';
@@ -22,6 +21,11 @@ import '../pasien/temu_janji.dart';
 import '../pasien/edukasi.dart';
 import '../pasien/jadwal_pasien.dart';
 import '../pasien/emergency_screen.dart';
+import '../screens/education_main_screen.dart';
+import '../screens/article_list_screen.dart';
+import '../screens/article_detail_screen.dart';
+import '../screens/article_admin_screen.dart';
+import '../admin/panel_edukasi.dart';
 
 class RouteHelper {
   static const String login = '/login';
@@ -48,6 +52,11 @@ class RouteHelper {
   static const String temuJanji = '/temu-janji';
   static const String edukasi = '/edukasi';
   static const String jadwalPasien = '/jadwal-pasien';
+  static const String educationMain = '/education-main';
+  static const String articleList = '/article-list';
+  static const String articleDetail = '/article-detail';
+  static const String articleAdmin = '/article-admin';
+  static const String panelEdukasi = '/panel-edukasi';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -74,11 +83,6 @@ class RouteHelper {
 
       case dataPasien:
         return MaterialPageRoute(builder: (_) => const DataPasienScreen());
-
-      case dataKonsultasi:
-        return MaterialPageRoute(
-          builder: (_) => const DataKonsultasiPasienScreen(),
-        );
 
       case registrasiPersalinan:
         return MaterialPageRoute(
@@ -154,6 +158,25 @@ class RouteHelper {
         final user = settings.arguments as UserModel;
         return MaterialPageRoute(builder: (_) => EdukasiScreen(user: user));
 
+      case educationMain:
+        return MaterialPageRoute(builder: (_) => const EducationMainScreen());
+
+      case articleList:
+        return MaterialPageRoute(builder: (_) => const ArticleListScreen());
+
+      case articleDetail:
+        final article = settings.arguments as Map<String, dynamic>;
+        return MaterialPageRoute(
+          builder: (_) => ArticleDetailScreen(article: article['article']),
+        );
+
+      case articleAdmin:
+        return MaterialPageRoute(builder: (_) => const ArticleAdminScreen());
+
+      case panelEdukasi:
+        final user = settings.arguments as UserModel;
+        return MaterialPageRoute(builder: (_) => PanelEdukasi(user: user));
+
       case jadwalPasien:
         final user = settings.arguments as UserModel;
         return MaterialPageRoute(
@@ -198,6 +221,34 @@ class RouteHelper {
       arguments: user,
       (route) => false,
     );
+  }
+
+  static void navigateToEdukasi(BuildContext context, UserModel user) {
+    Navigator.pushNamed(context, edukasi, arguments: user);
+  }
+
+  static void navigateToEducationMain(BuildContext context) {
+    Navigator.pushNamed(context, educationMain);
+  }
+
+  static void navigateToArticleList(BuildContext context) {
+    Navigator.pushNamed(context, articleList);
+  }
+
+  static void navigateToArticleDetail(BuildContext context, dynamic article) {
+    Navigator.pushNamed(
+      context,
+      articleDetail,
+      arguments: {'article': article},
+    );
+  }
+
+  static void navigateToArticleAdmin(BuildContext context) {
+    Navigator.pushNamed(context, articleAdmin);
+  }
+
+  static void navigateToPanelEdukasi(BuildContext context, UserModel user) {
+    Navigator.pushNamed(context, panelEdukasi, arguments: user);
   }
 
   static void navigateToDataPasien(BuildContext context, UserModel user) {
@@ -263,10 +314,6 @@ class RouteHelper {
 
   static void navigateToTemuJanji(BuildContext context, UserModel user) {
     Navigator.pushNamed(context, temuJanji, arguments: user);
-  }
-
-  static void navigateToEdukasi(BuildContext context, UserModel user) {
-    Navigator.pushNamed(context, edukasi, arguments: user);
   }
 
   static void navigateToDarurat(BuildContext context, UserModel user) {
