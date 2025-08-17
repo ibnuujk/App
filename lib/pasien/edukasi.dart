@@ -22,6 +22,19 @@ class _EdukasiScreenState extends State<EdukasiScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+  String _searchQuery = '';
+  String _selectedCategory = 'Semua Jenis';
+  List<String> _categories = [
+    'Semua Jenis',
+    'Trimester 1',
+    'Trimester 2',
+    'Trimester 3',
+    'Nutrisi',
+    'Perkembangan Janin',
+    'Tips Kehamilan',
+    'Kesehatan',
+    'Persiapan Persalinan',
+  ];
 
   @override
   void initState() {
@@ -52,6 +65,59 @@ class _EdukasiScreenState extends State<EdukasiScreen>
   void dispose() {
     _animationController.dispose();
     super.dispose();
+  }
+
+  void _handleSearch(String query) {
+    setState(() {
+      _searchQuery = query;
+    });
+  }
+
+  void _handleClearSearch() {
+    setState(() {
+      _searchQuery = '';
+    });
+  }
+
+  void _handleCategorySelected(String category) {
+    setState(() {
+      _selectedCategory = category;
+    });
+  }
+
+  List<dynamic> _getFilteredArticles(ArticleProvider articleProvider) {
+    List<dynamic> articles = articleProvider.activeArticles;
+
+    // Filter by category
+    if (_selectedCategory != 'Semua Jenis') {
+      articles =
+          articles
+              .where((article) => article.category == _selectedCategory)
+              .toList();
+    }
+
+    // Filter by search query
+    if (_searchQuery.isNotEmpty) {
+      articles =
+          articles
+              .where(
+                (article) =>
+                    article.title.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ||
+                    article.content.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ||
+                    article.keywords.any(
+                      (keyword) => keyword.toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      ),
+                    ),
+              )
+              .toList();
+    }
+
+    return articles;
   }
 
   @override
@@ -183,24 +249,15 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                     children: [
                       // Search Bar
                       SearchBarWidget(
-                        onSearch: (query) {
-                          context.read<ArticleProvider>().searchArticles(query);
-                        },
-                        onClear: () {
-                          context.read<ArticleProvider>().clearSearch();
-                        },
+                        onSearch: _handleSearch,
+                        onClear: _handleClearSearch,
                       ),
                       const SizedBox(height: 16),
                       // Category Chips
-                      Consumer<ArticleProvider>(
-                        builder: (context, articleProvider, child) {
-                          return CategoryChips(
-                            categories: articleProvider.categories,
-                            selectedCategory: articleProvider.selectedCategory,
-                            onCategorySelected:
-                                articleProvider.filterByCategory,
-                          );
-                        },
+                      CategoryChips(
+                        categories: _categories,
+                        selectedCategory: _selectedCategory,
+                        onCategorySelected: _handleCategorySelected,
                       ),
                     ],
                   ),
@@ -273,7 +330,11 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                         );
                       }
 
-                      if (articleProvider.filteredArticles.isEmpty) {
+                      final filteredArticles = _getFilteredArticles(
+                        articleProvider,
+                      );
+
+                      if (filteredArticles.isEmpty) {
                         return Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -314,7 +375,7 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                             child: Row(
                               children: [
                                 Text(
-                                  '${articleProvider.filteredArticles.length} artikel ditemukan',
+                                  '${filteredArticles.length} artikel ditemukan',
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
                                     color: Colors.grey[600],
@@ -329,11 +390,9 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                           Expanded(
                             child: ListView.builder(
                               padding: const EdgeInsets.only(bottom: 16),
-                              itemCount:
-                                  articleProvider.filteredArticles.length,
+                              itemCount: filteredArticles.length,
                               itemBuilder: (context, index) {
-                                final article =
-                                    articleProvider.filteredArticles[index];
+                                final article = filteredArticles[index];
                                 return ArticleCard(
                                   article: article,
                                   onTap: () {

@@ -3,7 +3,6 @@ import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../providers/article_provider.dart';
 import '../models/article_model.dart';
-import '../data/sample_articles.dart';
 
 class ArticleAdminScreen extends StatefulWidget {
   const ArticleAdminScreen({Key? key}) : super(key: key);
@@ -171,10 +170,11 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
   }
 
   void _loadSampleData() {
-    final articles = SampleArticles.getArticles();
-    for (final article in articles) {
-      context.read<ArticleProvider>().addArticle(article);
-    }
+    context.read<ArticleProvider>().loadFreshSampleData(
+      count: 15,
+      clearExisting: false,
+      highQualityOnly: true,
+    );
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('15 artikel sample berhasil ditambahkan!')),
@@ -258,7 +258,7 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
               // Articles List
               Expanded(
                 child:
-                    articleProvider.articles.isEmpty
+                    articleProvider.activeArticles.isEmpty
                         ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -291,9 +291,10 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
                         )
                         : ListView.builder(
                           padding: const EdgeInsets.all(16),
-                          itemCount: articleProvider.articles.length,
+                          itemCount: articleProvider.activeArticles.length,
                           itemBuilder: (context, index) {
-                            final article = articleProvider.articles[index];
+                            final article =
+                                articleProvider.activeArticles[index];
                             return Card(
                               margin: const EdgeInsets.only(bottom: 12),
                               child: ListTile(
@@ -330,9 +331,8 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
                                     Switch(
                                       value: article.isActive,
                                       onChanged: (value) {
-                                        articleProvider.toggleArticleVisibility(
+                                        articleProvider.toggleArticleStatus(
                                           article.id,
-                                          value,
                                         );
                                       },
                                     ),

@@ -17,6 +17,20 @@ class ArticleListScreen extends StatefulWidget {
 }
 
 class _ArticleListScreenState extends State<ArticleListScreen> {
+  String _searchQuery = '';
+  String _selectedCategory = 'Semua Jenis';
+  List<String> _categories = [
+    'Semua Jenis',
+    'Trimester 1',
+    'Trimester 2',
+    'Trimester 3',
+    'Nutrisi',
+    'Perkembangan Janin',
+    'Tips Kehamilan',
+    'Kesehatan',
+    'Persiapan Persalinan',
+  ];
+
   @override
   void initState() {
     super.initState();
@@ -24,6 +38,59 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<ArticleProvider>().initializeArticles();
     });
+  }
+
+  void _handleSearch(String query) {
+    setState(() {
+      _searchQuery = query;
+    });
+  }
+
+  void _handleClearSearch() {
+    setState(() {
+      _searchQuery = '';
+    });
+  }
+
+  void _handleCategorySelected(String category) {
+    setState(() {
+      _selectedCategory = category;
+    });
+  }
+
+  List<dynamic> _getFilteredArticles(ArticleProvider articleProvider) {
+    List<dynamic> articles = articleProvider.activeArticles;
+
+    // Filter by category
+    if (_selectedCategory != 'Semua Jenis') {
+      articles =
+          articles
+              .where((article) => article.category == _selectedCategory)
+              .toList();
+    }
+
+    // Filter by search query
+    if (_searchQuery.isNotEmpty) {
+      articles =
+          articles
+              .where(
+                (article) =>
+                    article.title.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ||
+                    article.content.toLowerCase().contains(
+                      _searchQuery.toLowerCase(),
+                    ) ||
+                    article.keywords.any(
+                      (keyword) => keyword.toLowerCase().contains(
+                        _searchQuery.toLowerCase(),
+                      ),
+                    ),
+              )
+              .toList();
+    }
+
+    return articles;
   }
 
   @override
@@ -114,19 +181,21 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
             );
           }
 
+          final filteredArticles = _getFilteredArticles(articleProvider);
+
           return Column(
             children: [
               // Search Bar
               SearchBarWidget(
-                onSearch: articleProvider.searchArticles,
-                onClear: articleProvider.clearSearch,
+                onSearch: _handleSearch,
+                onClear: _handleClearSearch,
               ),
 
               // Category Chips
               CategoryChips(
-                categories: articleProvider.categories,
-                selectedCategory: articleProvider.selectedCategory,
-                onCategorySelected: articleProvider.filterByCategory,
+                categories: _categories,
+                selectedCategory: _selectedCategory,
+                onCategorySelected: _handleCategorySelected,
               ),
 
               const SizedBox(height: 16),
@@ -137,7 +206,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
                 child: Row(
                   children: [
                     Text(
-                      '${articleProvider.filteredArticles.length} artikel ditemukan',
+                      '${filteredArticles.length} artikel ditemukan',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.grey[600],
@@ -153,7 +222,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
               // Articles List
               Expanded(
                 child:
-                    articleProvider.filteredArticles.isEmpty
+                    filteredArticles.isEmpty
                         ? Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -186,10 +255,9 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
                         )
                         : ListView.builder(
                           padding: const EdgeInsets.only(bottom: 16),
-                          itemCount: articleProvider.filteredArticles.length,
+                          itemCount: filteredArticles.length,
                           itemBuilder: (context, index) {
-                            final article =
-                                articleProvider.filteredArticles[index];
+                            final article = filteredArticles[index];
                             return ArticleCard(
                               article: article,
                               onTap: () {
