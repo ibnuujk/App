@@ -165,9 +165,11 @@ class RouteHelper {
         return MaterialPageRoute(builder: (_) => const ArticleListScreen());
 
       case articleDetail:
-        final article = settings.arguments as Map<String, dynamic>;
+        final args = settings.arguments as Map<String, dynamic>;
+        final article = args['article'];
+        final user = args['user']; // user might be null
         return MaterialPageRoute(
-          builder: (_) => ArticleDetailScreen(article: article['article']),
+          builder: (_) => ArticleDetailScreen(article: article, user: user),
         );
 
       case articleAdmin:
@@ -235,11 +237,15 @@ class RouteHelper {
     Navigator.pushNamed(context, articleList);
   }
 
-  static void navigateToArticleDetail(BuildContext context, dynamic article) {
+  static void navigateToArticleDetail(
+    BuildContext context,
+    dynamic article, [
+    UserModel? user,
+  ]) {
     Navigator.pushNamed(
       context,
       articleDetail,
-      arguments: {'article': article},
+      arguments: {'article': article, 'user': user},
     );
   }
 

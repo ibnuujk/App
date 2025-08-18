@@ -2,13 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/article_model.dart';
+import '../models/user_model.dart';
 import '../providers/article_provider.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
   final Article article;
+  final UserModel? user; // Make user optional
 
-  const ArticleDetailScreen({Key? key, required this.article})
-    : super(key: key);
+  const ArticleDetailScreen({
+    Key? key,
+    required this.article,
+    this.user, // Make user optional
+  }) : super(key: key);
 
   @override
   State<ArticleDetailScreen> createState() => _ArticleDetailScreenState();
@@ -20,7 +25,11 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
     super.initState();
     // Increment view count when article is opened
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ArticleProvider>().incrementViews(widget.article.id);
+      // Use user ID if available, otherwise use anonymous ID
+      final userId =
+          widget.user?.id ??
+          'anonymous_${DateTime.now().millisecondsSinceEpoch}';
+      context.read<ArticleProvider>().incrementViews(widget.article.id, userId);
     });
   }
 

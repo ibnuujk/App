@@ -47,6 +47,9 @@ class ArticleProvider with ChangeNotifier {
       _setLoading(true);
       _clearError();
 
+      // Initialize the article reads collection structure
+      await _articleService.initializeArticleReadsCollection();
+
       final articles = await _articleService.getActiveArticles();
       _articles = articles;
 
@@ -202,24 +205,53 @@ class ArticleProvider with ChangeNotifier {
     }
   }
 
-  // Increment article views
-  Future<void> incrementViews(String articleId) async {
+  // Increment views for an article
+  Future<void> incrementViews(String articleId, String userId) async {
     try {
-      final article = _articles.firstWhere((a) => a.id == articleId);
-      final updatedArticle = Article(
-        id: article.id,
-        title: article.title,
-        content: article.content,
-        category: article.category,
-        readTime: article.readTime,
-        views: article.views + 1,
-        isActive: article.isActive,
-        createdAt: article.createdAt,
+      // Get the new view count from the service
+      final newViewCount = await _articleService.incrementViews(
+        articleId,
+        userId,
       );
 
-      await updateArticle(updatedArticle);
+      // Update the local article with the new view count
+      final articleIndex = _articles.indexWhere(
+        (article) => article.id == articleId,
+      );
+      if (articleIndex != -1) {
+        final article = _articles[articleIndex];
+        final updatedArticle = Article(
+          id: article.id,
+          title: article.title,
+          content: article.content,
+          category: article.category,
+          readTime: article.readTime,
+          views: newViewCount,
+          isActive: article.isActive,
+          createdAt: article.createdAt,
+        );
+
+        _articles[articleIndex] = updatedArticle;
+        notifyListeners();
+      }
     } catch (e) {
+      print('Error incrementing views: $e');
       _setError('Error incrementing views: ${e.toString()}');
+    }
+  }
+
+  // Get unique reader statistics
+  Future<Map<String, dynamic>> getUniqueReaderStatistics() async {
+    try {
+      return await _articleService.getUniqueReaderStatistics();
+    } catch (e) {
+      print('Error getting unique reader statistics: $e');
+      return {
+        'totalUniqueReaders': 0,
+        'totalArticleReads': 0,
+        'averageReadersPerArticle': 0,
+        'articlesWithReaders': 0,
+      };
     }
   }
 
@@ -317,30 +349,51 @@ class ArticleProvider with ChangeNotifier {
   }
 
   // Get article statistics
-  Map<String, dynamic> getArticleStatistics() {
-    final totalArticles = _articles.length;
-    final activeArticles = _articles.where((a) => a.isActive).length;
-    final totalViews = _articles.fold(0, (sum, article) => sum + article.views);
-    final avgReadTime =
-        _articles.isNotEmpty
-            ? _articles.fold(0.0, (sum, article) => sum + article.readTime) /
-                _articles.length
-            : 0.0;
+  Future<Map<String, dynamic>> getArticleStatistics() async {
+    try {
+      // Get unique reader statistics
+      final readerStats = await getUniqueReaderStatistics();
 
-    // Category distribution
-    final categoryDistribution = <String, int>{};
-    for (final article in _articles) {
-      categoryDistribution[article.category] =
-          (categoryDistribution[article.category] ?? 0) + 1;
+      final totalArticles = _articles.length;
+      final activeArticles = _articles.where((a) => a.isActive).length;
+      final totalViews = _articles.fold(
+        0,
+        (sum, article) => sum + article.views,
+      );
+      final avgReadTime =
+          _articles.isNotEmpty
+              ? _articles.fold(0.0, (sum, article) => sum + article.readTime) /
+                  _articles.length
+              : 0.0;
+
+      // Category distribution
+      final categoryDistribution = <String, int>{};
+      for (final article in _articles) {
+        categoryDistribution[article.category] =
+            (categoryDistribution[article.category] ?? 0) + 1;
+      }
+
+      return {
+        'totalArticles': totalArticles,
+        'activeArticles': activeArticles,
+        'totalViews': totalViews,
+        'totalUniqueReaders': readerStats['totalUniqueReaders'],
+        'averageReadersPerArticle': readerStats['averageReadersPerArticle'],
+        'averageReadTime': avgReadTime.round(),
+        'categoryDistribution': categoryDistribution,
+      };
+    } catch (e) {
+      print('Error getting article statistics: $e');
+      return {
+        'totalArticles': 0,
+        'activeArticles': 0,
+        'totalViews': 0,
+        'totalUniqueReaders': 0,
+        'averageReadersPerArticle': 0,
+        'averageReadTime': 0,
+        'categoryDistribution': {},
+      };
     }
-
-    return {
-      'totalArticles': totalArticles,
-      'activeArticles': activeArticles,
-      'totalViews': totalViews,
-      'averageReadTime': avgReadTime.round(),
-      'categoryDistribution': categoryDistribution,
-    };
   }
 
   // Clear error
@@ -367,6 +420,36 @@ class ArticleProvider with ChangeNotifier {
   // Refresh articles from service
   Future<void> refreshArticles() async {
     await initializeArticles();
+  }
+
+  // Refresh view counts from Firebase to ensure accuracy
+  Future<void> refreshViewCounts() async {
+    try {
+      _setLoading(true);
+
+      // Get fresh data from Firebase
+      final freshArticles = await _articleService.getActiveArticles();
+
+      // Update local articles with fresh view counts
+      for (int i = 0; i < _articles.length; i++) {
+        final freshArticle = freshArticles.firstWhere(
+          (a) => a.id == _articles[i].id,
+          orElse: () => _articles[i],
+        );
+
+        if (freshArticle.views != _articles[i].views) {
+          _articles[i] = freshArticle;
+        }
+      }
+
+      notifyListeners();
+      print('View counts refreshed from Firebase');
+    } catch (e) {
+      print('Error refreshing view counts: $e');
+      _setError('Error refreshing view counts: ${e.toString()}');
+    } finally {
+      _setLoading(false);
+    }
   }
 
   // Dispose
