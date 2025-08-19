@@ -20,69 +20,23 @@ class _EdukasiScreenState extends State<EdukasiScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
-  String _searchQuery = '';
   String _selectedCategory = 'Semua Jenis';
-  String _selectedSubCategory = '';
-
-  // Enhanced category structure with subcategories
-  final Map<String, List<String>> _categoryStructure = {
-    'Semua Jenis': [],
-    'Nutrisi & Gizi': [
-      'Makanan Sehat',
-      'Vitamin & Suplemen',
-      'Diet Kehamilan',
-      'Hidrasi',
-    ],
-    'Perkembangan Janin': [
-      'Pertumbuhan',
-      'Gerakan Janin',
-      'Organ Development',
-      'Ukuran Janin',
-    ],
-    'Tips Kesehatan': [
-      'Kesehatan Ibu',
-      'Olahraga',
-      'Istirahat',
-      'Pakaian Hamil',
-    ],
-    'Pemeriksaan Medis': [
-      'Pemeriksaan Rutin',
-      'Gejala Normal',
-      'Tanda Bahaya',
-      'Imunisasi',
-    ],
-    'Persiapan Persalinan': [
-      'Persiapan Fisik',
-      'Persiapan Mental',
-      'Persiapan Barang',
-      'Rencana Persalinan',
-    ],
-    'Kesehatan Mental': [
-      'Stres Kehamilan',
-      'Depresi Pasca Melahirkan',
-      'Teknik Relaksasi',
-      'Dukungan Keluarga',
-    ],
-    'Olahraga & Aktivitas': [
-      'Senam Hamil',
-      'Yoga Kehamilan',
-      'Berjalan Kaki',
-      'Berenang',
-    ],
-  };
-
-  final List<String> _quickAccessCategories = [
-    'Nutrisi & Gizi',
-    'Perkembangan Janin',
-    'Tips Kesehatan',
-    'Pemeriksaan Medis',
-    'Persiapan Persalinan',
-    'Kesehatan Mental',
-  ];
+  String _selectedContentType = 'Semua Konten';
+  bool _isFilterExpanded = false;
+  bool _isHeaderVisible = true; // New variable for header visibility
+  late ScrollController _scrollController; // New scroll controller
+  late ScrollController
+  _contentTypeScrollController; // New scroll controller for content type
 
   @override
   void initState() {
     super.initState();
+
+    _scrollController = ScrollController(); // Initialize scroll controller
+    _scrollController.addListener(_onScroll); // Add scroll listener
+    _contentTypeScrollController =
+        ScrollController(); // Initialize content type scroll controller
+
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
       vsync: this,
@@ -101,394 +55,182 @@ class _EdukasiScreenState extends State<EdukasiScreen>
 
     // Initialize articles when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ArticleProvider>().initializeArticles();
+      final articleProvider = context.read<ArticleProvider>();
+      print('EdukasiScreen: Starting article initialization...');
+
+      // Initialize articles from Firebase
+      articleProvider
+          .initializeArticles()
+          .then((_) {
+            print('EdukasiScreen: Articles initialized from Firebase');
+            print(
+              'EdukasiScreen: Total articles: ${articleProvider.activeArticles.length}',
+            );
+
+            if (mounted) {
+              print(
+                'EdukasiScreen: Final article count: ${articleProvider.activeArticles.length}',
+              );
+              setState(() {}); // Trigger rebuild to show articles
+            }
+          })
+          .catchError((error) {
+            print('Error initializing articles: $error');
+            if (mounted) {
+              setState(() {});
+            }
+          });
     });
   }
 
   @override
   void dispose() {
+    _scrollController.removeListener(_onScroll); // Remove scroll listener
+    _scrollController.dispose(); // Dispose scroll controller
+    _contentTypeScrollController
+        .dispose(); // Dispose content type scroll controller
     _animationController.dispose();
     super.dispose();
   }
 
-  void _handleSearch(String query) {
-    setState(() {
-      _searchQuery = query;
-    });
-  }
-
-  void _handleClearSearch() {
-    setState(() {
-      _searchQuery = '';
-    });
+  void _onScroll() {
+    // Show header when scrolling up, hide when scrolling down
+    if (_scrollController.position.pixels > 100) {
+      if (_isHeaderVisible) {
+        setState(() {
+          _isHeaderVisible = false;
+        });
+      }
+    } else {
+      if (!_isHeaderVisible) {
+        setState(() {
+          _isHeaderVisible = true;
+        });
+      }
+    }
   }
 
   void _handleCategorySelected(String category) {
     setState(() {
       _selectedCategory = category;
-      _selectedSubCategory = '';
     });
   }
 
-  void _handleSubCategorySelected(String subCategory) {
+  void _handleContentTypeSelected(String contentType) {
     setState(() {
-      _selectedSubCategory = subCategory;
+      _selectedContentType = contentType;
     });
+  }
+
+  void _toggleFilterExpansion() {
+    setState(() {
+      _isFilterExpanded = !_isFilterExpanded;
+    });
+  }
+
+  void _scrollContentTypeLeft() {
+    // Scroll content type filter to the left
+    if (_contentTypeScrollController.hasClients) {
+      _contentTypeScrollController.animateTo(
+        _contentTypeScrollController.offset - 200,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
+  }
+
+  void _scrollContentTypeRight() {
+    // Scroll content type filter to the right
+    if (_contentTypeScrollController.hasClients) {
+      _contentTypeScrollController.animateTo(
+        _contentTypeScrollController.offset + 200,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+      );
+    }
   }
 
   List<dynamic> _getFilteredArticles(ArticleProvider articleProvider) {
-    List<dynamic> articles = articleProvider.activeArticles;
+    try {
+      List<dynamic> articles = articleProvider.activeArticles;
 
-    // Filter by main category
-    if (_selectedCategory != 'Semua Jenis') {
-      if (_selectedSubCategory.isNotEmpty) {
-        // Filter by subcategory
+      print(
+        '_getFilteredArticles: Total articles available: ${articles.length}',
+      );
+      print('_getFilteredArticles: Selected category: "$_selectedCategory"');
+      print(
+        '_getFilteredArticles: Selected content type: "$_selectedContentType"',
+      );
+
+      // Filter by category
+      if (_selectedCategory != 'Semua Jenis') {
         articles =
             articles
-                .where((article) => article.category == _selectedSubCategory)
+                .where((article) => article.category == _selectedCategory)
                 .toList();
-      } else {
-        // Filter by main category (check if article category matches any subcategory)
-        List<String> subCategories =
-            _categoryStructure[_selectedCategory] ?? [];
-        if (subCategories.isNotEmpty) {
-          articles =
-              articles
-                  .where((article) => subCategories.contains(article.category))
-                  .toList();
-        } else {
-          articles =
-              articles
-                  .where((article) => article.category == _selectedCategory)
-                  .toList();
-        }
+        print(
+          '_getFilteredArticles: After category filter: ${articles.length} articles',
+        );
       }
+
+      // Filter by content type (based on article title/content patterns)
+      if (_selectedContentType != 'Semua Konten') {
+        articles =
+            articles.where((article) {
+              final title = article.title?.toLowerCase() ?? '';
+              final content = article.content?.toLowerCase() ?? '';
+
+              switch (_selectedContentType) {
+                case 'Nutrisi & Gizi':
+                  return title.contains('nutrisi') ||
+                      title.contains('gizi') ||
+                      content.contains('nutrisi') ||
+                      content.contains('gizi');
+                case 'Perkembangan Janin':
+                  return title.contains('perkembangan') ||
+                      title.contains('janin') ||
+                      content.contains('perkembangan') ||
+                      content.contains('janin');
+                case 'Tips Kesehatan':
+                  return title.contains('tips') ||
+                      title.contains('kesehatan') ||
+                      content.contains('tips') ||
+                      content.contains('kesehatan');
+                case 'Pemeriksaan Medis':
+                  return title.contains('pemeriksaan') ||
+                      title.contains('medis') ||
+                      content.contains('pemeriksaan') ||
+                      content.contains('medis');
+                case 'Persiapan Persalinan':
+                  return title.contains('persiapan') ||
+                      title.contains('persalinan') ||
+                      content.contains('persiapan') ||
+                      content.contains('persalinan');
+                case 'Kesehatan Mental':
+                  return title.contains('mental') ||
+                      title.contains('emosi') ||
+                      content.contains('mental') ||
+                      content.contains('emosi');
+                case 'Olahraga & Aktivitas':
+                  return title.contains('olahraga') ||
+                      title.contains('aktivitas') ||
+                      content.contains('olahraga') ||
+                      content.contains('aktivitas');
+                default:
+                  return true;
+              }
+            }).toList();
+        print(
+          '_getFilteredArticles: After content type filter: ${articles.length} articles',
+        );
+      }
+
+      print('_getFilteredArticles: Final result: ${articles.length} articles');
+      return articles;
+    } catch (e) {
+      print('Error in _getFilteredArticles: $e');
+      return [];
     }
-
-    // Filter by search query
-    if (_searchQuery.isNotEmpty) {
-      articles =
-          articles
-              .where(
-                (article) =>
-                    article.title.toLowerCase().contains(
-                      _searchQuery.toLowerCase(),
-                    ) ||
-                    article.content.toLowerCase().contains(
-                      _searchQuery.toLowerCase(),
-                    ) ||
-                    (article.keywords != null &&
-                        article.keywords.any(
-                          (keyword) => keyword.toLowerCase().contains(
-                            _searchQuery.toLowerCase(),
-                          ),
-                        )) ||
-                    article.category.toLowerCase().contains(
-                      _searchQuery.toLowerCase(),
-                    ),
-              )
-              .toList();
-    }
-
-    return articles;
-  }
-
-  void _showCategoryFilterDialog() {
-    showDialog(
-      context: context,
-      builder:
-          (context) => AlertDialog(
-            title: Row(
-              children: [
-                Icon(
-                  Icons.filter_list,
-                  color: const Color(0xFFEC407A),
-                  size: 24,
-                ),
-                const SizedBox(width: 12),
-                Text(
-                  'Filter Kategori',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
-            content: SizedBox(
-              width: double.maxFinite,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Pilih Kategori Utama:',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF2D3748),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children:
-                        _categoryStructure.keys.map((category) {
-                          final isSelected = _selectedCategory == category;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedCategory = category;
-                                _selectedSubCategory = '';
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? const Color(0xFFEC407A)
-                                        : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color:
-                                      isSelected
-                                          ? const Color(0xFFEC407A)
-                                          : Colors.grey[300]!,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                category,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color:
-                                      isSelected
-                                          ? Colors.white
-                                          : Colors.grey[700],
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                  ),
-                  if (_selectedCategory != 'Semua Jenis' &&
-                      _categoryStructure[_selectedCategory]?.isNotEmpty ==
-                          true) ...[
-                    const SizedBox(height: 20),
-                    Text(
-                      'Pilih Sub-Kategori:',
-                      style: GoogleFonts.poppins(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF2D3748),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 8,
-                      runSpacing: 8,
-                      children: [
-                        // "Semua" option
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _selectedSubCategory = '';
-                            });
-                            Navigator.pop(context);
-                          },
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 8,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  _selectedSubCategory.isEmpty
-                                      ? const Color(0xFFEC407A)
-                                      : Colors.grey[100],
-                              borderRadius: BorderRadius.circular(20),
-                              border: Border.all(
-                                color:
-                                    _selectedSubCategory.isEmpty
-                                        ? const Color(0xFFEC407A)
-                                        : Colors.grey[300]!,
-                                width: 1,
-                              ),
-                            ),
-                            child: Text(
-                              'Semua',
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color:
-                                    _selectedSubCategory.isEmpty
-                                        ? Colors.white
-                                        : Colors.grey[700],
-                              ),
-                            ),
-                          ),
-                        ),
-                        // Sub-categories
-                        ...(_categoryStructure[_selectedCategory] ?? []).map((
-                          subCategory,
-                        ) {
-                          final isSelected =
-                              _selectedSubCategory == subCategory;
-                          return GestureDetector(
-                            onTap: () {
-                              setState(() {
-                                _selectedSubCategory = subCategory;
-                              });
-                              Navigator.pop(context);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 8,
-                              ),
-                              decoration: BoxDecoration(
-                                color:
-                                    isSelected
-                                        ? const Color(0xFFEC407A)
-                                        : Colors.grey[100],
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color:
-                                      isSelected
-                                          ? const Color(0xFFEC407A)
-                                          : Colors.grey[300]!,
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                subCategory,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color:
-                                      isSelected
-                                          ? Colors.white
-                                          : Colors.grey[700],
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                      ],
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  'Tutup',
-                  style: GoogleFonts.poppins(color: Colors.grey[600]),
-                ),
-              ),
-            ],
-          ),
-    );
-  }
-
-  Widget _buildSubCategoriesRow() {
-    final subCategories = _categoryStructure[_selectedCategory] ?? [];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            Text(
-              'Sub Kategori:',
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Colors.grey[600],
-              ),
-            ),
-            const Spacer(),
-            TextButton(
-              onPressed: () => _handleSubCategorySelected(''),
-              child: Text(
-                'Semua',
-                style: GoogleFonts.poppins(
-                  fontSize: 11,
-                  color:
-                      _selectedSubCategory.isEmpty
-                          ? const Color(0xFFEC407A)
-                          : Colors.grey[500],
-                  fontWeight:
-                      _selectedSubCategory.isEmpty
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        SizedBox(
-          height: 32,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: subCategories.length,
-            itemBuilder: (context, index) {
-              final subCategory = subCategories[index];
-              final isSelected = _selectedSubCategory == subCategory;
-
-              return Container(
-                margin: const EdgeInsets.only(right: 6),
-                child: GestureDetector(
-                  onTap: () => _handleSubCategorySelected(subCategory),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color:
-                          isSelected
-                              ? const Color(0xFFEC407A).withOpacity(0.2)
-                              : Colors.grey[100],
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color:
-                            isSelected
-                                ? const Color(0xFFEC407A)
-                                : Colors.grey[300]!,
-                        width: 1,
-                      ),
-                    ),
-                    child: Text(
-                      subCategory,
-                      style: GoogleFonts.poppins(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w500,
-                        color:
-                            isSelected
-                                ? const Color(0xFFEC407A)
-                                : Colors.grey[600],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            },
-          ),
-        ),
-      ],
-    );
   }
 
   Widget _buildArticlesSection() {
@@ -508,18 +250,49 @@ class _EdukasiScreenState extends State<EdukasiScreen>
 
         final filteredArticles = _getFilteredArticles(articleProvider);
 
+        print(
+          '_buildArticlesSection: Provider has ${articleProvider.activeArticles.length} articles',
+        );
+        print(
+          '_buildArticlesSection: Filtered articles: ${filteredArticles.length}',
+        );
+        print('_buildArticlesSection: Selected category: "$_selectedCategory"');
+        print(
+          '_buildArticlesSection: Selected content type: "$_selectedContentType"',
+        );
+
         if (filteredArticles.isEmpty) {
-          return _buildEmptyState();
+          // Check if there are no articles at all
+          if (articleProvider.activeArticles.length == 0) {
+            print(
+              '_buildArticlesSection: No articles in provider, showing no articles state',
+            );
+            return _buildNoArticlesState();
+          }
+          // Check if it's due to filters
+          if (_selectedCategory != 'Semua Jenis' ||
+              _selectedContentType != 'Semua Konten') {
+            print(
+              '_buildArticlesSection: No articles found for current filters, showing empty state',
+            );
+            return _buildEmptyState();
+          }
+          // If no articles and no filters, show no articles state
+          print(
+            '_buildArticlesSection: No articles and no filters, showing no articles state',
+          );
+          return _buildNoArticlesState();
         }
 
         return Column(
           children: [
-            // Article Count and Sort Options
+            // Article Count
             _buildArticleHeader(filteredArticles.length),
 
             // Articles List
             Expanded(
               child: ListView.builder(
+                controller: _scrollController, // Add scroll controller here
                 padding: const EdgeInsets.only(bottom: 16),
                 itemCount: filteredArticles.length,
                 itemBuilder: (context, index) {
@@ -564,29 +337,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
               fontWeight: FontWeight.w500,
             ),
           ),
-          const Spacer(),
-          if (_selectedCategory != 'Semua Jenis' ||
-              _selectedSubCategory.isNotEmpty)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFFEC407A).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: const Color(0xFFEC407A).withOpacity(0.3),
-                ),
-              ),
-              child: Text(
-                _selectedSubCategory.isNotEmpty
-                    ? _selectedSubCategory
-                    : _selectedCategory,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  color: const Color(0xFFEC407A),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -638,6 +388,52 @@ class _EdukasiScreenState extends State<EdukasiScreen>
     );
   }
 
+  Widget _buildNoArticlesState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.article_outlined, size: 64, color: Colors.grey[400]),
+          const SizedBox(height: 16),
+          Text(
+            'Belum ada artikel tersedia',
+            style: GoogleFonts.poppins(
+              fontSize: 18,
+              fontWeight: FontWeight.w600,
+              color: Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Artikel akan tersedia setelah admin membuat konten edukasi',
+            style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[500]),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          ElevatedButton(
+            onPressed: () {
+              final articleProvider = context.read<ArticleProvider>();
+              articleProvider.initializeArticles();
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFFEC407A),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(25),
+              ),
+            ),
+            child: Text(
+              'Refresh',
+              style: GoogleFonts.poppins(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildEmptyState() {
     return Center(
       child: Column(
@@ -655,7 +451,7 @@ class _EdukasiScreenState extends State<EdukasiScreen>
           ),
           const SizedBox(height: 8),
           Text(
-            'Coba ubah filter atau kata kunci pencarian',
+            'Coba ubah filter yang dipilih',
             style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[500]),
             textAlign: TextAlign.center,
           ),
@@ -664,8 +460,7 @@ class _EdukasiScreenState extends State<EdukasiScreen>
             onPressed: () {
               setState(() {
                 _selectedCategory = 'Semua Jenis';
-                _selectedSubCategory = '';
-                _searchQuery = '';
+                _selectedContentType = 'Semua Konten';
               });
             },
             style: ElevatedButton.styleFrom(
@@ -687,91 +482,394 @@ class _EdukasiScreenState extends State<EdukasiScreen>
     );
   }
 
-  Widget _buildSearchAndFilterSection() {
+  Widget _buildFilterSection() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: _isHeaderVisible ? null : 0,
+      child:
+          _isHeaderVisible
+              ? Container(
+                margin: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  children: [
+                    // Header Container
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFEC407A),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.grey.withValues(alpha: 0.2),
+                            spreadRadius: 1,
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(Icons.school, color: Colors.white, size: 40),
+                          const SizedBox(height: 12),
+                          Text(
+                            'Edukasi Kehamilan',
+                            style: GoogleFonts.poppins(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Temukan informasi lengkap tentang kehamilan',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.white.withValues(alpha: 0.9),
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Filter Toggle Button
+                    _buildFilterToggleButton(),
+
+                    // Filter Options - Expandable
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: _isFilterExpanded ? null : 0,
+                      child:
+                          _isFilterExpanded
+                              ? _buildFilterOptions()
+                              : const SizedBox.shrink(),
+                    ),
+                  ],
+                ),
+              )
+              : const SizedBox.shrink(),
+    );
+  }
+
+  Widget _buildFilterToggleButton() {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
+      width: double.infinity,
+      child: ElevatedButton.icon(
+        onPressed: _toggleFilterExpansion,
+        icon: Icon(
+          _isFilterExpanded
+              ? Icons.keyboard_arrow_up
+              : Icons.keyboard_arrow_down,
+          color: Colors.white,
+        ),
+        label: Text(
+          _isFilterExpanded ? 'Sembunyikan Filter' : 'Tampilkan Filter',
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.grey[600],
+          elevation: 0,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildFilterOptions() {
+    return Container(
+      margin: const EdgeInsets.only(top: 16),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Custom Search Bar with Filter Icon
-          _buildCustomSearchBar(),
+          // Category Filter - Horizontal scrollable chips
+          _buildHorizontalFilterChips(
+            title: 'Kategori',
+            options: [
+              'Semua Jenis',
+              'Trimester 1',
+              'Trimester 2',
+              'Trimester 3',
+            ],
+            selectedValue: _selectedCategory,
+            onSelected: _handleCategorySelected,
+          ),
           const SizedBox(height: 16),
 
-          // Sub Categories - Only show when main category is selected
-          if (_selectedCategory != 'Semua Jenis' &&
-              _categoryStructure[_selectedCategory]?.isNotEmpty == true)
-            _buildSubCategoriesRow(),
+          // Content Type Filter - With navigation buttons
+          _buildContentTypeFilterWithNavigation(),
 
-          const SizedBox(height: 16),
+          // Active Filters Summary
+          if (_selectedCategory != 'Semua Jenis' ||
+              _selectedContentType != 'Semua Konten')
+            Container(
+              margin: const EdgeInsets.only(top: 16),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFCE4EC), // Soft pink background
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: const Color(0xFFF8BBD9),
+                ), // Light pink border
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.filter_list,
+                    color: const Color(0xFFE91E63),
+                    size: 16,
+                  ), // Pink icon
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Filter Aktif: ${_getActiveFiltersText()}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFFC2185B), // Dark pink text
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      setState(() {
+                        _selectedCategory = 'Semua Jenis';
+                        _selectedContentType = 'Semua Konten';
+                      });
+                    },
+                    child: Text(
+                      'Reset',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFFE91E63), // Pink button text
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );
   }
 
-  Widget _buildCustomSearchBar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(25),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.2),
-            spreadRadius: 1,
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+  Widget _buildContentTypeFilterWithNavigation() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Jenis Konten',
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
           ),
-        ],
-      ),
-
-      child: Row(
-        children: [
-          // Search Icon
-          Padding(
-            padding: const EdgeInsets.only(left: 20),
-            child: Icon(Icons.search, color: Colors.grey[600], size: 24),
-          ),
-          // Search Text Field
-          Expanded(
-            child: TextField(
-              onChanged: _handleSearch,
-              style: GoogleFonts.poppins(fontSize: 16),
-              decoration: InputDecoration(
-                hintText: 'Cari artikel kehamilan...',
-                hintStyle: GoogleFonts.poppins(
-                  color: Colors.grey[400],
-                  fontSize: 16,
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            // Left Navigation Button
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: IconButton(
+                onPressed: _scrollContentTypeLeft,
+                icon: Icon(
+                  Icons.chevron_left,
+                  color: Colors.grey[600],
+                  size: 20,
                 ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 16,
+                padding: EdgeInsets.zero,
+              ),
+            ),
+            const SizedBox(width: 8),
+
+            // Content Type Chips Container
+            Expanded(
+              child: SizedBox(
+                height: 40,
+                child: ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  controller: _contentTypeScrollController,
+                  itemCount: _getContentTypeOptions().length,
+                  itemBuilder: (context, index) {
+                    final option = _getContentTypeOptions()[index];
+                    final isSelected = _selectedContentType == option;
+                    return Container(
+                      margin: const EdgeInsets.only(right: 8),
+                      child: GestureDetector(
+                        onTap: () => _handleContentTypeSelected(option),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                isSelected
+                                    ? const Color(0xFFEC407A)
+                                    : Colors.grey[100],
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color:
+                                  isSelected
+                                      ? const Color(0xFFEC407A)
+                                      : Colors.grey[300]!,
+                              width: 1,
+                            ),
+                          ),
+                          child: Center(
+                            child: Text(
+                              option,
+                              style: GoogleFonts.poppins(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isSelected
+                                        ? Colors.white
+                                        : Colors.grey[700],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),
-          ),
 
-          // Filter Icon Button
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: BoxDecoration(
-              color: const Color(0xFFEC407A).withOpacity(0.1),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: const Color(0xFFEC407A).withOpacity(0.3),
-                width: 1,
+            const SizedBox(width: 8),
+
+            // Right Navigation Button
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: Colors.grey[200],
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.grey[300]!),
+              ),
+              child: IconButton(
+                onPressed: _scrollContentTypeRight,
+                icon: Icon(
+                  Icons.chevron_right,
+                  color: Colors.grey[600],
+                  size: 20,
+                ),
+                padding: EdgeInsets.zero,
               ),
             ),
-            child: IconButton(
-              icon: Icon(
-                Icons.filter_list,
-                color: const Color(0xFFEC407A),
-                size: 20,
-              ),
-              onPressed: _showCategoryFilterDialog,
-              tooltip: 'Filter Kategori',
-            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  List<String> _getContentTypeOptions() {
+    return [
+      'Semua Konten',
+      'Nutrisi & Gizi',
+      'Perkembangan Janin',
+      'Tips Kesehatan',
+      'Pemeriksaan Medis',
+      'Persiapan Persalinan',
+      'Kesehatan Mental',
+      'Olahraga & Aktivitas',
+    ];
+  }
+
+  String _getActiveFiltersText() {
+    List<String> activeFilters = [];
+    if (_selectedCategory != 'Semua Jenis') {
+      activeFilters.add(_selectedCategory);
+    }
+    if (_selectedContentType != 'Semua Konten') {
+      activeFilters.add(_selectedContentType);
+    }
+    return activeFilters.join(', ');
+  }
+
+  Widget _buildHorizontalFilterChips({
+    required String title,
+    required List<String> options,
+    required String selectedValue,
+    required Function(String) onSelected,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: Colors.grey[700],
           ),
-        ],
-      ),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 40,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            itemCount: options.length,
+            itemBuilder: (context, index) {
+              final option = options[index];
+              final isSelected = selectedValue == option;
+              return Container(
+                margin: const EdgeInsets.only(right: 8),
+                child: GestureDetector(
+                  onTap: () => onSelected(option),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      color:
+                          isSelected
+                              ? const Color(0xFFEC407A)
+                              : Colors.grey[100],
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color:
+                            isSelected
+                                ? const Color(0xFFEC407A)
+                                : Colors.grey[300]!,
+                        width: 1,
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        option,
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                          color: isSelected ? Colors.white : Colors.grey[700],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
     );
   }
 
@@ -815,12 +913,9 @@ class _EdukasiScreenState extends State<EdukasiScreen>
           child: SafeArea(
             child: Column(
               children: [
-                // Search and Filter Section
-                _buildSearchAndFilterSection(),
-
-                const SizedBox(
-                  height: 24,
-                ), // Add spacing between search and articles
+                // Filter Section
+                _buildFilterSection(),
+                const SizedBox(height: 16), // Reduced spacing
                 // Articles Section
                 Expanded(child: _buildArticlesSection()),
               ],
