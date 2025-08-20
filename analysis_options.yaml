@@ -32,12 +32,8 @@ linter:
     package_api_docs: true
     package_names: true
     package_prefixed_library_names: true
-    prefer_const_constructors: true
-    prefer_const_declarations: true
-    prefer_const_literals_to_create_immutables: true
     prefer_contains: true
     prefer_equal_for_default_values: true
-    prefer_final_fields: true
     prefer_final_locals: true
     prefer_initializing_formals: true
     prefer_is_empty: true
@@ -100,11 +96,7 @@ linter:
     cast_nullable_to_non_nullable: true
     conditional_uri_does_not_exist: true
     control_flow_in_finally: true
-    curly_braces_in_flow_control_structures: true
-    directives_ordering: true
-    empty_catches: true
-    empty_constructor_bodies: true
-    empty_statements: true
+    curly_braces_in_flow_control_structures: tru
     exhaustive_cases: true
     file_names: true
     hash_and_equals: true
@@ -136,7 +128,6 @@ linter:
     prefer_asserts_with_message: true
     prefer_collection_literals: true
     prefer_conditional_assignment: true
-    prefer_const_constructors: true
     prefer_const_constructors_in_immutables: true
     prefer_const_declarations: true
     prefer_const_literals_to_create_immutables: true

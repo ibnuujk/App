@@ -510,7 +510,9 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                               color: const Color(0xFFFFCDD2),
                               borderRadius: BorderRadius.circular(40),
                               border: Border.all(
-                                color: const Color(0xFFEC407A).withValues(alpha: 0.2),
+                                color: const Color(
+                                  0xFFEC407A,
+                                ).withValues(alpha: 0.2),
                                 width: 2,
                               ),
                             ),
@@ -584,10 +586,14 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFCDD2).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFFFFCDD2,
+                            ).withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFFEC407A).withValues(alpha: 0.2),
+                              color: const Color(
+                                0xFFEC407A,
+                              ).withValues(alpha: 0.2),
                               width: 1,
                             ),
                           ),

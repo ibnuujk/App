@@ -51,7 +51,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   }
 
   Future<void> _makeEmergencyCall(String number, String service) async {
-    final success = await _emergencyService.makePhoneCall(number);
+    final success = await _emergencyService.makeEmergencyCall(number);
     if (!success) {
       _showSnackBar('Gagal melakukan panggilan ke $service', isError: true);
     }
@@ -321,31 +321,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
             ],
           ),
           const SizedBox(height: 16),
-
-          // Emergency Call Buttons
-          Row(
-            children: [
-              Expanded(
-                child: _buildEmergencyButton(
-                  icon: Icons.local_hospital,
-                  label: 'Ambulans\n118',
-                  color: Colors.red,
-                  onPressed: () => _makeEmergencyCall('118', 'Ambulans'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildEmergencyButton(
-                  icon: Icons.local_police,
-                  label: 'Polisi\n110',
-                  color: Colors.blue,
-                  onPressed: () => _makeEmergencyCall('110', 'Polisi'),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-
           // Bidan Contact Buttons
           Row(
             children: [
@@ -606,7 +581,7 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
             children: [
               IconButton(
                 onPressed:
-                    () => _emergencyService.makePhoneCall(contact.phoneNumber),
+                    () => _emergencyService.callEmergencyContact(contact),
                 icon: const Icon(Icons.phone, color: Color(0xFFEC407A)),
                 style: IconButton.styleFrom(
                   backgroundColor: const Color(0xFFFFCDD2),

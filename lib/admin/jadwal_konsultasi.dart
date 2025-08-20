@@ -139,10 +139,16 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
 
   Future<void> _approveSchedule(String scheduleId) async {
     try {
+      // Get schedule details for notification
+      final schedule = _consultationSchedules.firstWhere(
+        (s) => s['id'] == scheduleId,
+      );
+
       await _firebaseService.updateJadwalKonsultasi({
         'id': scheduleId,
         'status': 'confirmed',
       });
+
       _loadConsultationSchedules();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -160,10 +166,16 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
 
   Future<void> _rejectSchedule(String scheduleId) async {
     try {
+      // Get schedule details for notification
+      final schedule = _consultationSchedules.firstWhere(
+        (s) => s['id'] == scheduleId,
+      );
+
       await _firebaseService.updateJadwalKonsultasi({
         'id': scheduleId,
         'status': 'rejected',
       });
+
       _loadConsultationSchedules();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -481,9 +493,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
           ),
         ]);
       }
-      // If examination has been performed, only show status info (handled by status display)
     }
-    // For rejected appointments, only show status info (handled by status display)
 
     // Always show delete option
     items.add(
@@ -500,6 +510,67 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
     );
 
     return items;
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'pending':
+        return 'Menunggu';
+      case 'confirmed':
+        return 'Diterima';
+      case 'rejected':
+        return 'Ditolak';
+      default:
+        return 'Unknown';
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'pending':
+        return Colors.orange;
+      case 'confirmed':
+        return Colors.green;
+      case 'rejected':
+        return Colors.red;
+      default:
+        return Colors.grey;
+    }
+  }
+
+  Widget _buildStatusCard(String title, int count, Color color) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            count.toString(),
+            style: GoogleFonts.poppins(
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            title,
+            style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildUpcomingAppointments() {
@@ -537,19 +608,6 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                 color: const Color(0xFF2D3748),
               ),
             ),
-            if (upcomingAppointments.isNotEmpty)
-              TextButton(
-                onPressed: () {
-                  // Scroll to all schedules section
-                },
-                child: Text(
-                  'Lihat Semua',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: const Color(0xFFEC407A),
-                  ),
-                ),
-              ),
           ],
         ),
         const SizedBox(height: 12),
@@ -612,7 +670,9 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC407A).withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFFEC407A,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -660,7 +720,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  schedule['jamKonsultasi'] ?? 'N/A',
+                                  schedule['waktuKonsultasi'] ?? 'N/A',
                                   style: GoogleFonts.poppins(
                                     fontSize: 12,
                                     color: Colors.grey[600],
@@ -731,490 +791,391 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
     );
   }
 
-  String _getStatusText(String status) {
-    switch (status) {
-      case 'pending':
-        return 'Menunggu';
-      case 'confirmed':
-        return 'Diterima';
-      case 'rejected':
-        return 'Ditolak';
-      default:
-        return 'Unknown';
-    }
-  }
-
-  Color _getStatusColor(String status) {
-    switch (status) {
-      case 'pending':
-        return Colors.orange;
-      case 'confirmed':
-        return Colors.green;
-      case 'rejected':
-        return Colors.red;
-      default:
-        return Colors.grey;
-    }
-  }
-
-  Widget _buildStatusCard(String title, int count, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Text(
-            count.toString(),
-            style: GoogleFonts.poppins(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            title,
-            style: GoogleFonts.poppins(fontSize: 12, color: Colors.grey[600]),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        flexibleSpace: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              colors: [Color(0xFFEC407A), Color(0xFFE91E63)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with gradient background
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [Color(0xFFEC407A), Color(0xFFE91E63)],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                ),
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
-                    blurRadius: 10,
-                    offset: const Offset(0, 5),
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: const Color(0xFFF8FAFC),
+          body: CustomScrollView(
+            slivers: [
+              // Sliver App Bar yang akan hide/show
+              SliverAppBar(
+                expandedHeight: 120.0,
+                floating: false,
+                pinned: true,
+                backgroundColor: const Color(0xFFEC407A),
+                elevation: 0,
+                flexibleSpace: FlexibleSpaceBar(
+                  background: Container(
+                    color: const Color(0xFFEC407A),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(
+                        20.0,
+                        60.0,
+                        20.0,
+                        20.0,
+                      ),
+                    ),
                   ),
-                ],
+                ),
+                leading: IconButton(
+                  icon: const Icon(Icons.arrow_back, color: Colors.white),
+                  onPressed: () => Navigator.pop(context),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+
+              // Sliver untuk upcoming appointments
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: _buildUpcomingAppointments(),
+                ),
+              ),
+
+              // Sliver untuk status cards
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.schedule_rounded,
-                          color: Colors.white,
-                          size: 24,
+                      Expanded(
+                        child: _buildStatusCard(
+                          'Menunggu',
+                          _getPendingCount(),
+                          Colors.orange,
                         ),
                       ),
-                      const SizedBox(width: 16),
+                      const SizedBox(width: 12),
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Jadwal Konsultasi',
-                              style: GoogleFonts.poppins(
-                                fontWeight: FontWeight.w600,
-                                fontSize: 20,
-                                color: Colors.white,
-                              ),
-                            ),
-                            Text(
-                              'Kelola jadwal konsultasi pasien',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.white.withValues(alpha: 0.8),
-                              ),
-                            ),
-                          ],
+                        child: _buildStatusCard(
+                          'Diterima',
+                          _getConfirmedCount(),
+                          Colors.green,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: _buildStatusCard(
+                          'Ditolak',
+                          _getRejectedCount(),
+                          Colors.red,
                         ),
                       ),
                     ],
                   ),
-                ],
+                ),
               ),
-            ),
-            const SizedBox(height: 24),
 
-            // Upcoming appointments section
-            _buildUpcomingAppointments(),
-            const SizedBox(height: 24),
-
-            // Status summary cards
-            Row(
-              children: [
-                Expanded(
-                  child: _buildStatusCard(
-                    'Menunggu',
-                    _getPendingCount(),
-                    Colors.orange,
+              // Sliver untuk header "Semua Jadwal"
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Semua Jadwal',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF2D3748),
+                        ),
+                      ),
+                      IconButton(
+                        onPressed: _showAddScheduleDialog,
+                        icon: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEC407A),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: const Icon(
+                            Icons.add,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatusCard(
-                    'Diterima',
-                    _getConfirmedCount(),
-                    Colors.green,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildStatusCard(
-                    'Ditolak',
-                    _getRejectedCount(),
-                    Colors.red,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 24),
+              ),
 
-            // All schedules section header
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Semua Jadwal',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: const Color(0xFF2D3748),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-
-            // Schedule list
-            Expanded(
-              child:
-                  _isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : _consultationSchedules.isEmpty
-                      ? Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.schedule_outlined,
-                              size: 64,
-                              color: Colors.grey[400],
+              // Sliver untuk list jadwal
+              _isLoading
+                  ? const SliverToBoxAdapter(
+                    child: Center(child: CircularProgressIndicator()),
+                  )
+                  : _consultationSchedules.isEmpty
+                  ? SliverToBoxAdapter(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.schedule_outlined,
+                            size: 64,
+                            color: Colors.grey[400],
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Belum ada jadwal konsultasi',
+                            style: GoogleFonts.poppins(
+                              fontSize: 16,
+                              color: Colors.grey[600],
                             ),
-                            const SizedBox(height: 16),
-                            Text(
-                              'Belum ada jadwal konsultasi',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                color: Colors.grey[600],
-                              ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  )
+                  : SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final schedule = _consultationSchedules[index];
+                      final isConfirmed = schedule['status'] == 'confirmed';
+                      final isRejected = schedule['status'] == 'rejected';
+
+                      return Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 6.0,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withValues(alpha: 0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
                             ),
                           ],
                         ),
-                      )
-                      : ListView.builder(
-                        itemCount: _consultationSchedules.length,
-                        itemBuilder: (context, index) {
-                          final schedule = _consultationSchedules[index];
-                          final isConfirmed = schedule['status'] == 'confirmed';
-                          final isRejected = schedule['status'] == 'rejected';
-
-                          return Container(
-                            margin: const EdgeInsets.only(bottom: 12),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(12),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.05),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 5),
+                        child: Column(
+                          children: [
+                            ListTile(
+                              contentPadding: const EdgeInsets.all(16),
+                              leading: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: _getStatusColor(
+                                    schedule['status'],
+                                  ).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
-                              ],
-                            ),
-                            child: Column(
-                              children: [
-                                ListTile(
-                                  contentPadding: const EdgeInsets.all(16),
-                                  leading: Container(
-                                    padding: const EdgeInsets.all(8),
-                                    decoration: BoxDecoration(
-                                      color: _getStatusColor(
-                                        schedule['status'],
-                                      ).withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    child: Icon(
-                                      Icons.schedule_rounded,
-                                      color: _getStatusColor(
-                                        schedule['status'],
-                                      ),
-                                      size: 24,
-                                    ),
+                                child: Icon(
+                                  Icons.schedule_rounded,
+                                  color: _getStatusColor(schedule['status']),
+                                  size: 24,
+                                ),
+                              ),
+                              title: Text(
+                                schedule['namaPasien'] ?? 'Unknown Patient',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
+                                  fontSize: 16,
+                                ),
+                              ),
+                              subtitle: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    'Tanggal: ${_formatDate(schedule['tanggalKonsultasi'])}',
+                                    style: GoogleFonts.poppins(fontSize: 12),
                                   ),
-                                  title: Text(
-                                    schedule['namaPasien'] ?? 'Unknown Patient',
-                                    style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.w600,
-                                      fontSize: 16,
-                                    ),
+                                  Text(
+                                    'Waktu: ${schedule['waktuKonsultasi'] ?? 'N/A'}',
+                                    style: GoogleFonts.poppins(fontSize: 12),
                                   ),
-                                  subtitle: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        'Tanggal: ${_formatDate(schedule['tanggalKonsultasi'])}',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
+                                ],
+                              ),
+                              trailing: PopupMenuButton<String>(
+                                onSelected: (value) {
+                                  switch (value) {
+                                    case 'view':
+                                      _showScheduleDetailDialog(schedule);
+                                      break;
+                                    case 'edit':
+                                      _showEditScheduleDialog(schedule);
+                                      break;
+                                    case 'delete':
+                                      _deleteSchedule(schedule['id']);
+                                      break;
+                                  }
+                                },
+                                itemBuilder:
+                                    (context) => [
+                                      const PopupMenuItem(
+                                        value: 'view',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.visibility, size: 16),
+                                            SizedBox(width: 8),
+                                            Text('Lihat Detail'),
+                                          ],
                                         ),
                                       ),
-                                      Text(
-                                        'Waktu: ${schedule['waktuKonsultasi'] ?? 'N/A'}',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 12,
+                                      const PopupMenuItem(
+                                        value: 'edit',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.edit, size: 16),
+                                            SizedBox(width: 8),
+                                            Text('Edit'),
+                                          ],
                                         ),
                                       ),
-                                      const SizedBox(height: 8),
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 8,
-                                          vertical: 4,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _getStatusColor(
-                                            schedule['status'],
-                                          ).withValues(alpha: 0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            12,
-                                          ),
-                                        ),
-                                        child: Text(
-                                          _getStatusText(schedule['status']),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 10,
-                                            fontWeight: FontWeight.w500,
-                                            color: _getStatusColor(
-                                              schedule['status'],
-                                            ),
-                                          ),
+                                      const PopupMenuItem(
+                                        value: 'delete',
+                                        child: Row(
+                                          children: [
+                                            Icon(Icons.delete, size: 16),
+                                            SizedBox(width: 8),
+                                            Text('Hapus'),
+                                          ],
                                         ),
                                       ),
                                     ],
-                                  ),
-                                  trailing: PopupMenuButton<String>(
-                                    onSelected: (value) {
-                                      switch (value) {
-                                        case 'view':
-                                          _showScheduleDetailDialog(schedule);
-                                          break;
-                                        case 'edit':
-                                          _showEditScheduleDialog(schedule);
-                                          break;
-                                        case 'approve':
-                                          _approveSchedule(schedule['id']);
-                                          break;
-                                        case 'reject':
-                                          _rejectSchedule(schedule['id']);
-                                          break;
-                                        case 'delete':
-                                          _deleteSchedule(schedule['id']);
-                                          break;
-                                        case 'pemeriksaan':
-                                          _navigateToPemeriksaan(schedule);
-                                          break;
-                                      }
-                                    },
-                                    itemBuilder:
-                                        (context) =>
-                                            _buildPopupMenuItems(schedule),
-                                  ),
+                              ),
+                            ),
+                            // Action buttons
+                            if (!isRejected)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
                                 ),
-
-                                // Kondisi jika diterima dan belum pemeriksaan - muncul button lakukan pemeriksaan
-                                if (isConfirmed &&
-                                    schedule['hasExamination'] != true)
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.fromLTRB(
-                                      16,
-                                      0,
-                                      16,
-                                      16,
-                                    ),
-                                    child: ElevatedButton.icon(
-                                      onPressed:
-                                          () =>
-                                              _navigateToPemeriksaan(schedule),
-                                      icon: const Icon(
-                                        Icons.medical_services_rounded,
-                                        size: 20,
-                                      ),
-                                      label: Text(
-                                        'Lakukan Pemeriksaan',
-                                        style: GoogleFonts.poppins(
-                                          fontWeight: FontWeight.w600,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                      style: ElevatedButton.styleFrom(
-                                        backgroundColor: const Color(
-                                          0xFFEC407A,
-                                        ),
-                                        foregroundColor: Colors.white,
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 24,
-                                          vertical: 12,
-                                        ),
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceEvenly,
+                                  children: [
+                                    if (!isConfirmed)
+                                      Expanded(
+                                        child: ElevatedButton.icon(
+                                          onPressed:
+                                              () => _approveSchedule(
+                                                schedule['id'],
+                                              ),
+                                          icon: const Icon(
+                                            Icons.check,
+                                            size: 16,
                                           ),
-                                        ),
-                                        elevation: 2,
-                                      ),
-                                    ),
-                                  ),
-
-                                // Kondisi jika sudah pemeriksaan - tampilkan info
-                                if (isConfirmed &&
-                                    schedule['hasExamination'] == true)
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.fromLTRB(
-                                      16,
-                                      0,
-                                      16,
-                                      16,
-                                    ),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.green.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: Colors.green.withValues(alpha: 0.3),
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.check_circle,
-                                            color: Colors.green,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Pemeriksaan telah dilakukan',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w500,
-                                              color: Colors.green[700],
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-
-                                // Kondisi jika ditolak - tidak muncul button, hanya status
-                                if (isRejected)
-                                  Container(
-                                    width: double.infinity,
-                                    padding: const EdgeInsets.fromLTRB(
-                                      16,
-                                      0,
-                                      16,
-                                      16,
-                                    ),
-                                    child: Container(
-                                      padding: const EdgeInsets.all(12),
-                                      decoration: BoxDecoration(
-                                        color: Colors.red.withValues(alpha: 0.1),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(
-                                          color: Colors.red.withValues(alpha: 0.3),
-                                          width: 1,
-                                        ),
-                                      ),
-                                      child: Row(
-                                        children: [
-                                          Icon(
-                                            Icons.block,
-                                            color: Colors.red,
-                                            size: 20,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'Ditolak oleh admin',
+                                          label: Text(
+                                            'Terima',
                                             style: GoogleFonts.poppins(
                                               fontSize: 12,
-                                              color: Colors.red,
-                                              fontWeight: FontWeight.w500,
                                             ),
                                           ),
-                                        ],
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.green,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                        ),
                                       ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-            ),
-          ],
+                                    if (!isConfirmed) const SizedBox(width: 8),
+                                    if (!isConfirmed)
+                                      Expanded(
+                                        child: ElevatedButton.icon(
+                                          onPressed:
+                                              () => _rejectSchedule(
+                                                schedule['id'],
+                                              ),
+                                          icon: const Icon(
+                                            Icons.close,
+                                            size: 16,
+                                          ),
+                                          label: Text(
+                                            'Tolak',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.red,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    if (isConfirmed &&
+                                        !(schedule['hasExamination'] ?? false))
+                                      Expanded(
+                                        child: ElevatedButton.icon(
+                                          onPressed:
+                                              () => _markExaminationCompleted(
+                                                schedule['id'],
+                                              ),
+                                          icon: const Icon(
+                                            Icons.medical_services,
+                                            size: 16,
+                                          ),
+                                          label: Text(
+                                            'Selesai',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(
+                                              0xFFEC407A,
+                                            ),
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                    if (isConfirmed &&
+                                        (schedule['hasExamination'] ?? false))
+                                      Expanded(
+                                        child: ElevatedButton.icon(
+                                          onPressed:
+                                              () => _navigateToPemeriksaan(
+                                                schedule,
+                                              ),
+                                          icon: const Icon(
+                                            Icons.medical_services,
+                                            size: 16,
+                                          ),
+                                          label: Text(
+                                            'Pemeriksaan',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                            ),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: Colors.blue,
+                                            foregroundColor: Colors.white,
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                  ],
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }, childCount: _consultationSchedules.length),
+                  ),
+            ],
+          ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _showAddScheduleDialog,
-        backgroundColor: const Color(0xFFEC407A),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
+      ],
     );
   }
 }
@@ -1733,7 +1694,9 @@ class ConsultationScheduleDetailDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(schedule['status']).withValues(alpha: 0.1),
+                  color: _getStatusColor(
+                    schedule['status'],
+                  ).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

@@ -25,6 +25,7 @@ import '../screens/education_main_screen.dart';
 import '../screens/article_list_screen.dart';
 import '../screens/article_detail_screen.dart';
 import '../screens/article_admin_screen.dart';
+
 import '../admin/panel_edukasi.dart';
 
 class RouteHelper {
@@ -57,6 +58,9 @@ class RouteHelper {
   static const String articleDetail = '/article-detail';
   static const String articleAdmin = '/article-admin';
   static const String panelEdukasi = '/panel-edukasi';
+  static const String notification = '/notification';
+  static const String adminNotification = '/admin-notification';
+  static const String fcmToken = '/fcm-token';
 
   static Route<dynamic> generateRoute(RouteSettings settings) {
     switch (settings.name) {
@@ -328,6 +332,21 @@ class RouteHelper {
 
   static void navigateToJadwalPasien(BuildContext context, UserModel user) {
     Navigator.pushNamed(context, jadwalPasien, arguments: user);
+  }
+
+  static void navigateToNotification(BuildContext context, UserModel user) {
+    Navigator.pushNamed(context, notification, arguments: user);
+  }
+
+  static void navigateToAdminNotification(
+    BuildContext context,
+    UserModel user,
+  ) {
+    Navigator.pushNamed(context, adminNotification, arguments: user);
+  }
+
+  static void navigateToFCMToken(BuildContext context, UserModel user) {
+    Navigator.pushNamed(context, fcmToken, arguments: user);
   }
 
   static void navigateToRiwayatPemeriksaan(

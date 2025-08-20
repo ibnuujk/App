@@ -163,10 +163,14 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC407A).withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFFEC407A,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: const Color(0xFFEC407A).withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFFEC407A,
+                              ).withValues(alpha: 0.3),
                             ),
                           ),
                           child: Center(
@@ -559,7 +563,9 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFEC407A).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFFEC407A,
+                            ).withValues(alpha: 0.3),
                             blurRadius: 15,
                             offset: const Offset(0, 8),
                           ),
@@ -605,7 +611,9 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                                       'Pilih waktu yang sesuai untukmu',
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
-                                        color: Colors.white.withValues(alpha: 0.9),
+                                        color: Colors.white.withValues(
+                                          alpha: 0.9,
+                                        ),
                                       ),
                                     ),
                                   ],
@@ -1070,7 +1078,9 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          shadowColor: const Color(0xFFEC407A).withValues(alpha: 0.3),
+                          shadowColor: const Color(
+                            0xFFEC407A,
+                          ).withValues(alpha: 0.3),
                         ),
                         child:
                             _isSubmitting
@@ -1082,10 +1092,9 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                                       height: 20,
                                       child: CircularProgressIndicator(
                                         strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Colors.white.withValues(alpha: 0.8),
-                                            ),
+                                        valueColor: AlwaysStoppedAnimation<
+                                          Color
+                                        >(Colors.white.withValues(alpha: 0.8)),
                                       ),
                                     ),
                                     const SizedBox(width: 12),

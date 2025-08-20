@@ -724,7 +724,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                                       borderRadius: BorderRadius.circular(18),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.1),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.1,
+                                          ),
                                           blurRadius: 10,
                                           offset: const Offset(0, 4),
                                         ),
@@ -758,7 +760,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                                                 color:
                                                     isAdmin
                                                         ? Colors.white
-                                                            .withValues(alpha: 0.7)
+                                                            .withValues(
+                                                              alpha: 0.7,
+                                                            )
                                                         : Colors.grey[600],
                                               ),
                                             ),
@@ -773,7 +777,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                                                     message.isRead
                                                         ? Colors.blue[300]
                                                         : Colors.white
-                                                            .withValues(alpha: 0.7),
+                                                            .withValues(
+                                                              alpha: 0.7,
+                                                            ),
                                               ),
                                             ],
                                           ],
@@ -850,7 +856,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                           borderRadius: BorderRadius.circular(25),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFFEC407A).withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFFEC407A,
+                              ).withValues(alpha: 0.3),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),

@@ -12,16 +12,8 @@ class DataPersalinanScreen extends StatefulWidget {
 }
 
 class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
-  String _selectedFilter = 'Semua';
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
-
-  final List<String> _filterOptions = [
-    'Semua',
-    'Sudah Melahirkan',
-    'Belum Melahirkan',
-    'Pasca Persalinan',
-  ];
 
   @override
   void dispose() {
@@ -100,51 +92,6 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Filter Chips
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  child: Row(
-                    children:
-                        _filterOptions.map((filter) {
-                          final isSelected = _selectedFilter == filter;
-                          return Container(
-                            margin: const EdgeInsets.only(right: 12),
-                            child: FilterChip(
-                              label: Text(
-                                filter,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color:
-                                      isSelected
-                                          ? Colors.white
-                                          : const Color(0xFFEC407A),
-                                ),
-                              ),
-                              selected: isSelected,
-                              onSelected: (selected) {
-                                setState(() {
-                                  _selectedFilter = filter;
-                                });
-                              },
-                              backgroundColor: Colors.white.withValues(
-                                alpha: 0.2,
-                              ),
-                              selectedColor: Colors.white.withValues(
-                                alpha: 0.3,
-                              ),
-                              checkmarkColor: Colors.white,
-                              side: BorderSide(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 1,
-                              ),
-                            ),
-                          );
-                        }).toList(),
-                  ),
-                ),
-                const SizedBox(height: 20),
               ],
             ),
           ),
@@ -218,20 +165,7 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
                           user.alamat.toLowerCase().contains(
                             _searchQuery.toLowerCase(),
                           );
-
-                      if (!matchesSearch) return false;
-
-                      switch (_selectedFilter) {
-                        case 'Sudah Melahirkan':
-                          return user.pregnancyStatus == 'completed';
-                        case 'Belum Melahirkan':
-                          return user.pregnancyStatus == 'active' ||
-                              user.pregnancyStatus == null;
-                        case 'Pasca Persalinan':
-                          return user.pregnancyStatus == 'completed';
-                        default:
-                          return true;
-                      }
+                      return matchesSearch;
                     }).toList();
 
                 if (filteredUsers.isEmpty) {
@@ -251,14 +185,6 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: Colors.grey[600],
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Coba ubah kata kunci pencarian',
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            color: Colors.grey[500],
                           ),
                         ),
                       ],
@@ -301,37 +227,24 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
           // Patient Info Header
           Container(
             padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [const Color(0xFFEC407A), const Color(0xFFF48FB1)],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
-              ),
-            ),
             child: Row(
               children: [
+                // Profile Icon Container
                 Container(
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(30),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      width: 2,
-                    ),
+                    color: const Color(0xFFFCE4EC), // Light pink background
+                    borderRadius: BorderRadius.circular(15),
                   ),
                   child: Icon(
-                    Icons.pregnant_woman_rounded,
-                    color: Colors.white,
+                    Icons.medical_services_rounded,
+                    color: const Color(0xFFE91E63), // Darker pink icon
                     size: 30,
                   ),
                 ),
                 const SizedBox(width: 16),
+                // Patient Details
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -341,58 +254,74 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: const Color(0xFF2D3748),
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        user.noHp,
-                        style: GoogleFonts.poppins(
-                          fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.9),
-                        ),
+                      Row(
+                        children: [
+                          Icon(Icons.phone, size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 8),
+                          Text(
+                            user.noHp,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        user.alamat,
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.white.withValues(alpha: 0.8),
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      Row(
+                        children: [
+                          Icon(Icons.cake, size: 16, color: Colors.grey[600]),
+                          const SizedBox(width: 8),
+                          Text(
+                            '${_calculateAge(user.tanggalLahir)} tahun',
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 2),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on,
+                            size: 16,
+                            color: Colors.grey[600],
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            user.alamat,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              color: Colors.grey[600],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
                     ],
                   ),
                 ),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Text(
-                    _getPregnancyStatusText(user.pregnancyStatus),
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.white,
-                    ),
-                  ),
+                // Options Menu
+                IconButton(
+                  icon: Icon(Icons.more_vert, color: const Color(0xFFE91E63)),
+                  onPressed: () {
+                    _showOptionsMenu(context, user);
+                  },
                 ),
               ],
             ),
           ),
+          const SizedBox(height: 20),
           // Action Buttons
           Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20),
             child: Row(
               children: [
                 Expanded(
@@ -424,11 +353,25 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 20),
         ],
       ),
     );
   }
 
+  // Helper method to calculate age
+  int _calculateAge(DateTime? birthDate) {
+    if (birthDate == null) return 0;
+    final now = DateTime.now();
+    int age = now.year - birthDate.year;
+    if (now.month < birthDate.month ||
+        (now.month == birthDate.month && now.day < birthDate.day)) {
+      age--;
+    }
+    return age;
+  }
+
+  // Build action button widget
   Widget _buildActionButton(
     String label,
     IconData icon,
@@ -463,21 +406,7 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
     );
   }
 
-  String _getPregnancyStatusText(String? status) {
-    switch (status) {
-      case 'active':
-        return 'Aktif';
-      case 'completed':
-        return 'Selesai';
-      case 'miscarriage':
-        return 'Keguguran';
-      case 'complication':
-        return 'Komplikasi';
-      default:
-        return 'Belum Ada';
-    }
-  }
-
+  // Navigate to childbirth report screen
   void _viewChildbirthReport(UserModel user) {
     Navigator.push(
       context,
@@ -487,6 +416,7 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
     );
   }
 
+  // Navigate to postpartum report screen
   void _viewPostpartumReport(UserModel user) {
     Navigator.push(
       context,
@@ -496,12 +426,54 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
     );
   }
 
+  // Navigate to birth certificate screen
   void _viewBirthCertificate(UserModel user) {
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => BirthCertificateScreen(user: user),
       ),
+    );
+  }
+
+  // Show options menu
+  void _showOptionsMenu(BuildContext context, UserModel user) {
+    showModalBottomSheet(
+      context: context,
+      builder:
+          (context) => Container(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ListTile(
+                  leading: Icon(Icons.edit, color: const Color(0xFFE91E63)),
+                  title: Text(
+                    'Edit Data Pasien',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Add edit functionality here
+                  },
+                ),
+                ListTile(
+                  leading: Icon(Icons.delete, color: Colors.red),
+                  title: Text(
+                    'Hapus Data Pasien',
+                    style: GoogleFonts.poppins(
+                      fontWeight: FontWeight.w500,
+                      color: Colors.red,
+                    ),
+                  ),
+                  onTap: () {
+                    Navigator.pop(context);
+                    // Add delete functionality here
+                  },
+                ),
+              ],
+            ),
+          ),
     );
   }
 }

@@ -133,252 +133,234 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
   }
 
   Widget _buildDashboard() {
-    return SafeArea(
-      child: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: <Widget>[
-                // Header Section with enhanced design
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(20),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Hello, ${widget.user.nama.isNotEmpty ? widget.user.nama : 'Admin'}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Admin Sistem Persalinan',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFFEC407A),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Row(
-                        children: [
-                          _buildHeaderIcon(Icons.notifications_rounded, () {
-                            // Notification action
-                          }),
-                          const SizedBox(width: 12),
-                          _buildHeaderIcon(Icons.person_rounded, () {
-                            _showLogoutDialog();
-                          }),
+    return Stack(
+      children: [
+        SafeArea(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    // Header Section with enhanced design
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.1),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-                // Welcome Card
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFFEC407A),
-                        const Color(0xFFEC407A).withValues(alpha: 0.8),
-                      ],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFFEC407A).withValues(alpha: 0.3),
-                        blurRadius: 15,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Container(
-                            width: 60,
-                            height: 60,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.2),
-                              borderRadius: BorderRadius.circular(15),
-                              border: Border.all(
-                                color: Colors.white.withValues(alpha: 0.3),
-                                width: 2,
-                              ),
-                            ),
-                            child: const Icon(
-                              Icons.admin_panel_settings_rounded,
-                              color: Colors.white,
-                              size: 30,
-                            ),
-                          ),
-                          const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Selamat Datang!',
+                                  'Hello, ${widget.user.nama.isNotEmpty ? widget.user.nama : 'Admin'}',
                                   style: GoogleFonts.poppins(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.w700,
-                                    color: Colors.white,
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w500,
+                                    color: Colors.grey[600],
                                   ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  'Kelola data pasien dan konsultasi dengan mudah',
+                                  'Admin Sistem Persalinan',
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
-                                    color: Colors.white.withValues(alpha: 0.9),
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFEC407A),
                                   ),
                                 ),
                               ],
                             ),
                           ),
+                          Row(
+                            children: [
+                              _buildHeaderIconWithBadge(
+                                Icons.notifications_rounded,
+                                () {
+                                  RouteHelper.navigateToAdminNotification(
+                                    context,
+                                    widget.user,
+                                  );
+                                },
+                              ),
+                              const SizedBox(width: 12),
+                              _buildHeaderIcon(Icons.person_rounded, () {
+                                _showLogoutDialog();
+                              }),
+                            ],
+                          ),
                         ],
                       ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 32),
+                    ),
+                    const SizedBox(height: 24),
 
-                // Action Grid
-                GridView.count(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  crossAxisCount: 2,
-                  crossAxisSpacing: 16,
-                  mainAxisSpacing: 16,
-                  childAspectRatio: 1.2,
-                  children: [
-                    _buildActionButton(
-                      Icons.people_rounded,
-                      'Data Pasien',
-                      () => setState(() => _selectedIndex = 1),
+                    // Welcome Card
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            const Color(0xFFEC407A),
+                            const Color(0xFFEC407A).withValues(alpha: 0.8),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(
+                              0xFFEC407A,
+                            ).withValues(alpha: 0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 60,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  color: Colors.white.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(15),
+                                  border: Border.all(
+                                    color: Colors.white.withValues(alpha: 0.3),
+                                    width: 2,
+                                  ),
+                                ),
+                                child: const Icon(
+                                  Icons.admin_panel_settings_rounded,
+                                  color: Colors.white,
+                                  size: 30,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Selamat Datang!',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                        color: Colors.white,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'Kelola data pasien dan konsultasi dengan mudah',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 14,
+                                        color: Colors.white.withValues(
+                                          alpha: 0.9,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
                     ),
-                    _buildActionButton(
-                      Icons.medical_services_rounded,
-                      'Registrasi\nPersalinan',
-                      () => setState(() => _selectedIndex = 2),
+                    const SizedBox(height: 32),
+
+                    // Action Grid
+                    GridView.count(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      crossAxisCount: 2,
+                      crossAxisSpacing: 16,
+                      mainAxisSpacing: 16,
+                      childAspectRatio: 1.2,
+                      children: [
+                        _buildActionButton(
+                          Icons.people_rounded,
+                          'Data Pasien',
+                          () => setState(() => _selectedIndex = 1),
+                        ),
+                        _buildActionButton(
+                          Icons.medical_services_rounded,
+                          'Registrasi\nPersalinan',
+                          () => setState(() => _selectedIndex = 2),
+                        ),
+                        _buildActionButton(
+                          Icons.local_hospital_rounded,
+                          'Laporan\nPersalinan',
+                          () => setState(() => _selectedIndex = 3),
+                        ),
+                        _buildActionButton(
+                          Icons.chat_rounded,
+                          'Chat dengan\nPasien',
+                          () => setState(() => _selectedIndex = 4),
+                        ),
+                        _buildActionButton(
+                          Icons.analytics_rounded,
+                          'Dashboard\nAnalytics',
+                          () => RouteHelper.navigateToAnalytics(
+                            context,
+                            widget.user,
+                          ),
+                        ),
+                        _buildActionButton(
+                          Icons.pregnant_woman_rounded,
+                          'Pemeriksaan\nIbu Hamil',
+                          () => RouteHelper.navigateToPemeriksaanIbuHamil(
+                            context,
+                            widget.user,
+                          ),
+                        ),
+                        _buildActionButton(
+                          Icons.schedule_rounded,
+                          'Jadwal\nTemu Janji',
+                          () => RouteHelper.navigateToJadwalKonsultasi(
+                            context,
+                            widget.user,
+                          ),
+                        ),
+                        _buildActionButton(
+                          Icons.school_rounded,
+                          'Edukasi\nManagement',
+                          () => RouteHelper.navigateToPanelEdukasi(
+                            context,
+                            widget.user,
+                          ),
+                        ),
+                      ],
                     ),
-                    _buildActionButton(
-                      Icons.local_hospital_rounded,
-                      'Laporan\nPersalinan',
-                      () => setState(() => _selectedIndex = 3),
-                    ),
-                    _buildActionButton(
-                      Icons.chat_rounded,
-                      'Chat dengan\nPasien',
-                      () => setState(() => _selectedIndex = 4),
-                    ),
+                    const SizedBox(height: 32),
+
+                    const SizedBox(height: 16),
                   ],
                 ),
-                const SizedBox(height: 32),
-
-                // Quick Access Section
-                Text(
-                  'Akses Cepat',
-                  style: GoogleFonts.poppins(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: const Color(0xFF2D3748),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // Additional Features Row
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildQuickAccessButton(
-                        Icons.analytics_rounded,
-                        'Dashboard\nAnalytics',
-                        () => RouteHelper.navigateToAnalytics(
-                          context,
-                          widget.user,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildQuickAccessButton(
-                        Icons.pregnant_woman_rounded,
-                        'Pemeriksaan\nIbu Hamil',
-                        () => RouteHelper.navigateToPemeriksaanIbuHamil(
-                          context,
-                          widget.user,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildQuickAccessButton(
-                        Icons.schedule_rounded,
-                        'Jadwal\nTemu Janji',
-                        () => RouteHelper.navigateToJadwalKonsultasi(
-                          context,
-                          widget.user,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: _buildQuickAccessButton(
-                        Icons.school_rounded,
-                        'Edukasi\nManagement',
-                        () => RouteHelper.navigateToPanelEdukasi(
-                          context,
-                          widget.user,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 32),
-              ],
+              ),
             ),
           ),
         ),
-      ),
+      ],
     );
   }
 
@@ -392,6 +374,24 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: const Color(0xFFEC407A), size: 20),
+      ),
+    );
+  }
+
+  Widget _buildHeaderIconWithBadge(IconData icon, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: const Color(0xFFEC407A).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(icon, color: const Color(0xFFEC407A), size: 20),
+          ),
+        ],
       ),
     );
   }

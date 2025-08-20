@@ -5,10 +5,6 @@ import '../models/emergency_contact_model.dart';
 
 class EmergencyService {
   static const String _emergencyContactsKey = 'emergency_contacts';
-
-  // Emergency hotline numbers
-  static const String ambulanceNumber = '118';
-  static const String policeNumber = '110';
   static const String bidanNumber = '+6289666712042'; // Bidan phone number
   static const String bidanWhatsApp = '+6282323216060'; // Bidan WhatsApp number
 
@@ -87,18 +83,109 @@ class EmergencyService {
     }
   }
 
-  // Make phone call
+  // Make phone call with voice call intent
   Future<bool> makePhoneCall(String phoneNumber) async {
     try {
-      final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+      // Clean the phone number
+      String cleanNumber = _cleanPhoneNumber(phoneNumber);
+
+      // Use tel: scheme for direct voice call
+      final Uri phoneUri = Uri(scheme: 'tel', path: cleanNumber);
+
       if (await canLaunchUrl(phoneUri)) {
-        return await launchUrl(phoneUri);
+        // Launch with external application mode to ensure it opens phone app
+        return await launchUrl(phoneUri, mode: LaunchMode.externalApplication);
       }
       return false;
     } catch (e) {
       print('Error making phone call: $e');
       return false;
     }
+  }
+
+  // Make emergency phone call with immediate dialing
+  Future<bool> makeEmergencyCall(String phoneNumber) async {
+    try {
+      // Clean the phone number
+      String cleanNumber = _cleanPhoneNumber(phoneNumber);
+
+      print('Making emergency call to: $cleanNumber'); // Debug log
+
+      // Remove the + sign for tel: scheme as it might cause issues on some devices
+      String telNumber =
+          cleanNumber.startsWith('+') ? cleanNumber.substring(1) : cleanNumber;
+
+      // Use tel: scheme for immediate voice call
+      final Uri phoneUri = Uri(scheme: 'tel', path: telNumber);
+
+      print('Phone URI: $phoneUri'); // Debug log
+
+      if (await canLaunchUrl(phoneUri)) {
+        print('Can launch URL, attempting to launch...'); // Debug log
+
+        // Try different launch modes for better compatibility
+        bool launched = false;
+
+        // First try with platform default
+        try {
+          launched = await launchUrl(
+            phoneUri,
+            mode: LaunchMode.platformDefault,
+          );
+          print('Platform default launch result: $launched'); // Debug log
+        } catch (e) {
+          print('Platform default failed: $e'); // Debug log
+        }
+
+        // If platform default fails, try external application
+        if (!launched) {
+          try {
+            launched = await launchUrl(
+              phoneUri,
+              mode: LaunchMode.externalApplication,
+            );
+            print('External application launch result: $launched'); // Debug log
+          } catch (e) {
+            print('External application failed: $e'); // Debug log
+          }
+        }
+
+        // If both fail, try without mode specification
+        if (!launched) {
+          try {
+            launched = await launchUrl(phoneUri);
+            print('Default launch result: $launched'); // Debug log
+          } catch (e) {
+            print('Default launch failed: $e'); // Debug log
+          }
+        }
+
+        return launched;
+      } else {
+        print('Cannot launch URL: $phoneUri'); // Debug log
+        return false;
+      }
+    } catch (e) {
+      print('Error making emergency call: $e');
+      return false;
+    }
+  }
+
+  // Clean phone number for proper formatting
+  String _cleanPhoneNumber(String phoneNumber) {
+    // Remove any non-numeric characters
+    String cleanNumber = phoneNumber.replaceAll(RegExp(r'[^0-9+]'), '');
+
+    // Handle Indonesian phone numbers
+    if (cleanNumber.startsWith('0')) {
+      cleanNumber = '+62${cleanNumber.substring(1)}';
+    } else if (cleanNumber.startsWith('62') && !cleanNumber.startsWith('+62')) {
+      cleanNumber = '+$cleanNumber';
+    } else if (!cleanNumber.startsWith('+')) {
+      cleanNumber = '+62$cleanNumber';
+    }
+
+    return cleanNumber;
   }
 
   // Open WhatsApp chat
@@ -131,26 +218,26 @@ class EmergencyService {
     }
   }
 
-  // Emergency call to ambulance
-  Future<bool> callAmbulance() async {
-    return await makePhoneCall(ambulanceNumber);
-  }
-
-  // Emergency call to police
-  Future<bool> callPolice() async {
-    return await makePhoneCall(policeNumber);
-  }
-
-  // Call bidan
+  // Call bidan with voice call
   Future<bool> callBidan() async {
-    return await makePhoneCall(bidanNumber);
+    return await makeEmergencyCall(bidanNumber);
   }
 
-  // WhatsApp bidan
+  // WhatsApp bidan (unchanged)
   Future<bool> whatsAppBidan({String? message}) async {
     final defaultMessage =
         message ??
         'Halo, saya membutuhkan bantuan medis segera. Mohon bantuannya.';
     return await openWhatsAppChat(bidanWhatsApp, message: defaultMessage);
+  }
+
+  // Call emergency contact with voice call
+  Future<bool> callEmergencyContact(EmergencyContact contact) async {
+    return await makeEmergencyCall(contact.phoneNumber);
+  }
+
+  // Call custom phone number with voice call
+  Future<bool> callCustomNumber(String phoneNumber) async {
+    return await makeEmergencyCall(phoneNumber);
   }
 }

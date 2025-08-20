@@ -31,6 +31,104 @@
 
   <title>persalinanku</title>
   <link rel="manifest" href="manifest.json">
+
+  <!-- Firebase Configuration -->
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.0.0/firebase-messaging-compat.js"></script>
+  <script src="firebase-config.js"></script>
+  
+  <script>
+    // Initialize Firebase
+    firebase.initializeApp(window.firebaseConfig);
+
+    // Initialize Firebase Cloud Messaging
+    const messaging = firebase.messaging();
+
+    // Request permission for notifications
+    messaging.requestPermission()
+      .then((permission) => {
+        if (permission === 'granted') {
+          console.log('Notification permission granted.');
+          
+          // Get FCM token with VAPID key
+          return messaging.getToken({ 
+            vapidKey: window.vapidKey || 'YOUR_VAPID_KEY_HERE' 
+          });
+        } else {
+          console.log('Unable to get permission to notify.');
+        }
+      })
+      .then((token) => {
+        if (token) {
+          console.log('FCM Token:', token);
+          // Store token for later use
+          localStorage.setItem('fcmToken', token);
+          
+          // Send token to Flutter app
+          if (window.flutter_inappwebview) {
+            window.flutter_inappwebview.callHandler('onFCMTokenReceived', token);
+          }
+        }
+      })
+      .catch((err) => {
+        console.log('An error occurred while retrieving token. ', err);
+        
+        // Handle specific errors
+        if (err.code === 'messaging/permission-blocked') {
+          console.log('Please enable notifications in your browser settings');
+        } else if (err.code === 'messaging/unsupported-browser') {
+          console.log('This browser does not support push notifications');
+        }
+      });
+
+    // Handle foreground messages
+    messaging.onMessage((payload) => {
+      console.log('Message received in foreground. ', payload);
+      
+      // Show notification
+      if (payload.notification) {
+        const { title, body } = payload.notification;
+        if ('serviceWorker' in navigator && 'showNotification' in ServiceWorkerRegistration.prototype) {
+          navigator.serviceWorker.ready.then(registration => {
+            registration.showNotification(title, {
+              body: body,
+              icon: '/icons/Icon-192.png',
+              badge: '/icons/Icon-192.png',
+              data: payload.data || {}
+            });
+          });
+        }
+      }
+    });
+
+    // Handle token refresh
+    messaging.onTokenRefresh(() => {
+      messaging.getToken({ vapidKey: window.vapidKey || 'YOUR_VAPID_KEY_HERE' })
+        .then((refreshedToken) => {
+          console.log('Token refreshed:', refreshedToken);
+          localStorage.setItem('fcmToken', refreshedToken);
+          
+          // Send refreshed token to Flutter app
+          if (window.flutter_inappwebview) {
+            window.flutter_inappwebview.callHandler('onFCMTokenRefreshed', refreshedToken);
+          }
+        })
+        .catch((err) => {
+          console.log('Unable to retrieve refreshed token ', err);
+        });
+    });
+
+    // Check if service worker is supported
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/firebase-messaging-sw.js')
+        .then((registration) => {
+          console.log('Service Worker registered with scope:', registration.scope);
+        })
+        .catch((err) => {
+          console.log('Service Worker registration failed:', err);
+        });
+    }
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>
