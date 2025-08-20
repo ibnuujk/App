@@ -6,6 +6,7 @@ import '../../routes/route_helper.dart';
 import 'data_pasien.dart';
 import 'registrasi_persalinan.dart';
 import 'chat_admin.dart';
+import 'data_persalinan.dart';
 
 class HomeAdminScreen extends StatefulWidget {
   final UserModel user;
@@ -59,6 +60,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
           _buildDashboard(),
           const DataPasienScreen(),
           const RegistrasiPersalinanScreen(),
+          const DataPersalinanScreen(),
           const ChatAdminScreen(),
         ],
       ),
@@ -83,7 +85,8 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
               _buildNavItem(Icons.dashboard_rounded, 'Dashboard', 0),
               _buildNavItem(Icons.people_rounded, 'Pasien', 1),
               _buildNavItem(Icons.medical_services_rounded, 'Registrasi', 2),
-              _buildNavItem(Icons.chat_rounded, 'Chat', 3),
+              _buildNavItem(Icons.local_hospital_rounded, 'Laporan', 3),
+              _buildNavItem(Icons.chat_rounded, 'Chat', 4),
             ],
           ),
         ),
@@ -283,12 +286,6 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                   childAspectRatio: 1.2,
                   children: [
                     _buildActionButton(
-                      Icons.analytics_rounded,
-                      'Dashboard\nAnalytics',
-                      () =>
-                          RouteHelper.navigateToAnalytics(context, widget.user),
-                    ),
-                    _buildActionButton(
                       Icons.people_rounded,
                       'Data Pasien',
                       () => setState(() => _selectedIndex = 1),
@@ -299,32 +296,79 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                       () => setState(() => _selectedIndex = 2),
                     ),
                     _buildActionButton(
-                      Icons.chat_rounded,
-                      'Chat dengan\nPasien',
+                      Icons.local_hospital_rounded,
+                      'Laporan\nPersalinan',
                       () => setState(() => _selectedIndex = 3),
                     ),
                     _buildActionButton(
-                      Icons.pregnant_woman_rounded,
-                      'Pemeriksaan\nIbu Hamil',
-                      () => RouteHelper.navigateToPemeriksaanIbuHamil(
-                        context,
-                        widget.user,
+                      Icons.chat_rounded,
+                      'Chat dengan\nPasien',
+                      () => setState(() => _selectedIndex = 4),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 32),
+
+                // Quick Access Section
+                Text(
+                  'Akses Cepat',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF2D3748),
+                  ),
+                ),
+                const SizedBox(height: 16),
+
+                // Additional Features Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildQuickAccessButton(
+                        Icons.analytics_rounded,
+                        'Dashboard\nAnalytics',
+                        () => RouteHelper.navigateToAnalytics(
+                          context,
+                          widget.user,
+                        ),
                       ),
                     ),
-                    _buildActionButton(
-                      Icons.schedule_rounded,
-                      'Jadwal\nTemu Janji',
-                      () => RouteHelper.navigateToJadwalKonsultasi(
-                        context,
-                        widget.user,
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildQuickAccessButton(
+                        Icons.pregnant_woman_rounded,
+                        'Pemeriksaan\nIbu Hamil',
+                        () => RouteHelper.navigateToPemeriksaanIbuHamil(
+                          context,
+                          widget.user,
+                        ),
                       ),
                     ),
-                    _buildActionButton(
-                      Icons.school_rounded,
-                      'Edukasi\nManagement',
-                      () => RouteHelper.navigateToPanelEdukasi(
-                        context,
-                        widget.user,
+                  ],
+                ),
+                const SizedBox(height: 16),
+
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildQuickAccessButton(
+                        Icons.schedule_rounded,
+                        'Jadwal\nTemu Janji',
+                        () => RouteHelper.navigateToJadwalKonsultasi(
+                          context,
+                          widget.user,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _buildQuickAccessButton(
+                        Icons.school_rounded,
+                        'Edukasi\nManagement',
+                        () => RouteHelper.navigateToPanelEdukasi(
+                          context,
+                          widget.user,
+                        ),
                       ),
                     ),
                   ],
@@ -393,6 +437,58 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                 color: const Color(0xFF2D3748),
               ),
               textAlign: TextAlign.center,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildQuickAccessButton(
+    IconData icon,
+    String title,
+    VoidCallback onTap,
+  ) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFFEC407A).withValues(alpha: 0.2),
+            width: 1,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                color: const Color(0xFFEC407A).withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Icon(icon, color: const Color(0xFFEC407A), size: 20),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                  color: const Color(0xFF2D3748),
+                ),
+              ),
             ),
           ],
         ),
