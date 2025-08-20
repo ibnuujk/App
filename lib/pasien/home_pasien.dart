@@ -2,7 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../services/firebase_service.dart';
+import '../../services/notification_listener_service.dart';
+import '../../services/notification_service.dart';
+import '../../widgets/simple_notification_badge.dart';
 import '../../routes/route_helper.dart';
+import '../../screens/notification_screen.dart';
 import 'jadwal_pasien.dart';
 import 'profile.dart';
 
@@ -52,6 +56,9 @@ class _HomePasienScreenState extends State<HomePasienScreen>
 
     _animationController.forward();
     _loadFetalInformation();
+
+    // Initialize notification service and listeners
+    _initializeNotifications();
 
     // Debug print untuk memeriksa data user
     print('=== USER DATA DEBUG ===');
@@ -303,7 +310,15 @@ class _HomePasienScreenState extends State<HomePasienScreen>
   @override
   void dispose() {
     _animationController.dispose();
+    // Dispose notification listeners
+    NotificationListenerService.dispose();
     super.dispose();
+  }
+
+  // Initialize notification service and listeners
+  Future<void> _initializeNotifications() async {
+    await NotificationService.initialize();
+    NotificationListenerService.initializePasienListeners(widget.user.id ?? '');
   }
 
   @override
@@ -438,8 +453,15 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                       ),
                       Row(
                         children: [
-                          _buildHeaderIcon(Icons.notifications_rounded, () {
-                            // Notification action
+                          _buildNotificationIcon(() {
+                            // Navigate to notification screen
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder:
+                                    (context) => const NotificationScreen(),
+                              ),
+                            );
                           }),
                           const SizedBox(width: 12),
                           _buildHeaderIcon(Icons.person_rounded, () {
@@ -749,6 +771,17 @@ class _HomePasienScreenState extends State<HomePasienScreen>
         ),
         child: Icon(icon, color: const Color(0xFFEC407A), size: 20),
       ),
+    );
+  }
+
+  Widget _buildNotificationIcon(VoidCallback onTap) {
+    return NotificationIconWithBadge(
+      icon: Icons.notifications,
+      onPressed: onTap,
+      iconColor: const Color(0xFFEC407A),
+      badgeColor: Colors.red,
+      textColor: Colors.white,
+      badgeSize: 20,
     );
   }
 

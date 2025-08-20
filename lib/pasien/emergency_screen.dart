@@ -23,6 +23,15 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
   void initState() {
     super.initState();
     _loadEmergencyContacts();
+    _syncDataWithFirebase();
+  }
+
+  Future<void> _syncDataWithFirebase() async {
+    try {
+      await _emergencyService.syncLocalDataToFirebase();
+    } catch (e) {
+      print('Error syncing data with Firebase: $e');
+    }
   }
 
   Future<void> _loadEmergencyContacts() async {
@@ -268,22 +277,39 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
         backgroundColor: const Color(0xFFEC407A),
         foregroundColor: Colors.white,
         elevation: 0,
+        actions: [
+          IconButton(
+            onPressed: () async {
+              await _loadEmergencyContacts();
+              await _syncDataWithFirebase();
+            },
+            icon: const Icon(Icons.refresh),
+            tooltip: 'Refresh',
+          ),
+        ],
       ),
       body:
           _isLoading
               ? const Center(child: CircularProgressIndicator())
-              : SingleChildScrollView(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    // Emergency Actions Section
-                    _buildEmergencyActionsSection(),
-                    const SizedBox(height: 24),
+              : RefreshIndicator(
+                onRefresh: () async {
+                  await _loadEmergencyContacts();
+                  await _syncDataWithFirebase();
+                },
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Emergency Actions Section
+                      _buildEmergencyActionsSection(),
+                      const SizedBox(height: 24),
 
-                    // Emergency Contacts Section
-                    _buildEmergencyContactsSection(),
-                  ],
+                      // Emergency Contacts Section
+                      _buildEmergencyContactsSection(),
+                    ],
+                  ),
                 ),
               ),
     );

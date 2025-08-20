@@ -11,6 +11,7 @@ import '../models/laporan_persalinan_model.dart';
 import '../models/laporan_pasca_persalinan_model.dart';
 import '../models/keterangan_kelahiran_model.dart';
 import '../models/article_model.dart';
+import 'notification_integration_service.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -320,6 +321,20 @@ class FirebaseService {
           .doc(konsultasi.id)
           .set(konsultasi.toMap());
       print('Konsultasi created successfully: ${konsultasi.id}');
+
+      // Send notification to admin about new konsultasi
+      try {
+        await NotificationIntegrationService.notifyAdminNewKonsultasi(
+          konsultasiId: konsultasi.id,
+          patientName: konsultasi.pasienNama,
+          question: konsultasi.pertanyaan,
+          patientId: konsultasi.pasienId,
+        );
+        print('Konsultasi notification sent to admin');
+      } catch (e) {
+        print('Error sending konsultasi notification: $e');
+        // Don't fail the konsultasi creation if notification fails
+      }
     } catch (e) {
       print('Error creating konsultasi: $e');
       rethrow;
@@ -374,6 +389,35 @@ class FirebaseService {
   Future<void> updateKonsultasi(KonsultasiModel konsultasi) async {
     try {
       await ensureAuthenticated();
+
+      // Get current konsultasi data to check if answer was added
+      final currentKonsultasi =
+          await _firestore.collection('konsultasi').doc(konsultasi.id).get();
+
+      if (currentKonsultasi.exists) {
+        final currentData = currentKonsultasi.data() as Map<String, dynamic>;
+        final currentJawaban = currentData['jawaban'];
+        final newJawaban = konsultasi.jawaban;
+
+        // Check if answer was added or updated
+        if (newJawaban != null &&
+            newJawaban.isNotEmpty &&
+            (currentJawaban == null || currentJawaban != newJawaban)) {
+          // Send notification to patient about answered konsultasi
+          try {
+            await NotificationIntegrationService.notifyPatientKonsultasiAnswered(
+              patientId: konsultasi.pasienId,
+              konsultasiId: konsultasi.id,
+              adminName: 'Admin',
+              answer: newJawaban,
+            );
+            print('Konsultasi answer notification sent to patient');
+          } catch (e) {
+            print('Error sending konsultasi answer notification: $e');
+          }
+        }
+      }
+
       await _firestore
           .collection('konsultasi')
           .doc(konsultasi.id)
@@ -487,6 +531,25 @@ class FirebaseService {
       await ensureAuthenticated();
       await _firestore.collection('chats').doc(message.id).set(message.toMap());
       print('Message sent successfully: ${message.id}');
+
+      // Send notification based on sender role
+      if (message.senderRole == 'pasien') {
+        // Pasien mengirim chat ke admin
+        await NotificationIntegrationService.notifyAdminNewChat(
+          chatId: message.id,
+          patientName: message.senderName,
+          message: message.message,
+          patientId: message.senderId,
+        );
+      } else if (message.senderRole == 'admin') {
+        // Admin membalas chat ke pasien
+        await NotificationIntegrationService.notifyPatientChatReply(
+          patientId: message.recipientId,
+          chatId: message.id,
+          adminName: message.senderName,
+          message: message.message,
+        );
+      }
     } catch (e) {
       print('Error sending message: $e');
       rethrow;
@@ -923,43 +986,48 @@ class FirebaseService {
       );
       final endOfDay = startOfDay.add(const Duration(days: 1));
 
-      try {
-        final existingAppointments =
-            await _firestore
-                .collection('jadwal_konsultasi')
-                .where('pasienId', isEqualTo: data['pasienId'])
-                .where(
-                  'tanggalKonsultasi',
-                  isGreaterThanOrEqualTo: startOfDay.toIso8601String(),
-                )
-                .where(
-                  'tanggalKonsultasi',
-                  isLessThan: endOfDay.toIso8601String(),
-                )
-                .get();
+      final existingAppointments =
+          await _firestore
+              .collection('jadwal_konsultasi')
+              .where('pasienId', isEqualTo: data['pasienId'])
+              .where(
+                'tanggalKonsultasi',
+                isGreaterThanOrEqualTo: startOfDay.toIso8601String(),
+              )
+              .where(
+                'tanggalKonsultasi',
+                isLessThan: endOfDay.toIso8601String(),
+              )
+              .get();
 
-        if (existingAppointments.docs.isNotEmpty) {
-          throw Exception(
-            'You already have an appointment scheduled for this date',
-          );
-        }
-      } catch (e) {
-        // If the query fails due to missing indexes, we'll skip the duplicate check
-        // but log the issue for debugging
-        print('Warning: Could not check for duplicate appointments: $e');
-        print('This might be due to missing Firestore indexes');
-        // Continue with the creation process
+      if (existingAppointments.docs.isNotEmpty) {
+        throw Exception(
+          'Anda sudah memiliki jadwal temu janji pada tanggal yang sama',
+        );
       }
 
-      // Add additional metadata
-      data['createdAt'] = DateTime.now().toIso8601String();
-      data['updatedAt'] = DateTime.now().toIso8601String();
-
+      // Create the appointment
       await _firestore
           .collection('jadwal_konsultasi')
           .doc(data['id'])
           .set(data);
+
       print('Jadwal konsultasi created successfully: ${data['id']}');
+
+      // Send notification to admin about new appointment
+      try {
+        await NotificationIntegrationService.notifyAdminNewAppointment(
+          appointmentId: data['id'],
+          patientName: data['namaPasien'] ?? 'Pasien',
+          appointmentType: 'Temu Janji',
+          appointmentTime: selectedDateTime,
+          patientId: data['pasienId'],
+        );
+        print('Appointment notification sent to admin');
+      } catch (e) {
+        print('Error sending appointment notification: $e');
+        // Don't fail the appointment creation if notification fails
+      }
     } catch (e) {
       print('Error creating jadwal konsultasi: $e');
       rethrow;
@@ -969,6 +1037,57 @@ class FirebaseService {
   Future<void> updateJadwalKonsultasi(Map<String, dynamic> data) async {
     try {
       await ensureAuthenticated();
+
+      // Get current schedule data to check status changes
+      final currentSchedule =
+          await _firestore
+              .collection('jadwal_konsultasi')
+              .doc(data['id'])
+              .get();
+
+      if (currentSchedule.exists) {
+        final currentData = currentSchedule.data() as Map<String, dynamic>;
+        final currentStatus = currentData['status'] ?? 'pending';
+        final newStatus = data['status'];
+
+        // Check if status changed to accepted or rejected
+        if (newStatus != null && newStatus != currentStatus) {
+          if (newStatus == 'confirmed' || newStatus == 'accepted') {
+            // Send notification to patient about accepted appointment
+            try {
+              await NotificationIntegrationService.notifyPatientAppointmentAccepted(
+                patientId: data['pasienId'] ?? currentData['pasienId'],
+                appointmentId: data['id'],
+                adminName: 'Admin',
+                appointmentType: 'Temu Janji',
+                appointmentTime: DateTime.parse(
+                  data['tanggalKonsultasi'] ?? currentData['tanggalKonsultasi'],
+                ),
+              );
+              print('Appointment accepted notification sent to patient');
+            } catch (e) {
+              print('Error sending appointment accepted notification: $e');
+            }
+          } else if (newStatus == 'rejected') {
+            // Send notification to patient about rejected appointment
+            try {
+              await NotificationIntegrationService.notifyPatientAppointmentRejected(
+                patientId: data['pasienId'] ?? currentData['pasienId'],
+                appointmentId: data['id'],
+                adminName: 'Admin',
+                reason:
+                    data['rejectionReason'] ??
+                    'Tidak ada alasan yang diberikan',
+              );
+              print('Appointment rejected notification sent to patient');
+            } catch (e) {
+              print('Error sending appointment rejected notification: $e');
+            }
+          }
+        }
+      }
+
+      // Update the schedule
       await _firestore
           .collection('jadwal_konsultasi')
           .doc(data['id'])

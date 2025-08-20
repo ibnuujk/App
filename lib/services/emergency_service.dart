@@ -1,6 +1,8 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/emergency_contact_model.dart';
 
 class EmergencyService {
@@ -8,35 +10,94 @@ class EmergencyService {
   static const String bidanNumber = '+6289666712042'; // Bidan phone number
   static const String bidanWhatsApp = '+6282323216060'; // Bidan WhatsApp number
 
-  // Get emergency contacts from local storage
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+
+  // Get current user ID
+  String? get _currentUserId => _auth.currentUser?.uid;
+
+  // Get emergency contacts from Firebase with local fallback
   Future<List<EmergencyContact>> getEmergencyContacts() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final contactsJson = prefs.getStringList(_emergencyContactsKey) ?? [];
+      // Try to get from Firebase first
+      if (_currentUserId != null) {
+        final snapshot =
+            await _firestore
+                .collection('users')
+                .doc(_currentUserId)
+                .collection('emergency_contacts')
+                .get();
 
-      return contactsJson.map((jsonString) {
-        final map = json.decode(jsonString) as Map<String, dynamic>;
-        return EmergencyContact.fromMap(map);
-      }).toList();
+        if (snapshot.docs.isNotEmpty) {
+          final contacts =
+              snapshot.docs.map((doc) {
+                final data = doc.data();
+                return EmergencyContact.fromMap({'id': doc.id, ...data});
+              }).toList();
+
+          // Save to local storage as backup
+          await _saveToLocalStorage(contacts);
+          return contacts;
+        }
+      }
+
+      // Fallback to local storage
+      return await _getFromLocalStorage();
     } catch (e) {
-      print('Error loading emergency contacts: $e');
-      return [];
+      print('Error loading emergency contacts from Firebase: $e');
+      // Fallback to local storage
+      return await _getFromLocalStorage();
     }
   }
 
-  // Save emergency contacts to local storage
+  // Save emergency contacts to Firebase and local storage
   Future<bool> saveEmergencyContacts(List<EmergencyContact> contacts) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final contactsJson =
-          contacts.map((contact) {
-            return json.encode(contact.toMap());
-          }).toList();
+      bool firebaseSuccess = false;
 
-      return await prefs.setStringList(_emergencyContactsKey, contactsJson);
+      // Try to save to Firebase first
+      if (_currentUserId != null) {
+        try {
+          final batch = _firestore.batch();
+
+          // Clear existing contacts
+          final existingSnapshot =
+              await _firestore
+                  .collection('users')
+                  .doc(_currentUserId)
+                  .collection('emergency_contacts')
+                  .get();
+
+          for (var doc in existingSnapshot.docs) {
+            batch.delete(doc.reference);
+          }
+
+          // Add new contacts
+          for (var contact in contacts) {
+            final docRef = _firestore
+                .collection('users')
+                .doc(_currentUserId)
+                .collection('emergency_contacts')
+                .doc(contact.id);
+            batch.set(docRef, contact.toMap());
+          }
+
+          await batch.commit();
+          firebaseSuccess = true;
+          print('Emergency contacts saved to Firebase successfully');
+        } catch (e) {
+          print('Error saving to Firebase: $e');
+        }
+      }
+
+      // Always save to local storage as backup
+      final localSuccess = await _saveToLocalStorage(contacts);
+
+      return firebaseSuccess || localSuccess;
     } catch (e) {
       print('Error saving emergency contacts: $e');
-      return false;
+      // Try local storage as last resort
+      return await _saveToLocalStorage(contacts);
     }
   }
 
@@ -44,6 +105,14 @@ class EmergencyService {
   Future<bool> addEmergencyContact(EmergencyContact contact) async {
     try {
       final contacts = await getEmergencyContacts();
+
+      // If this is a primary contact, remove primary from others
+      if (contact.isPrimary) {
+        for (int i = 0; i < contacts.length; i++) {
+          contacts[i] = contacts[i].copyWith(isPrimary: false);
+        }
+      }
+
       contacts.add(contact);
       return await saveEmergencyContacts(contacts);
     } catch (e) {
@@ -61,6 +130,15 @@ class EmergencyService {
       );
 
       if (index != -1) {
+        // If this is a primary contact, remove primary from others
+        if (updatedContact.isPrimary) {
+          for (int i = 0; i < contacts.length; i++) {
+            if (i != index) {
+              contacts[i] = contacts[i].copyWith(isPrimary: false);
+            }
+          }
+        }
+
         contacts[index] = updatedContact;
         return await saveEmergencyContacts(contacts);
       }
@@ -80,6 +158,52 @@ class EmergencyService {
     } catch (e) {
       print('Error deleting emergency contact: $e');
       return false;
+    }
+  }
+
+  // Local storage methods
+  Future<List<EmergencyContact>> _getFromLocalStorage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final contactsJson = prefs.getStringList(_emergencyContactsKey) ?? [];
+
+      return contactsJson.map((jsonString) {
+        final map = json.decode(jsonString) as Map<String, dynamic>;
+        return EmergencyContact.fromMap(map);
+      }).toList();
+    } catch (e) {
+      print('Error loading from local storage: $e');
+      return [];
+    }
+  }
+
+  Future<bool> _saveToLocalStorage(List<EmergencyContact> contacts) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final contactsJson =
+          contacts.map((contact) {
+            return json.encode(contact.toMap());
+          }).toList();
+
+      return await prefs.setStringList(_emergencyContactsKey, contactsJson);
+    } catch (e) {
+      print('Error saving to local storage: $e');
+      return false;
+    }
+  }
+
+  // Sync local data to Firebase when user logs in
+  Future<void> syncLocalDataToFirebase() async {
+    try {
+      if (_currentUserId != null) {
+        final localContacts = await _getFromLocalStorage();
+        if (localContacts.isNotEmpty) {
+          await saveEmergencyContacts(localContacts);
+          print('Local emergency contacts synced to Firebase');
+        }
+      }
+    } catch (e) {
+      print('Error syncing local data to Firebase: $e');
     }
   }
 

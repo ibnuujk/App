@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'firebase_options.dart';
 import 'routes/route_helper.dart';
 import 'services/firebase_service.dart';
+import 'services/notification_service.dart';
 import 'providers/article_provider.dart';
 
 void main() async {
@@ -27,6 +28,10 @@ void main() async {
     if (!isConnected) {
       print('Warning: Firebase connection check failed');
     }
+
+    // Initialize notification service
+    await NotificationService.initialize();
+    print('Notification service initialized successfully');
   } catch (e) {
     print('Error initializing Firebase: $e');
     print('Continuing with app initialization...');
