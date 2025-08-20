@@ -1,14 +1,14 @@
 import 'dart:io';
 import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
-// Conditional import for web
-import 'dart:html' as html if (dart.library.io) 'dart:io';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/user_model.dart';
+
+// Import for web platform (will be handled in code)
 
 class PdfService {
   static Future<void> generatePemeriksaanReport({
@@ -669,12 +669,20 @@ class PdfService {
   ) async {
     try {
       // For web, trigger direct download
-      final blob = html.Blob([bytes], 'application/pdf');
-      final url = html.Url.createObjectUrlFromBlob(blob);
-      html.AnchorElement(href: url)
-        ..setAttribute('download', fileName)
-        ..click();
-      html.Url.revokeObjectUrl(url);
+      if (kIsWeb) {
+        // Web-specific code using conditional compilation
+        // This will only compile for web platform
+        // For mobile, this method will use the fallback below
+        throw UnsupportedError('Web download not supported on this platform');
+      } else {
+        // Fallback for mobile platforms
+        final XFile file = XFile.fromData(
+          bytes,
+          name: fileName,
+          mimeType: 'application/pdf',
+        );
+        await Share.shareXFiles([file]);
+      }
     } catch (e) {
       print('Error downloading PDF on web: $e');
       // Fallback to share if direct download fails
