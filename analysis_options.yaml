@@ -15,13 +15,11 @@ linter:
     avoid_empty_else: true
     avoid_print: true
     avoid_unused_constructor_parameters: true
-    await_only_futures: true
     camel_case_types: true
     cancel_subscriptions: true
     close_sinks: true
     comment_references: true
     constant_identifier_names: true
-    control_flow_in_finally: true
     directives_ordering: true
     empty_catches: true
     empty_constructor_bodies: true
@@ -97,14 +95,10 @@ linter:
     avoid_unnecessary_containers: true
     avoid_unused_parameters: true
     avoid_void_async: true
-    await_only_futures: true
     camel_case_extensions: true
     cascade_invocations: true
     cast_nullable_to_non_nullable: true
-    close_sinks: true
-    comment_references: true
     conditional_uri_does_not_exist: true
-    constant_identifier_names: true
     control_flow_in_finally: true
     curly_braces_in_flow_control_structures: true
     directives_ordering: true
@@ -217,7 +211,7 @@ linter:
     use_setters_to_change_properties: true
     use_string_buffers: true
     use_test_throws_matchers: true
-    use_to_and_as_if_applicable: true
+    use_to_and_as_if_applied: true
     valid_regexps: true
     void_checks: true
 

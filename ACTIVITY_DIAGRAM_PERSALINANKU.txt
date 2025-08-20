@@ -1,0 +1,1079 @@
+================================================================================
+                       ACTIVITY DIAGRAM SISTEM PERSALINANKU
+                              (Mobile Application)
+================================================================================
+
+Aplikasi Persalinanku adalah sistem manajemen persalinan yang memiliki tiga komponen utama:
+1. PASIEN (USER) - untuk ibu hamil
+2. BIDAN (ADMIN) - untuk tenaga medis/bidan  
+3. SISTEM - infrastruktur dan layanan backend
+
+================================================================================
+                                1. START POINT
+================================================================================
+
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| membuka aplikasi   | initialize firebase  |            |
+|                    | check connection     |            |
+|                    | menampilkan halaman  |            |
+|                    | login/register       |            |
+
+================================================================================
+                            2. AUTHENTICATION FLOW
+================================================================================
+
+2.1 LOGIN/REGISTER PROCESS
+
+**REGISTRASI:**
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| memilih menu       | menampilkan form     |            |
+| register           | registrasi           |            |
+| mengisi form       | validasi input       |            |
+| (nama, email,      | check email exists   |            |
+| password, no hp,   |                      |            |
+| alamat, tanggal    |                      |            |
+| lahir)             |                      |            |
+|                    | jika email sudah ada |            |
+|                    | tampilkan pesan      |            |
+|                    | error                |            |
+| mengisi email baru |                      |            |
+|                    | create firebase auth |            |
+|                    | create user document |            |
+|                    | navigate ke HPHT     |            |
+|                    | form                 |            |
+| mengisi data HPHT  | save HPHT ke         | HPHT data  |
+|                    | database             | tersimpan  |
+|                    | navigate ke home     |            |
+|                    | pasien               |            |
+
+**LOGIN:**
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| memilih menu       | menampilkan form     |            |
+| login              | login                |            |
+| input email &      | validasi form        |            |
+| password           |                      |            |
+|                    | authenticate dengan  |            |
+|                    | firebase             |            |
+|                    | check user role      |            |
+|                    |                      |            |
+|                    | jika role admin      |            |
+|                    | navigate ke home     |            |
+|                    | admin                |            |
+|                    |                      |            |
+|                    | jika role pasien     |            |
+|                    | navigate ke home     |            |
+|                    | pasien               |            |
+
+2.2 FORGOT PASSWORD
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik forgot        | menampilkan form     |            |
+| password           | email                |            |
+| input email        | send reset email     |            |
+|                    | menampilkan pesan    |            |
+|                    | success              |            |
+
+================================================================================
+                              3. PASIEN (USER) FLOW
+================================================================================
+
+3.1 PASIEN DASHBOARD
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| login berhasil     | navigate ke home     |            |
+|                    | pasien               |            |
+|                    | load data pasien     | return     |
+|                    | dari database        | user data  |
+|                    | menampilkan          |            |
+|                    | dashboard pasien     |            |
+|                    | show pregnancy info  |            |
+|                    | display gestational  |            |
+|                    | age                  |            |
+|                    | show fetal           |            |
+|                    | development          |            |
+|                    | menampilkan action   |            |
+|                    | grid                 |            |
+| memilih fitur      |                      |            |
+
+Fitur Dashboard Pasien:
+- Kehamilanku
+- Riwayat Pemeriksaan
+- Temu Janji
+- Darurat
+- Chat dengan Bidan
+- Edukasi
+
+3.2 KEHAMILANKU
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu          | check HPHT data      |            |
+| kehamilanku        |                      |            |
+|                    |                      |            |
+|                    | jika ada HPHT data   |            |
+|                    | calculate pregnancy  |            |
+|                    | week                 |            |
+|                    | show fetal info      |            |
+|                    | update pregnancy     |            |
+|                    | info                 |            |
+|                    | show development     |            |
+|                    | progress             |            |
+|                    |                      |            |
+|                    | jika tidak ada HPHT  |            |
+|                    | navigate ke HPHT     |            |
+|                    | form                 |            |
+| input HPHT date    | save HPHT ke         | HPHT data  |
+|                    | database             | tersimpan  |
+|                    | calculate pregnancy  |            |
+|                    | week                 |            |
+|                    | show fetal info      |            |
+
+Informasi Kehamilan:
+- Usia Kehamilan (Minggu & Hari)
+- Trimester
+- Ukuran Janin (Perbandingan dengan Buah)
+- Panjang Janin (cm)
+- Berat Janin (gram)
+- Perkiraan Tanggal Lahir
+- Informasi Perkembangan
+
+3.3 RIWAYAT PEMERIKSAAN
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu riwayat  | load examination     |            |
+| pemeriksaan        | history              |            |
+|                    | query database       | return     |
+|                    |                      | examination|
+|                    |                      | data       |
+|                    | menampilkan riwayat  |            |
+|                    | pemeriksaan          |            |
+| view details       |                      |            |
+| download reports   |                      |            |
+| filter by date     |                      |            |
+| search specific    |                      |            |
+| exams              |                      |            |
+
+3.4 TEMU JANJI
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu temu     | load appointments    |            |
+| janji              | query database       | return     |
+|                    |                      | appointment|
+|                    |                      | data       |
+|                    | menampilkan jadwal   |            |
+|                    | temu janji           |            |
+| request new        |                      |            |
+| appointment        |                      |            |
+| select date/time   | validasi jadwal      |            |
+|                    | save appointment ke  | appointment|
+|                    | database             | tersimpan  |
+|                    | send confirmation    |            |
+| receive            |                      |            |
+| confirmation       |                      |            |
+|                    | add to calendar      |            |
+
+3.5 CHAT DENGAN BIDAN
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu chat     | load chat history    |            |
+|                    | query database       | return     |
+|                    |                      | chat data  |
+|                    | menampilkan chat     |            |
+|                    | history              |            |
+| type message       |                      |            |
+| send message       | save message ke      | message    |
+|                    | database             | tersimpan  |
+|                    | send notification    |            |
+|                    | ke bidan             |            |
+| wait for response  |                      |            |
+|                    | receive message      |            |
+|                    | dari bidan           |            |
+|                    | update chat          |            |
+| mark as read       |                      |            |
+| reply message      |                      |            |
+
+3.6 DARURAT
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu darurat  | load emergency       |            |
+|                    | contacts             |            |
+|                    | query database       | return     |
+|                    |                      | emergency  |
+|                    |                      | data       |
+|                    | menampilkan kontak   |            |
+|                    | darurat              |            |
+| call emergency     |                      |            |
+|                    | show emergency info  |            |
+|                    | show emergency       |            |
+|                    | guidelines           |            |
+|                    | show quick actions   |            |
+
+Kontak Darurat:
+- Nomor Bidan
+- Nomor Rumah Sakit
+- Nomor Ambulans
+- Panduan Darurat
+
+3.7 EDUKASI
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu edukasi  | load articles        |            |
+|                    | query database       | return     |
+|                    |                      | article    |
+|                    |                      | data       |
+|                    | menampilkan articles |            |
+| filter by category |                      |            |
+| read content       |                      |            |
+| search articles    |                      |            |
+| bookmark favorites |                      |            |
+| share content      |                      |            |
+
+3.8 PROFILE MANAGEMENT
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu profile  | load personal info   |            |
+|                    | query database       | return     |
+|                    |                      | user data  |
+|                    | menampilkan profile  |            |
+| edit information   |                      |            |
+| update photo       |                      |            |
+| change password    |                      |            |
+| update contact     |                      |            |
+| info               |                      |            |
+|                    | validasi input       |            |
+|                    | save changes ke      | user data  |
+|                    | database             | terupdate  |
+|                    | show success message |            |
+
+================================================================================
+                              4. BIDAN (ADMIN) FLOW
+================================================================================
+
+4.1 BIDAN DASHBOARD
+|  BIDAN             |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| login berhasil     | navigate ke home     |            |
+|                    | admin                |            |
+|                    | load data admin      | return     |
+|                    | dari database        | admin data |
+|                    | menampilkan          |            |
+|                    | dashboard bidan      |            |
+|                    | show quick stats     |            |
+|                    | menampilkan action   |            |
+|                    | grid                 |            |
+| memilih fitur      |                      |            |
+
+Fitur Dashboard Bidan:
+- Analytics Dashboard
+- Data Pasien Management
+- Registrasi Persalinan
+- Chat dengan Pasien
+- Pemeriksaan Ibu Hamil
+- Jadwal Konsultasi
+- Panel Edukasi
+
+4.2 DATA PASIEN MANAGEMENT
+|  BIDAN             |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu data     | load patient list    |            |
+| pasien             | query database       | return     |
+|                    |                      | patient    |
+|                    |                      | data       |
+|                    | menampilkan daftar   |            |
+|                    | pasien               |            |
+| search & filter    |                      |            |
+| view patient       |                      |            |
+| details            |                      |            |
+| edit patient       |                      |            |
+| update information |                      |            |
+|                    | validasi input       |            |
+|                    | save changes ke      | patient    |
+|                    | database             | terupdate  |
+|                    | show success message |            |
+|                    |                      |            |
+| delete patient     | confirm deletion     |            |
+| konfirmasi         |                      |            |
+|                    | remove from database | patient    |
+|                    |                      | terhapus   |
+|                    | show success message |            |
+
+4.3 REGISTRASI PERSALINAN
+|  BIDAN             |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu          | load existing        |            |
+| registrasi         | reports              |            |
+| persalinan         | query database       | return     |
+|                    |                      | report     |
+|                    |                      | data       |
+|                    | menampilkan daftar   |            |
+|                    | laporan              |            |
+| search reports     |                      |            |
+| add new report     |                      |            |
+| select patient     |                      |            |
+| fill report form   |                      |            |
+|                    | validasi data        |            |
+|                    | save report ke       | report     |
+|                    | database             | tersimpan  |
+|                    | generate PDF          |            |
+|                    | show success message |            |
+
+Form Registrasi Persalinan:
+- Data Pasien (Nama, No HP, Alamat)
+- Data Suami
+- Data Kehamilan
+- Data Persalinan
+- Data Bayi
+- Data Komplikasi
+
+4.4 CHAT BIDAN
+|  BIDAN             |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu chat     | load patient list    |            |
+|                    | query database       | return     |
+|                    |                      | patient    |
+|                    |                      | data       |
+| select patient     |                      |            |
+|                    | load chat history    |            |
+|                    | query database       | return     |
+|                    |                      | chat data  |
+|                    | menampilkan chat     |            |
+|                    | history              |            |
+| type message       |                      |            |
+| send message       | save message ke      | message    |
+|                    | database             | tersimpan  |
+|                    | update chat          |            |
+|                    | send notification    |            |
+|                    | ke pasien            |            |
+|                    | mark as read         |            |
+|                    | update unread count  |            |
+
+4.5 PEMERIKSAAN IBU HAMIL
+|  BIDAN             |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu          | load patient list    |            |
+| pemeriksaan ibu    |                      |            |
+| hamil              | query database       | return     |
+|                    |                      | patient    |
+|                    |                      | data       |
+| select patient     |                      |            |
+|                    | menampilkan form     |            |
+|                    | examination          |            |
+| input vital signs  |                      |            |
+|                    | validasi input       |            |
+|                    | save examination ke  | examination|
+|                    | database             | tersimpan  |
+|                    | generate report      |            |
+|                    | show success message |            |
+
+Data Pemeriksaan:
+- Tekanan Darah
+- Berat Badan
+- Tinggi Badan
+- Lingkar Lengan
+- Denyut Nadi
+- Suhu Tubuh
+- Hasil Laboratorium
+
+4.6 JADWAL KONSULTASI
+|  BIDAN             |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu jadwal   | load appointments    |            |
+| konsultasi         | query database       | return     |
+|                    |                      | appointment|
+|                    |                      | data       |
+|                    | menampilkan jadwal   |            |
+| schedule new       |                      |            |
+| appointment        |                      |            |
+| set date & time    |                      |            |
+| assign patient     |                      |            |
+|                    | validasi jadwal      |            |
+|                    | save appointment ke  | appointment|
+|                    | database             | tersimpan  |
+|                    | send notification    |            |
+|                    | ke pasien            |            |
+|                    | show success message |            |
+
+4.7 ANALYTICS DASHBOARD
+|  BIDAN             |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu          | load statistics      |            |
+| analytics          | query database       | return     |
+|                    |                      | analytics  |
+|                    |                      | data       |
+|                    | display charts       |            |
+|                    | show patient trends  |            |
+| export data        |                      |            |
+|                    | generate reports     |            |
+|                    | show success message |            |
+
+Metrik Analytics:
+- Total Pasien
+- Pasien Baru per Bulan
+- Distribusi Usia Kehamilan
+- Frekuensi Kunjungan
+- Komplikasi Kehamilan
+- Hasil Persalinan
+
+4.8 PANEL EDUKASI
+|  BIDAN             |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| klik menu panel    | load articles        |            |
+| edukasi            | query database       | return     |
+|                    |                      | article    |
+|                    |                      | data       |
+|                    | menampilkan daftar   |            |
+|                    | artikel              |            |
+| manage articles    |                      |            |
+| create/edit        |                      |            |
+| content            |                      |            |
+|                    | validasi content     |            |
+| publish articles   |                      |            |
+|                    | save ke database     | article    |
+|                    |                      | tersimpan  |
+|                    | update publication   |            |
+|                    | status               |            |
+|                    | show success message |            |
+|                    |                      |            |
+| manage categories  |                      |            |
+|                    | update category data | category   |
+|                    |                      | terupdate  |
+| moderate content   |                      |            |
+|                    | update moderation    | content    |
+|                    | status               | terupdate  |
+|                    | track user           |            |
+|                    | engagement           |            |
+|                    | generate engagement  |            |
+|                    | stats                |            |
+
+Kategori Edukasi:
+- Nutrisi Kehamilan
+- Perkembangan Janin
+- Persiapan Persalinan
+- Perawatan Bayi
+- Kesehatan Ibu
+
+================================================================================
+                              5. SISTEM FLOW
+================================================================================
+
+5.1 INFRASTRUKTUR BACKEND
+|  SISTEM            |  FIREBASE            |  DATABASE  |
+|--------------------|----------------------|------------|
+| initialize firebase|                      |            |
+| services           |                      |            |
+| load authentication|                      |            |
+| service            |                      |            |
+| load firestore     |                      |            |
+| database           |                      |            |
+| load cloud storage |                      |            |
+| load cloud         |                      |            |
+| functions          |                      |            |
+| load analytics     |                      |            |
+| load performance   |                      |            |
+| monitoring         |                      |            |
+| ready to serve     |                      |            |
+
+5.2 DATA MANAGEMENT
+|  SISTEM            |  VALIDASI            |  DATABASE  |
+|--------------------|----------------------|------------|
+| receive data input |                      |            |
+|                    | validasi data        |            |
+|                    | check data format    |            |
+|                    |                      |            |
+| save ke database   |                      | data       |
+|                    |                      | tersimpan  |
+| index data         |                      |            |
+| enable retrieval   |                      |            |
+| setup real-time    |                      |            |
+| updates            |                      |            |
+| create data backup |                      | backup     |
+|                    |                      | tersimpan  |
+| apply security     |                      |            |
+| set access control |                      |            |
+
+5.3 COMMUNICATION SERVICES
+|  SISTEM            |  SERVICE             |  STATUS    |
+|--------------------|----------------------|------------|
+| initialize chat    |                      |            |
+| system             |                      |            |
+| setup message      |                      |            |
+| queue              |                      |            |
+| configure push     |                      |            |
+| notifications      |                      |            |
+| setup email        |                      |            |
+| services           |                      |            |
+| enable file        |                      |            |
+| sharing            |                      |            |
+| configure media    |                      |            |
+| storage            |                      |            |
+| ready for          |                      |            |
+| communication      |                      |            |
+
+5.4 SECURITY & AUTHENTICATION
+|  SISTEM            |  SECURITY            |  STATUS    |
+|--------------------|----------------------|------------|
+| receive user login |                      |            |
+| request            |                      |            |
+|                    | validate credentials |            |
+|                    | generate JWT token  |            |
+|                    | manage session       |            |
+|                    | check permissions    |            |
+|                    | encrypt data         |            |
+|                    | log access           |            |
+|                    | monitor security     |            |
+|                    | apply security       |            |
+|                    | policies             |            |
+
+5.5 PERFORMANCE & OPTIMIZATION
+|  SISTEM            |  OPTIMIZATION        |  STATUS    |
+|--------------------|----------------------|------------|
+| implement lazy     |                      |            |
+| loading            |                      |            |
+| setup caching      |                      |            |
+| enable background  |                      |            |
+| sync               |                      |            |
+| configure offline  |                      |            |
+| support            |                      |            |
+| manage memory      |                      |            |
+| optimize resources |                      |            |
+| monitor            |                      |            |
+| performance        |                      |            |
+| apply              |                      |            |
+| optimizations      |                      |            |
+
+5.6 ERROR HANDLING & MONITORING
+|  SISTEM            |  MONITORING          |  STATUS    |
+|--------------------|----------------------|------------|
+| detect errors      |                      |            |
+|                    | log errors           |            |
+|                    | send alerts          |            |
+|                    | execute recovery     |            |
+|                    | procedures           |            |
+| collect            |                      |            |
+| performance        |                      |            |
+| metrics            |                      |            |
+| analyze user       |                      |            |
+| behavior           |                      |            |
+| generate reports   |                      |            |
+| apply              |                      |            |
+| improvements       |                      |            |
+
+5.7 INTEGRATION SERVICES
+|  SISTEM            |  INTEGRATION         |  STATUS    |
+|--------------------|----------------------|------------|
+| initialize PDF     |                      |            |
+| generation         |                      |            |
+| setup calendar     |                      |            |
+| integration        |                      |            |
+| configure external |                      |            |
+| APIs               |                      |            |
+| connect third-party|                      |            |
+| services           |                      |            |
+| enable data export |                      |            |
+| setup reporting    |                      |            |
+| tools              |                      |            |
+| test integrations  |                      |            |
+| monitor service    |                      |            |
+| health             |                      |            |
+
+================================================================================
+                              6. INTERACTION FLOWS
+================================================================================
+
+6.1 PASIEN ↔ SISTEM INTERACTION
+|  PASIEN            |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| melakukan action   |                      |            |
+|                    | receive action        |            |
+|                    | validate action       |            |
+|                    | process data          |            |
+|                    | save ke database      | data       |
+|                    |                      | tersimpan  |
+|                    | generate response     |            |
+|                    | send response ke      |            |
+|                    | pasien                |            |
+|                    | enable real-time      |            |
+|                    | updates               |            |
+|                    | send notification     |            |
+|                    | sync data             |            |
+
+6.2 BIDAN ↔ SISTEM INTERACTION
+|  BIDAN             |  SISTEM              |  DATABASE  |
+|--------------------|----------------------|------------|
+| melakukan action   |                      |            |
+|                    | receive action        |            |
+|                    | process action        |            |
+|                    | manage data           |            |
+|                    | update database       | data       |
+|                    |                      | terupdate  |
+|                    | generate response     |            |
+|                    | send response ke      |            |
+|                    | bidan                 |            |
+|                    | update analytics      |            |
+|                    | generate reports      |            |
+|                    | enable data export    |            |
+
+6.3 PASIEN ↔ BIDAN INTERACTION
+|  PASIEN            |  SISTEM              |  BIDAN     |
+|--------------------|----------------------|------------|
+| send chat message  |                      |            |
+|                    | receive message       |            |
+|                    | relay message         |            |
+|                    | send notification ke  |            |
+|                    | bidan                 |            |
+|                    |                      | receive    |
+|                    |                      | notification|
+|                    |                      | read       |
+|                    |                      | message    |
+|                    |                      | reply      |
+|                    |                      | message    |
+|                    | receive reply         |            |
+|                    | update chat history   |            |
+|                    | enable file sharing   |            |
+|                    | update status         |            |
+|                    | send notification ke  |            |
+|                    | pasien                |            |
+
+6.4 SYSTEM ↔ EXTERNAL SERVICES
+|  SISTEM            |  EXTERNAL SERVICE    |  STATUS    |
+|--------------------|----------------------|------------|
+| make API calls     |                      |            |
+|                    | receive request       |            |
+|                    |                      | process    |
+|                    |                      | request    |
+|                    |                      | send       |
+|                    |                      | response   |
+| receive response   |                      |            |
+| integrate data     |                      |            |
+| handle errors      |                      |            |
+| apply fallback     |                      |            |
+| mechanisms         |                      |            |
+| update internal    |                      |            |
+| data               |                      |            |
+| log interaction    |                      |            |
+
+================================================================================
+                              7. DECISION POINTS
+================================================================================
+
+7.1 ROLE-BASED ACCESS CONTROL
+|  USER               |  SISTEM              |  INTERFACE |
+|---------------------|----------------------|------------|
+| login               |                      |            |
+|                     | receive login request|            |
+|                     | check user role      |            |
+|                     | branch to interface  |            |
+|                     |                      |            |
+|                     | jika role pasien     | navigate ke|
+|                     |                      | pasien     |
+|                     |                      | interface  |
+|                     |                      |            |
+|                     | jika role bidan      | navigate ke|
+|                     |                      | bidan      |
+|                     |                      | interface  |
+|                     | check permissions    |            |
+|                     | apply feature access |            |
+|                     | control              |            |
+
+7.2 DATA VALIDATION
+|  USER               |  SISTEM              |  VALIDASI  |
+|---------------------|----------------------|------------|
+| input form data     |                      |            |
+|                     | receive input        |            |
+|                     |                      | validate   |
+|                     |                      | required   |
+|                     |                      | fields     |
+|                     |                      | check data |
+|                     |                      | format     |
+|                     |                      |            |
+|                     |                      | jika valid |
+|                     |                      | proceed to |
+|                     |                      | save       |
+|                     |                      |            |
+|                     |                      | jika tidak |
+|                     |                      | valid      |
+|                     |                      | show error |
+|                     |                      | message    |
+|                     | request correction   |            |
+| correct input       |                      |            |
+|                     | revalidate          |            |
+|                     |                      | proceed to |
+|                     |                      | save       |
+
+7.3 NETWORK STATUS
+|  SISTEM             |  NETWORK             |  STATUS    |
+|---------------------|----------------------|------------|
+| check network status|                      |            |
+|                     | determine connection |            |
+|                     |                      |            |
+|                     |                      | jika online|
+|                     |                      | use online |
+|                     |                      | sync       |
+|                     |                      | strategy   |
+|                     | provide full user    |            |
+|                     | experience          |            |
+|                     |                      |            |
+|                     |                      | jika offline|
+|                     |                      | enable     |
+|                     |                      | offline    |
+|                     |                      | mode       |
+|                     | queue operations    |            |
+|                     | sync when online    |            |
+
+7.4 SYSTEM HEALTH
+|  SISTEM             |  HEALTH              |  RECOVERY  |
+|---------------------|----------------------|------------|
+| perform system check|                      |            |
+|                     | monitor performance  |            |
+|                     | allocate resources   |            |
+|                     | apply optimizations |            |
+|                     | detect issues        |            |
+|                     |                      | jika issue |
+|                     |                      | detected   |
+|                     | attempt auto recovery|            |
+|                     |                      |            |
+|                     |                      | jika auto  |
+|                     |                      | recovery   |
+|                     |                      | failed     |
+|                     | request manual       |            |
+|                     | intervention         |            |
+|                     |                      | admin      |
+|                     |                      | intervene  |
+|                     | restore services     |            |
+
+================================================================================
+                              8. EXCEPTION HANDLING
+================================================================================
+
+8.1 FIREBASE ERRORS
+|  SISTEM             |  ERROR               |  RECOVERY  |
+|---------------------|----------------------|------------|
+| detect firebase     |                      |            |
+| error               |                      |            |
+|                     | log error            |            |
+|                     |                      |            |
+| attempt retry       |                      |            |
+| mechanism           |                      |            |
+|                     |                      | jika retry |
+|                     |                      | success    |
+|                     | continue operation   |            |
+|                     |                      |            |
+|                     |                      | jika retry |
+|                     |                      | failed     |
+|                     | enable fallback      |            |
+|                     | authentication       |            |
+|                     | use local storage    |            |
+|                     | send user            |            |
+|                     | notification         |            |
+|                     | provide support      |            |
+|                     | contact              |            |
+|                     | attempt recovery     |            |
+
+8.2 DATA CORRUPTION
+|  SISTEM             |  CORRUPTION          |  RECOVERY  |
+|---------------------|----------------------|------------|
+| detect data issue   |                      |            |
+|                     | log corruption       |            |
+|                     |                      |            |
+|                     | perform validation   |            |
+|                     | check                |            |
+|                     | attempt data recovery|            |
+|                     |                      |            |
+|                     |                      | jika recovery|
+|                     |                      | success    |
+|                     | restore data         |            |
+|                     |                      |            |
+|                     |                      | jika recovery|
+|                     |                      | failed     |
+|                     | send user            |            |
+|                     | notification         |            |
+|                     | request manual       |            |
+|                     | correction           |            |
+| correct data        |                      |            |
+|                     | validate correction  |            |
+|                     | sync data            |            |
+
+8.3 SYSTEM FAILURES
+|  SISTEM             |  FAILURE             |  RECOVERY  |
+|---------------------|----------------------|------------|
+| detect system crash |                      |            |
+|                     | log crash            |            |
+|                     |                      |            |
+|                     | attempt auto restart |            |
+|                     |                      |            |
+|                     |                      | jika restart|
+|                     |                      | success    |
+|                     | perform data recovery|            |
+|                     | restore services     |            |
+|                     |                      |            |
+|                     |                      | jika restart|
+|                     |                      | failed     |
+|                     | send user            |            |
+|                     | notification         |            |
+|                     | enable maintenance   |            |
+|                     | mode                 |            |
+|                     |                      | admin      |
+|                     |                      | intervene  |
+|                     | manual restart       |            |
+|                     | restore services     |            |
+
+8.4 NETWORK ISSUES
+|  SISTEM             |  NETWORK             |  RECOVERY  |
+|---------------------|----------------------|------------|
+| detect connection   |                      |            |
+| lost                |                      |            |
+|                     | log network issue    |            |
+|                     |                      |            |
+|                     | enable offline mode  |            |
+|                     | queue operations     |            |
+|                     | persist data locally |            |
+|                     | monitor connection   |            |
+|                     |                      |            |
+|                     |                      | jika       |
+|                     |                      | connection |
+|                     |                      | restored   |
+|                     | sync queued          |            |
+|                     | operations           |            |
+|                     | resolve conflicts    |            |
+|                     | restore online mode  |            |
+
+================================================================================
+                              9. PERFORMANCE OPTIMIZATION
+================================================================================
+
+9.1 LAZY LOADING
+|  SCREEN             |  LOADING             |  OPTIMIZATION |
+|---------------------|----------------------|---------------|
+| screen load         |                      |               |
+|                     | load essential data  |               |
+|                     | background load      |               |
+|                     | update UI            |               |
+|                     |                      |               |
+|                     | cache management     |               |
+|                     | memory optimization  |               |
+
+9.2 REAL-TIME UPDATES
+|  DATA               |  STREAM              |  UPDATE      |
+|---------------------|----------------------|--------------|
+| data change         |                      |              |
+|                     | firestore stream     |              |
+|                     | UI update            |              |
+|                     | user notification    |              |
+|                     |                      |              |
+|                     | background sync      |              |
+|                     | conflict resolution  |              |
+
+9.3 RESOURCE MANAGEMENT
+|  RESOURCE           |  OPTIMIZATION        |  MONITORING  |
+|---------------------|----------------------|--------------|
+| memory usage        |                      |              |
+|                     | CPU optimization     |              |
+|                     | battery management   |              |
+|                     | storage cleanup      |              |
+|                     |                      |              |
+|                     | performance          |              |
+|                     | monitoring           |              |
+|                     | auto optimization    |              |
+
+================================================================================
+                              10. SECURITY FRAMEWORK
+================================================================================
+
+10.1 AUTHENTICATION
+|  USER               |  AUTH                |  SESSION    |
+|---------------------|----------------------|-------------|
+| user login          |                      |             |
+|                     | firebase auth        |             |
+|                     | JWT token            |             |
+|                     | session management   |             |
+|                     |                      |             |
+|                     | token expiry         |             |
+|                     | re-authentication    |             |
+|                     | secure logout        |             |
+
+10.2 DATA ACCESS
+|  REQUEST            |  VERIFICATION        |  ACCESS     |
+|---------------------|----------------------|-------------|
+| data request        |                      |             |
+|                     | role verification    |             |
+|                     | permission check     |             |
+|                     | data retrieval       |             |
+|                     |                      |             |
+|                     | unauthorized access  |             |
+|                     | access denied        |             |
+|                     | log security event   |             |
+
+10.3 DATA PROTECTION
+|  PROTECTION         |  SECURITY            |  COMPLIANCE |
+|---------------------|----------------------|-------------|
+| data encryption     |                      |             |
+|                     | secure transmission  |             |
+|                     | access logging       |             |
+|                     | audit trail          |             |
+|                     |                      |             |
+|                     | privacy compliance   |             |
+|                     | data retention       |             |
+
+================================================================================
+                              11. INTEGRATION ARCHITECTURE
+================================================================================
+
+11.1 FIREBASE SERVICES
+|  SERVICE             |  FUNCTION            |  STATUS     |
+|----------------------|----------------------|-------------|
+| Authentication       | user management      | active      |
+| Firestore Database  | data storage         | active      |
+| Cloud Storage       | file storage         | active      |
+| Cloud Functions     | serverless logic     | active      |
+| Analytics           | user tracking        | active      |
+
+11.2 EXTERNAL SERVICES
+|  SERVICE             |  FUNCTION            |  STATUS     |
+|----------------------|----------------------|-------------|
+| PDF Generation      | document creation     | active      |
+| Email Services      | communication        | active      |
+| Push Notifications  | real-time alerts     | active      |
+| Calendar Integration| scheduling           | active      |
+
+11.3 THIRD-PARTY INTEGRATIONS
+|  SERVICE             |  FUNCTION            |  STATUS     |
+|----------------------|----------------------|-------------|
+| Payment Gateways    | financial processing  | planned     |
+| SMS Services        | text messaging        | planned     |
+| Video Calling       | telemedicine         | planned     |
+| Health APIs         | medical data         | planned     |
+
+================================================================================
+                              12. TESTING SCENARIOS
+================================================================================
+
+12.1 PASIEN TESTING
+|  TEST SCENARIO      |  EXPECTED RESULT     |  STATUS     |
+|----------------------|----------------------|-------------|
+| Login dengan role   | berhasil masuk ke    | passed      |
+| pasien              | home pasien          |             |
+| Input data HPHT     | data tersimpan dan   | passed      |
+|                     | kehamilan terhitung  |             |
+| Lihat perkembangan  | informasi kehamilan  | passed      |
+| kehamilan           | ditampilkan          |             |
+| Chat dengan bidan   | pesan terkirim dan   | passed      |
+|                     | diterima             |             |
+| Akses edukasi       | artikel edukasi      | passed      |
+|                     | ditampilkan          |             |
+
+12.2 BIDAN TESTING
+|  TEST SCENARIO      |  EXPECTED RESULT     |  STATUS     |
+|----------------------|----------------------|-------------|
+| Login dengan role   | berhasil masuk ke    | passed      |
+| bidan               | home admin            |             |
+| Manajemen data      | CRUD pasien          | passed      |
+| pasien              | berfungsi             |             |
+| Registrasi          | laporan tersimpan    | passed      |
+| persalinan          | dan PDF generated     |             |
+| Chat dengan pasien  | komunikasi dua arah  | passed      |
+|                     | berfungsi             |             |
+| Analytics dashboard | data statistik       | passed      |
+|                     | ditampilkan          |             |
+
+12.3 SYSTEM TESTING
+|  TEST TYPE          |  EXPECTED RESULT     |  STATUS     |
+|----------------------|----------------------|-------------|
+| Performance testing | response time < 2s   | passed      |
+| Load testing        | handle 100+ users    | passed      |
+| Security testing    | data terenkripsi     | passed      |
+| Integration testing | semua service        | passed      |
+|                     | terintegrasi         |             |
+
+12.4 ERROR TESTING
+|  ERROR SCENARIO     |  EXPECTED RESULT     |  STATUS     |
+|----------------------|----------------------|-------------|
+| Koneksi internet    | offline mode aktif   | passed      |
+| terputus            |                      |             |
+| Data tidak valid    | error message        | passed      |
+|                     | ditampilkan          |             |
+| Firebase error      | fallback mechanism   | passed      |
+|                     | aktif                |             |
+| Permission denied   | access denied        | passed      |
+|                     | message               |             |
+| System crash        | auto recovery        | passed      |
+|                     | berfungsi             |             |
+
+================================================================================
+                              13. DEPLOYMENT & MAINTENANCE
+================================================================================
+
+13.1 BUILD PROCESS
+|  SOURCE             |  BUILD               |  OUTPUT     |
+|---------------------|----------------------|-------------|
+| source code         |                      |             |
+|                     | flutter build        |             |
+|                     | platform specific    |             |
+|                     |                      | APK/IPA     |
+|                     |                      |             |
+|                     | code signing         |             |
+|                     | release build        |             |
+|                     | distribution         |             |
+
+13.2 PLATFORMS
+|  PLATFORM           |  OUTPUT              |  STATUS     |
+|---------------------|----------------------|-------------|
+| Android             | APK                  | active      |
+| iOS                 | IPA                  | active      |
+| Web                 | Progressive Web App  | active      |
+
+13.3 MONITORING
+|  MONITORING         |  TRACKING            |  ACTION     |
+|---------------------|----------------------|-------------|
+| app performance     |                      |             |
+|                     | error tracking       |             |
+|                     | user analytics       |             |
+|                     | performance metrics  |             |
+|                     |                      |             |
+|                     | issue detection      |             |
+|                     | bug fixes            |             |
+|                     | performance          |             |
+|                     | optimization         |             |
+
+13.4 UPDATES
+|  FEATURE            |  PROCESS             |  FEEDBACK   |
+|---------------------|----------------------|-------------|
+| new features        |                      |             |
+|                     | testing              |             |
+|                     | staging              |             |
+|                     | production release   |             |
+|                     |                      |             |
+|                     |                      | user        |
+|                     |                      | feedback    |
+|                     |                      | bug reports |
+|                     |                      | feature     |
+|                     |                      | requests    |
+
+================================================================================
+                              14. CONCLUSION
+================================================================================
+
+Sistem Persalinanku adalah aplikasi mobile yang kompleks dengan arsitektur tiga lapisan:
+1. **PASIEN (USER)** - Interface untuk ibu hamil dengan fitur tracking kehamilan
+2. **BIDAN (ADMIN)** - Interface untuk tenaga medis dengan fitur manajemen pasien
+3. **SISTEM** - Backend infrastructure yang mendukung kedua role
+
+Setiap komponen memiliki alur yang terstruktur dengan validasi, error handling,
+dan fallback mechanisms yang memastikan pengalaman pengguna yang optimal.
+
+Kunci keberhasilan sistem:
+1. Role-based access control yang ketat
+2. Real-time data synchronization
+3. Offline capability
+4. Comprehensive error handling
+5. User-friendly interface
+6. Secure data management
+7. Performance optimization
+8. Scalable architecture
+9. Robust security framework
+10. Continuous monitoring & maintenance
+
+================================================================================
+                            END OF DOCUMENT
+================================================================================

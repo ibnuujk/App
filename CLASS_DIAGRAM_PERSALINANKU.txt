@@ -1,0 +1,496 @@
+================================================================================
+                        CLASS DIAGRAM SISTEM PERSALINANKU
+                               (Mobile Application)
+================================================================================
+
+Sistem Persalinanku adalah aplikasi mobile yang memiliki arsitektur berbasis Flutter
+dengan Firebase sebagai backend. Class Diagram ini menggambarkan struktur kelas,
+atribut, method, dan relasi antar kelas dalam sistem.
+
+================================================================================
+                                1. USER MANAGEMENT CLASSES
+================================================================================
+
++------------------------+       +------------------------+       +------------------------+
+|      UserModel         |       |    FirebaseService     |       |   AuthenticationService |
++------------------------+       +------------------------+       +------------------------+
+| - String id            |       | - FirebaseAuth _auth  |       | - FirebaseAuth _auth   |
+| - String name          |       | - FirebaseFirestore   |       | - User? _currentUser   |
+| - String email         |       |   _firestore          |       | - Stream<User?>        |
+| - String password      |       | - FirebaseStorage     |       |   _authStateChanges    |
+| - String phoneNumber   |       |   _storage            |       +------------------------+
+| - String address       |       | - FirebaseMessaging   |       | + signInWithEmailAndPassword() |
+| - DateTime birthDate   |       |   _messaging          |       | + createUserWithEmailAndPassword() |
+| - String role          |       | - FirebaseAnalytics   |       | + signOut()            |
+| - DateTime? hpht       |       |   _analytics          |       | + resetPassword()      |
+| - DateTime createdAt   |       | - bool _isInitialized |       | + getCurrentUser()     |
+| - DateTime updatedAt   |       +------------------------+       | + onAuthStateChanged() |
++------------------------+       | + initializeFirebase() |       +------------------------+
+| + UserModel()          |       | + signIn()            |
+| + fromMap()            |       | + signUp()            |
+| + toMap()              |       | + signOut()           |
+| + copyWith()           |       | + getUserData()       |
+| + calculateGestationalAge() |  | + saveUserData()      |
+| + getTrimester()       |       | + updateUserData()    |
+| + getDueDate()         |       | + deleteUserData()    |
+| + getFetalDevelopment()|       | + uploadFile()        |
+| + validateEmail()      |       | + downloadFile()      |
+| + validatePhone()      |       | + sendNotification()  |
++------------------------+       | + getAnalytics()      |
+                                 | + enableOffline()     |
+                                 +------------------------+
+
++------------------------+       +------------------------+       +------------------------+
+|      RouteHelper       |       |      MainApp          |       |    LoginScreen         |
++------------------------+       +------------------------+       +------------------------+
+| - Map<String, Widget   |       | - FirebaseApp _app   |       | - TextEditingController |
+|   Function(BuildContext,       | - GlobalKey<NavigatorState> |   _emailController       |
+|   Object?)> _routes    |       |   _navigatorKey      |       | - TextEditingController |
+| - Map<String, Widget   |       | - ThemeData _theme   |       |   _passwordController   |
+|   Function(BuildContext,       | - bool _isInitialized|       | - bool _isLoading       |
+|   Object?)> _adminRoutes|      | - bool _isDarkMode   |       | - bool _obscurePassword |
++------------------------+       +------------------------+       | - FirebaseService      |
+| + generateRoute()      |       | + createState()       |       |   _firebaseService     |
+| + generateAdminRoute() |       | + initState()         |       | - UserModel? _user     |
+| + navigateTo()         |       | + _initializeFirebase()|      +------------------------+
+| + navigateToAdmin()    |       | + _setupTheme()       |       | + build()              |
+| + goBack()             |       | + _handleAuthState()  |       | + _handleLogin()       |
+| + clearStack()         |       | + _navigateToHome()   |       | + _validateForm()      |
++------------------------+       | + _showError()        |       | + _navigateToHome()    |
+                                 | + _showSuccess()      |       | + _resetPassword()     |
+                                 +------------------------+       +------------------------+
+
+================================================================================
+                                2. PASIEN (USER) CLASSES
+================================================================================
+
++------------------------+       +------------------------+       +------------------------+
+|      HomePasien        |       |      Kehamilanku      |       |   RiwayatPemeriksaan   |
++------------------------+       +------------------------+       +------------------------+
+| - UserModel _user      |       | - UserModel _user     |       | - List<ExaminationModel> |
+| - int _gestationalAge  |       | - int _gestationalAge |      |   _examinations        |
+| - String _trimester    |       | - String _trimester   |       | - bool _isLoading      |
+| - DateTime _dueDate    |       | - DateTime _dueDate   |       | - FirebaseService      |
+| - bool _isLoading      |       | - Map<String, dynamic>|      |   _firebaseService     |
+| - FirebaseService      |       |   _fetalDevelopment  |       | - UserModel _user      |
+|   _firebaseService     |       | - bool _isLoading     |       +------------------------+
+| - StreamSubscription   |       | - FirebaseService     |       | + build()              |
+|   _userSubscription    |       |   _firebaseService    |       | + _loadExaminations()  |
++------------------------+       +------------------------+       | + _downloadReport()    |
+| + build()              |       | + build()              |       | + _filterByDate()     |
+| + _loadUserData()      |       | + _loadPregnancyData()|       | + _searchExaminations()|
+| + _calculatePregnancy()|       | + _calculateGestationalAge()| | + _showExaminationDetails()|
+| + _navigateToFeature() |       | + _getFetalDevelopment()|     | + _refreshData()       |
+| + _refreshData()       |       | + _navigateToHPHT()   |       +------------------------+
+| + _logout()            |       | + _refreshData()      |
+| + dispose()            |       | + dispose()            |
++------------------------+       +------------------------+
+
++------------------------+       +------------------------+       +------------------------+
+|      TemuJanji         |       |      ChatPasien       |       |      Darurat           |
++------------------------+       +------------------------+       +------------------------+
+| - List<AppointmentModel> |     | - List<ChatMessageModel> |    | - List<EmergencyContactModel> |
+|   _appointments        |       |   _messages           |       |   _emergencyContacts   |
+| - bool _isLoading      |       | - bool _isLoading     |       | - bool _isLoading      |
+| - FirebaseService      |       | - FirebaseService     |       | - FirebaseService      |
+|   _firebaseService     |       |   _firebaseService    |       |   _firebaseService     |
+| - UserModel _user      |       | - UserModel _user     |       | - UserModel _user      |
+| - ScrollController     |       | - ScrollController    |       +------------------------+
+|   _scrollController    |       |   _scrollController   |       | + build()              |
++------------------------+       +------------------------+       | + _loadEmergencyContacts()|
+| + build()              |       | + build()              |       | + _callEmergency()    |
+| + _loadAppointments()  |       | + _loadChatHistory()  |       | + _showEmergencyInfo() |
+| + _requestAppointment()|       | + _sendMessage()      |       | + _showGuidelines()    |
+| + _selectDateTime()    |       | + _receiveMessage()   |       | + _showQuickActions()  |
+| + _confirmAppointment()|       | + _markAsRead()       |       | + _refreshData()       |
+| + _refreshData()       |       | + _autoScroll()       |       +------------------------+
+| + _addToCalendar()     |       | + _refreshData()      |
+| + dispose()            |       | + dispose()            |
++------------------------+       +------------------------+
+
++------------------------+       +------------------------+       +------------------------+
+|      Edukasi           |       |      Profile           |       |   ExaminationModel     |
++------------------------+       +------------------------+       +------------------------+
+| - List<ArticleModel>   |       | - UserModel _user     |       | - String id            |
+|   _articles            |       | - bool _isLoading     |       | - String patientId     |
+| - List<String>         |       | - FirebaseService     |       | - DateTime date        |
+|   _categories          |       |   _firebaseService    |       | - double bloodPressure |
+| - String _selectedCategory|    | - ImagePicker         |       | - double weight        |
+| - bool _isLoading      |       |   _imagePicker        |       | - double height        |
+| - FirebaseService      |       | - File? _selectedImage|       | - double armCircumference|
+|   _firebaseService     |       | - bool _isEditing     |       | - int pulseRate        |
+| - ArticleProvider      |       +------------------------+       | - double temperature   |
+|   _articleProvider     |       | + build()              |       | - String labResults    |
++------------------------+       | + _loadUserData()      |       | - String notes         |
+| + build()              |       | + _editProfile()      |       | - DateTime createdAt   |
+| + _loadArticles()      |       | + _updatePhoto()      |       | - DateTime updatedAt   |
+| + _filterByCategory()  |       | + _changePassword()   |       +------------------------+
+| + _searchArticles()    |       | + _updateContact()    |       | + ExaminationModel()   |
+| + _bookmarkArticle()   |       | + _saveChanges()      |       | + fromMap()            |
+| + _shareArticle()      |       | + _validateInput()    |       | + toMap()              |
+| + _refreshData()       |       | + _logout()           |       | + copyWith()           |
+| + dispose()            |       | + dispose()            |       +------------------------+
++------------------------+       +------------------------+
+
+================================================================================
+                                3. BIDAN (ADMIN) CLASSES
+================================================================================
+
++------------------------+       +------------------------+       +------------------------+
+|      HomeAdmin         |       |      DataPasien       |       |   RegistrasiPersalinan |
++------------------------+       +------------------------+       +------------------------+
+| - UserModel _admin     |       | - List<UserModel>     |       | - List<PersalinanModel> |
+| - Map<String, int>     |       |   _patients           |       |   _reports             |
+|   _quickStats          |       | - bool _isLoading     |       | - bool _isLoading      |
+| - bool _isLoading      |       | - FirebaseService     |       | - FirebaseService      |
+| - FirebaseService      |       |   _firebaseService    |       |   _firebaseService     |
+|   _firebaseService     |       | - String _searchQuery |       | - UserModel? _selectedPatient|
+| - StreamSubscription   |       | - String _selectedFilter|     | - TextEditingController |
+|   _statsSubscription   |       | - bool _isSearching   |       |   _formControllers      |
++------------------------+       +------------------------+       +------------------------+
+| + build()              |       | + build()              |       | + build()              |
+| + _loadAdminData()     |       | + _loadPatients()      |       | + _loadReports()       |
+| + _loadQuickStats()    |       | + _searchPatients()    |       | + _searchReports()     |
+| + _navigateToFeature() |       | + _filterPatients()    |       | + _addNewReport()      |
+| + _refreshData()       |       | + _viewPatientDetails()|      | + _selectPatient()     |
+| + _logout()            |       | + _editPatient()       |       | + _fillReportForm()    |
+| + dispose()            |       | + _updatePatient()     |       | + _saveReport()        |
++------------------------+       | + _deletePatient()     |       | + _generatePDF()       |
+                                 | + _refreshData()       |       | + _refreshData()       |
+                                 | + dispose()            |       | + dispose()            |
+                                 +------------------------+       +------------------------+
+
++------------------------+       +------------------------+       +------------------------+
+|      ChatAdmin         |       |   PemeriksaanIbuHamil |       |   JadwalKonsultasi     |
++------------------------+       +------------------------+       +------------------------+
+| - List<UserModel>      |       | - List<UserModel>     |       | - List<AppointmentModel> |
+|   _patients            |       |   _patients           |       |   _appointments        |
+| - UserModel?           |       | - UserModel?          |       | - bool _isLoading      |
+|   _selectedPatient     |       |   _selectedPatient    |       | - FirebaseService      |
+| - List<ChatMessageModel> |     | - bool _isLoading     |       |   _firebaseService     |
+|   _messages            |       | - FirebaseService     |       | - UserModel? _selectedPatient|
+| - bool _isLoading      |       |   _firebaseService    |       | - DateTime _selectedDate|
+| - FirebaseService      |       | - Map<String, dynamic>|      | - TimeOfDay _selectedTime|
+|   _firebaseService     |       |   _examinationForm   |       +------------------------+
+| - ScrollController     |       +------------------------+       | + build()              |
+|   _scrollController    |       | + build()              |       | + _loadAppointments()  |
++------------------------+       | + _loadPatients()      |       | + _scheduleAppointment()|
+| + build()              |       | + _selectPatient()    |       | + _selectPatient()     |
+| + _loadPatients()      |       | + _showExaminationForm()|     | + _setDateTime()       |
+| + _selectPatient()     |       | + _inputVitalSigns()  |       | + _assignPatient()     |
+| + _loadChatHistory()   |       | + _saveExamination()  |       | + _validateSchedule()  |
+| + _sendMessage()       |       | + _generateReport()   |       | + _saveAppointment()   |
+| + _receiveMessage()    |       | + _refreshData()      |       | + _sendNotification()  |
+| + _markAsRead()        |       | + dispose()            |       | + _refreshData()       |
+| + _refreshData()       |       +------------------------+       | + dispose()            |
+| + dispose()            |                                       +------------------------+
++------------------------+
+
+================================================================================
+                                4. SYSTEM & UTILITY CLASSES
+================================================================================
+
++------------------------+       +------------------------+       +------------------------+
+|      PDFService        |       |      AnalyticsService  |       |   EnhancedArticleGenerator |
++------------------------+       +------------------------+       +------------------------+
+| - Directory _tempDir   |       | - FirebaseAnalytics   |       | - List<String> _topics |
+| - String _fileName     |       |   _analytics          |       | - List<String> _patterns|
+| - File _pdfFile        |       | - bool _isEnabled     |       | - Map<String, List<String>> |
+| - bool _isGenerating   |       | - Map<String, dynamic>|      |   _variations          |
+| - PdfDocument _document|       |   _customDimensions   |       | - Random _random       |
++------------------------+       +------------------------+       +------------------------+
+| + PDFService()         |       | + AnalyticsService()  |       | + EnhancedArticleGenerator()|
+| + generatePDF()        |       | + logEvent()          |       | + generateArticle()     |
+| + savePDF()            |       | + logScreenView()     |       | + generateTopic()       |
+| + sharePDF()           |       | + setUserProperty()   |       | + generateContent()     |
+| + deletePDF()          |       | + logError()          |       | + getRandomPattern()    |
+| + getPDFPath()         |       | + enableAnalytics()   |       | + getRandomVariation() |
+| + dispose()            |       | + disableAnalytics()  |       | + validateContent()     |
++------------------------+       | + getAnalyticsData()  |       +------------------------+
+                                 | + exportAnalytics()   |
+                                 | + dispose()           |
+                                 +------------------------+
+
++------------------------+       +------------------------+       +------------------------+
+|      SearchBar         |       |      CategoryChips     |       |      ArticleCard        |
++------------------------+       +------------------------+       +------------------------+
+| - TextEditingController |      | - List<String>         |       | - ArticleModel _article |
+|   _searchController    |       |   _categories         |       | - VoidCallback?        |
+| - String _hintText     |       | - String _selectedCategory|   |   _onTap              |
+| - Function(String)     |       | - Function(String)?   |       | - bool _isBookmarked   |
+|   _onChanged           |       |   _onCategorySelected |       | - bool _isShared       |
+| - Function(String)     |       | - Color _selectedColor|       | - ArticleProvider      |
+|   _onSubmitted        |        | - Color _unselectedColor|     |   _articleProvider     |
+| - bool _isSearching    |       | - double _chipHeight  |       +------------------------+
++------------------------+       +------------------------+       | + build()              |
+| + build()              |       | + build()              |       | + _handleTap()         |
+| + _handleSearch()      |       | + _buildChips()        |       | + _toggleBookmark()    |
+| + _clearSearch()       |       | + _handleCategoryTap()|       | + _shareArticle()      |
+| + _onSearchChanged()   |       | + _getCategoryColor() |       | + _getReadingTime()    |
+| + _onSearchSubmitted() |       | + _animateSelection() |       | + _getExcerpt()        |
+| + dispose()            |       | + dispose()            |       | + dispose()            |
++------------------------+       +------------------------+       +------------------------+
+
+================================================================================
+                                5. RELATIONSHIP DIAGRAM
+================================================================================
+
+USER MANAGEMENT:
+UserModel ←→ FirebaseService (1:1)
+UserModel ←→ AuthenticationService (1:1)
+RouteHelper ←→ MainApp (1:1)
+LoginScreen ←→ FirebaseService (1:1)
+RegisterScreen ←→ FirebaseService (1:1)
+
+PASIEN FLOW:
+HomePasien ←→ UserModel (1:1)
+HomePasien ←→ FirebaseService (1:1)
+Kehamilanku ←→ UserModel (1:1)
+RiwayatPemeriksaan ←→ ExaminationModel (1:many)
+TemuJanji ←→ AppointmentModel (1:many)
+ChatPasien ←→ ChatMessageModel (1:many)
+Darurat ←→ EmergencyContactModel (1:many)
+Edukasi ←→ ArticleModel (1:many)
+Profile ←→ UserModel (1:1)
+
+BIDAN FLOW:
+HomeAdmin ←→ UserModel (1:1)
+HomeAdmin ←→ FirebaseService (1:1)
+DataPasien ←→ UserModel (1:many)
+RegistrasiPersalinan ←→ PersalinanModel (1:many)
+ChatAdmin ←→ ChatMessageModel (1:many)
+PemeriksaanIbuHamil ←→ ExaminationModel (1:many)
+JadwalKonsultasi ←→ AppointmentModel (1:many)
+
+SYSTEM FLOW:
+FirebaseService ←→ AuthenticationService (1:1)
+FirebaseService ←→ PDFService (1:1)
+FirebaseService ←→ AnalyticsService (1:1)
+
+================================================================================
+                                6. ATTRIBUTE DETAILS
+================================================================================
+
+USER MODEL ATTRIBUTES:
+- id: Unique identifier (String)
+- name: Full name of user (String)
+- email: Email address (String)
+- password: Encrypted password (String)
+- phoneNumber: Contact number (String)
+- address: Residential address (String)
+- birthDate: Date of birth (DateTime)
+- role: User role (pasien/bidan) (String)
+- hpht: Last menstrual period (DateTime?)
+- createdAt: Account creation date (DateTime)
+- updatedAt: Last update date (DateTime)
+
+EXAMINATION MODEL ATTRIBUTES:
+- id: Unique identifier (String)
+- patientId: Reference to patient (String)
+- date: Examination date (DateTime)
+- bloodPressure: Blood pressure reading (double)
+- weight: Body weight in kg (double)
+- height: Body height in cm (double)
+- armCircumference: Arm circumference (double)
+- pulseRate: Heart rate per minute (int)
+- temperature: Body temperature (double)
+- labResults: Laboratory results (String)
+- notes: Additional notes (String)
+
+================================================================================
+                                7. METHOD DETAILS
+================================================================================
+
+USER MODEL METHODS:
++ calculateGestationalAge(): Calculate pregnancy weeks
++ getTrimester(): Determine current trimester
++ getDueDate(): Calculate estimated due date
++ getFetalDevelopment(): Get fetal development info
++ validateEmail(): Validate email format
++ validatePhone(): Validate phone number format
+
+FIREBASE SERVICE METHODS:
++ initializeFirebase(): Initialize Firebase services
++ signIn(): User authentication
++ signUp(): User registration
++ signOut(): User logout
++ getUserData(): Retrieve user data
++ saveUserData(): Save user data
++ updateUserData(): Update user data
++ deleteUserData(): Delete user data
+
+PDF SERVICE METHODS:
++ generatePDF(): Create PDF document
++ savePDF(): Save PDF to local storage
++ sharePDF(): Share PDF via other apps
++ deletePDF(): Remove PDF file
++ getPDFPath(): Get file path
+
+================================================================================
+                               8. DESIGN PATTERNS
+================================================================================
+
+1. PROVIDER PATTERN:
+- ArticleProvider: Manages article state
+- UserProvider: Manages user state
+- ThemeProvider: Manages app theme
+
+2. SINGLETON PATTERN:
+- FirebaseService: Single instance for Firebase operations
+- PDFService: Single instance for PDF operations
+- AnalyticsService: Single instance for analytics
+
+3. FACTORY PATTERN:
+- EnhancedArticleGenerator: Creates article content
+- ContentTemplates: Generates content templates
+- LanguagePatterns: Creates language patterns
+
+4. OBSERVER PATTERN:
+- StreamSubscription: Real-time data updates
+- Firebase streams: Live data synchronization
+- Provider listeners: State change notifications
+
+================================================================================
+                               9. SECURITY FEATURES
+================================================================================
+
+1. AUTHENTICATION:
+- Firebase Authentication
+- JWT token management
+- Session management
+- Password encryption
+
+2. AUTHORIZATION:
+- Role-based access control
+- Permission checking
+- Feature access control
+- Admin privileges
+
+3. DATA PROTECTION:
+- Data encryption
+- Secure transmission (HTTPS)
+- Access logging
+- Audit trails
+
+================================================================================
+                               10. PERFORMANCE OPTIMIZATION
+================================================================================
+
+1. LAZY LOADING:
+- Screen content loading
+- Image lazy loading
+- Data pagination
+- Background processing
+
+2. CACHING:
+- Data caching
+- Image caching
+- API response caching
+- Offline data storage
+
+3. MEMORY MANAGEMENT:
+- Resource cleanup
+- Memory optimization
+- Garbage collection
+- Memory monitoring
+
+================================================================================
+                               11. ERROR HANDLING
+================================================================================
+
+1. EXCEPTION TYPES:
+- Firebase errors
+- Network errors
+- Validation errors
+- Permission errors
+- System errors
+
+2. ERROR RECOVERY:
+- Retry mechanisms
+- Fallback strategies
+- Offline mode
+- Data recovery
+
+3. USER FEEDBACK:
+- Error messages
+- Success notifications
+- Loading indicators
+- Progress bars
+
+================================================================================
+                               12. TESTING STRATEGY
+================================================================================
+
+1. UNIT TESTING:
+- Model classes
+- Service classes
+- Utility functions
+- Business logic
+
+2. WIDGET TESTING:
+- UI components
+- User interactions
+- Screen navigation
+- Form validation
+
+3. INTEGRATION TESTING:
+- Firebase services
+- API integration
+- Data flow
+- User workflows
+
+================================================================================
+                               13. DEPLOYMENT CONSIDERATIONS
+================================================================================
+
+1. BUILD CONFIGURATION:
+- Debug vs Release builds
+- Platform-specific builds
+- Code signing
+- ProGuard optimization
+
+2. DISTRIBUTION:
+- App store deployment
+- Internal testing
+- Beta releases
+- Production releases
+
+3. MONITORING:
+- Crash reporting
+- Performance monitoring
+- User analytics
+- Error tracking
+
+================================================================================
+                               14. CONCLUSION
+================================================================================
+
+Class Diagram ini menggambarkan arsitektur sistem Persalinanku yang kompleks
+dengan pemisahan yang jelas antara:
+
+1. **USER MANAGEMENT**: Kelas-kelas untuk manajemen pengguna dan autentikasi
+2. **PASIEN FLOW**: Kelas-kelas untuk fitur-fitur pasien
+3. **BIDAN FLOW**: Kelas-kelas untuk fitur-fitur bidan/admin
+4. **SYSTEM FLOW**: Kelas-kelas untuk infrastruktur dan layanan backend
+5. **UTILITY CLASSES**: Kelas-kelas pendukung dan helper
+
+Setiap kelas memiliki tanggung jawab yang jelas dengan:
+- Atribut yang terdefinisi dengan baik
+- Method yang spesifik dan fokus
+- Relasi antar kelas yang logis
+- Implementasi design pattern yang tepat
+- Fitur keamanan yang komprehensif
+- Optimasi performa yang optimal
+- Error handling yang robust
+- Testing strategy yang menyeluruh
+
+Arsitektur ini memungkinkan sistem untuk:
+- Mudah di-maintain dan di-scale
+- Memiliki performa yang optimal
+- Aman dan reliable
+- Mudah di-test dan di-debug
+- Fleksibel untuk pengembangan masa depan
+
+================================================================================
+                             END OF DOCUMENT
+================================================================================

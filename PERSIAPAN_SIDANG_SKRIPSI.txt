@@ -1,0 +1,256 @@
+PERSIAPAN SIDANG SKRIPSI - APLIKASI PERSALINANKU
+====================================================
+
+DOKUMEN INI BERISI KELEMAHAN APLIKASI YANG MUNGKIN DITANYAKAN PADA SIDANG SKRIPSI
+BESERTA JAWABAN YANG DAPAT DISIAPKAN
+
+================================================================================
+KELEMAHAN YANG MUNGKIN DITANYAKAN PADA SIDANG
+================================================================================
+
+1. SECURITY VULNERABILITIES (PERTANYAAN PALING SERING)
+   ===================================================
+   
+   PERTANYAAN YANG MUNGKIN DIAJUKAN:
+   - "Mengapa password disimpan dalam plain text? Ini sangat tidak aman!"
+   - "Bagaimana Anda menjamin keamanan data pasien?"
+   - "Apakah aplikasi ini sudah memenuhi standar keamanan kesehatan?"
+   
+   JAWABAN YANG DAPAT DISIAPKAN:
+   
+   A. TENTANG PASSWORD PLAIN TEXT:
+      "Saya menyadari ini adalah kelemahan serius yang perlu diperbaiki. 
+       Dalam implementasi awal, saya fokus pada fungsionalitas dasar terlebih dahulu.
+       Untuk production, password akan di-hash menggunakan bcrypt atau Argon2,
+       dan sensitive data akan di-encrypt menggunakan AES-256."
+   
+   B. TENTANG KEAMANAN DATA:
+      "Aplikasi menggunakan Firebase Security Rules yang ketat untuk mengontrol
+       akses data. Hanya user yang terautentikasi yang dapat mengakses data,
+       dan admin hanya dapat melihat data pasien yang menjadi tanggung jawabnya.
+       Semua komunikasi menggunakan HTTPS dan data di-rest di Firebase."
+   
+   C. TENTANG STANDAR KESEHATAN:
+      "Ini adalah prototype yang akan dikembangkan lebih lanjut untuk memenuhi
+       standar HIPAA atau standar keamanan kesehatan Indonesia. Implementasi
+       encryption, audit logging, dan access control yang lebih ketat akan
+       ditambahkan sebelum deployment ke production."
+
+2. TESTING DAN QUALITY ASSURANCE
+   =============================
+   
+   PERTANYAAN YANG MUNGKIN DIAJUKAN:
+   - "Mengapa tidak ada unit testing? Bagaimana Anda memastikan kualitas kode?"
+   - "Apakah aplikasi sudah diuji dengan berbagai skenario?"
+   - "Bagaimana Anda memastikan aplikasi tidak crash?"
+   
+   JAWABAN YANG DAPAT DISIAPKAN:
+   
+   A. TENTANG UNIT TESTING:
+      "Saya mengakui ini adalah area yang perlu ditingkatkan. Dalam development
+       awal, saya fokus pada fitur utama. Untuk tahap selanjutnya, saya akan
+       implementasi unit testing menggunakan Flutter testing framework,
+       integration testing, dan widget testing untuk memastikan kualitas kode."
+   
+   B. TENTANG SCENARIO TESTING:
+      "Aplikasi sudah diuji manual dengan berbagai skenario seperti login/logout,
+       CRUD operations, chat functionality, dan offline scenarios. Namun testing
+       otomatis akan ditambahkan untuk memastikan konsistensi dan reliability."
+   
+   C. TENTANG CRASH PREVENTION:
+      "Aplikasi menggunakan try-catch blocks dan error handling yang comprehensive.
+       Firebase Crashlytics akan diintegrasikan untuk monitoring crash reports
+       dan performance issues secara real-time."
+
+3. PERFORMANCE DAN SCALABILITY
+   ===========================
+   
+   PERTANYAAN YANG MUNGKIN DIAJUKAN:
+   - "Bagaimana aplikasi akan perform jika ada ribuan user?"
+   - "Apakah ada optimasi untuk data yang besar?"
+   - "Bagaimana dengan memory management?"
+   
+   JAWABAN YANG DAPAT DISIAPKAN:
+   
+   A. TENTANG SCALABILITY:
+      "Firebase Firestore dapat handle jutaan user dan document. Untuk optimasi,
+       saya akan implementasi pagination, lazy loading, dan virtual scrolling
+       untuk data yang besar. Caching strategy juga akan ditambahkan."
+   
+   B. TENTANG DATA OPTIMIZATION:
+      "Data akan di-optimize dengan indexing yang tepat, query optimization,
+       dan data pagination. Image compression dan lazy loading juga akan
+       diimplementasi untuk menghemat bandwidth dan memory."
+   
+   C. TENTANG MEMORY MANAGEMENT:
+      "Flutter memiliki garbage collection yang baik, namun saya akan implementasi
+       proper disposal untuk controllers, listeners, dan resources untuk
+       memastikan memory tidak leak."
+
+4. OFFLINE FUNCTIONALITY
+   =====================
+   
+   PERTANYAAN YANG MUNGKIN DIAJUKAN:
+   - "Bagaimana aplikasi berfungsi tanpa internet?"
+   - "Apakah data offline akan sync dengan server?"
+   - "Bagaimana jika ada conflict data?"
+   
+   JAWABAN YANG DAPAT DISIAPKAN:
+   
+   A. TENTANG OFFLINE FUNCTIONALITY:
+      "Firebase sudah menyediakan offline persistence dasar. Untuk improvement,
+       saya akan implementasi offline-first architecture dengan local database
+       (SQLite/Hive) dan sync mechanism yang robust."
+   
+   B. TENTANG DATA SYNC:
+      "Data akan di-sync secara otomatis ketika koneksi internet tersedia.
+       Conflict resolution akan menggunakan timestamp dan user priority untuk
+       menentukan data mana yang valid."
+   
+   C. TENTANG CONFLICT RESOLUTION:
+      "Conflict akan di-handle dengan strategy yang jelas: data terbaru
+       berdasarkan timestamp, atau user dapat memilih data mana yang valid
+       dalam kasus conflict yang kompleks."
+
+5. ACCESSIBILITY DAN INCLUSIVITY
+   =============================
+   
+   PERTANYAAN YANG MUNGKIN DIAJUKAN:
+   - "Bagaimana dengan user yang memiliki disabilitas?"
+   - "Apakah aplikasi accessible untuk semua kalangan?"
+   - "Bagaimana dengan user yang tidak familiar dengan teknologi?"
+   
+   JAWABAN YANG DAPAT DISIAPKAN:
+   
+   A. TENTANG DISABILITAS:
+      "Ini adalah area yang sangat penting untuk dikembangkan. Saya akan
+       implementasi screen reader support, high contrast mode, font size
+       adjustment, dan voice navigation untuk accessibility compliance."
+   
+   B. TENTANG INCLUSIVITY:
+      "Interface akan didesain dengan prinsip universal design. Icon yang jelas,
+       text yang readable, dan navigasi yang intuitif akan memastikan
+       semua user dapat menggunakan aplikasi dengan mudah."
+   
+   C. TENTANG USER EXPERIENCE:
+      "Aplikasi akan memiliki onboarding yang jelas, tooltips, dan help
+       system untuk user yang tidak familiar dengan teknologi. Design
+       yang simple dan straightforward akan memudahkan penggunaan."
+
+6. INTERNATIONALIZATION
+   ====================
+   
+   PERTANYAAN YANG MUNGKIN DIAJUKAN:
+   - "Mengapa hanya support bahasa Indonesia?"
+   - "Bagaimana jika ada user dari luar negeri?"
+   - "Apakah ada rencana untuk multi-language?"
+   
+   JAWABAN YANG DAPAT DISIAPKAN:
+   
+   A. TENTANG BAHASA INDONESIA:
+      "Untuk prototype awal, saya fokus pada market Indonesia. Namun
+       multi-language support adalah fitur yang akan diimplementasi
+       menggunakan Flutter's internationalization framework."
+   
+   B. TENTANG GLOBAL USER:
+      "Aplikasi akan support multiple languages termasuk English, dan
+       locale-specific formatting untuk date, time, dan currency.
+       Cultural adaptation juga akan dipertimbangkan."
+   
+   C. TENTANG IMPLEMENTATION:
+      "Flutter memiliki built-in support untuk i18n. Saya akan menggunakan
+       flutter_localizations package dan organize text dalam ARB files
+       untuk easy translation management."
+
+7. DATA VALIDATION DAN INTEGRITY
+   =============================
+   
+   PERTANYAAN YANG MUNGKIN DIAJUKAN:
+   - "Bagaimana Anda memastikan data yang diinput valid?"
+   - "Apakah ada backup dan recovery system?"
+   - "Bagaimana dengan data consistency?"
+   
+   JAWABAN YANG DAPAT DISIAPKAN:
+   
+   A. TENTANG DATA VALIDATION:
+      "Validasi input akan diimplementasi di multiple level: client-side
+       untuk immediate feedback, dan server-side untuk security. Regular
+       expressions, type checking, dan business logic validation akan
+       memastikan data integrity."
+   
+   B. TENTANG BACKUP SYSTEM:
+      "Firebase menyediakan automatic backup, namun saya akan implementasi
+       additional backup strategy dengan data export functionality dan
+       manual backup options untuk admin."
+   
+   C. TENTANG DATA CONSISTENCY:
+      "Data consistency akan dijamin dengan Firebase transactions,
+       validation rules, dan data integrity checks. Regular data
+       validation scripts juga akan dijalankan untuk maintenance."
+
+================================================================================
+STRATEGI MENJAWAB PERTANYAAN
+================================================================================
+
+1. JANGAN DEFENSIVE
+   - Akui kelemahan dengan jujur
+   - Jelaskan alasan teknis dengan jelas
+   - Tunjukkan pemahaman tentang masalah
+
+2. FOKUS PADA SOLUSI
+   - Setiap kelemahan harus disertai solusi
+   - Jelaskan roadmap implementasi
+   - Tunjukkan prioritas perbaikan
+
+3. GUNAKAN CONTOH KONKRET
+   - Berikan contoh implementasi
+   - Jelaskan teknologi yang akan digunakan
+   - Tunjukkan best practices
+
+4. TUNJUKKAN LEARNING
+   - Jelaskan apa yang sudah dipelajari
+   - Tunjukkan pemahaman tentang best practices
+   - Jelaskan rencana improvement
+
+5. HUBUNGKAN DENGAN SKRIPSI
+   - Setiap jawaban harus relevan dengan scope skripsi
+   - Jelaskan bagaimana kelemahan akan diatasi dalam project
+   - Tunjukkan nilai tambah dari perbaikan
+
+================================================================================
+PERTANYAAN TAMBAHAN YANG MUNGKIN DIAJUKAN
+================================================================================
+
+1. TEKNIS:
+   - "Mengapa memilih Flutter dibanding React Native?"
+   - "Bagaimana dengan bundle size aplikasi?"
+   - "Apakah ada rencana untuk web version?"
+
+2. BISNIS:
+   - "Bagaimana dengan cost Firebase untuk production?"
+   - "Apakah ada rencana monetisasi?"
+   - "Bagaimana dengan competitor analysis?"
+
+3. MAINTENANCE:
+   - "Siapa yang akan maintain aplikasi setelah lulus?"
+   - "Bagaimana dengan update dan bug fixes?"
+   - "Apakah ada dokumentasi yang lengkap?"
+
+================================================================================
+KESIMPULAN
+================================================================================
+
+Persiapan yang baik untuk sidang skripsi meliputi:
+1. Pemahaman mendalam tentang kelemahan aplikasi
+2. Solusi konkret untuk setiap kelemahan
+3. Roadmap implementasi yang jelas
+4. Kemampuan menjelaskan secara teknis
+5. Sikap yang jujur dan terbuka terhadap feedback
+
+Ingat: Kelemahan bukan akhir dari project, tapi awal dari improvement!
+Setiap kelemahan yang diidentifikasi adalah kesempatan untuk belajar dan berkembang.
+
+================================================================================
+TANGGAL PERSIAPAN: [Current Date]
+DIPERSIAPKAN UNTUK: Sidang Skripsi
+================================================================================
