@@ -22,13 +22,31 @@ class _HPHTFormScreenState extends State<HPHTFormScreen> {
   bool _isLoading = false;
 
   Future<void> _selectHPHT() async {
+    final DateTime now = DateTime.now();
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime.now().subtract(const Duration(days: 30)),
-      firstDate: DateTime.now().subtract(const Duration(days: 365)),
-      lastDate: DateTime.now(),
+      initialDate: now.subtract(const Duration(days: 30)),
+      firstDate: now.subtract(const Duration(days: 365)),
+      lastDate: now, // Maksimal hari ini, tidak bisa memilih hari esok
     );
     if (picked != null && picked != _selectedHPHT) {
+      // Validasi tambahan: pastikan HPHT tidak melebihi hari ini
+      if (picked.isAfter(now)) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('HPHT tidak boleh melebihi hari ini'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(8)),
+              ),
+            ),
+          );
+        }
+        return;
+      }
+
       setState(() {
         _selectedHPHT = picked;
       });
@@ -61,130 +79,49 @@ class _HPHTFormScreenState extends State<HPHTFormScreen> {
     });
 
     try {
-      // Update user with HPHT data
-      final updatedUser = widget.user.copyWith(hpht: _selectedHPHT);
-      await _firebaseService.updateUser(updatedUser);
-
-      // Automatically create child data from HPHT
-      try {
-        await _firebaseService.createChildFromHPHT(
+      // Check if user had miscarriage and this is a new pregnancy
+      if (widget.user.pregnancyStatus == 'miscarriage' &&
+          widget.user.hpht != null) {
+        // This is a new pregnancy after miscarriage
+        await _firebaseService.addNewHPHTForNextPregnancy(
           widget.user.id,
           _selectedHPHT!,
         );
-        print('Child data created automatically from HPHT');
-      } catch (e) {
-        print('Error creating child data: $e');
-        // Don't fail the whole process if child creation fails
-      }
 
-      // Calculate pregnancy information
-      final gestationalAge = PregnancyCalculator.calculateGestationalAge(
-        _selectedHPHT!,
-      );
-      final dueDate = PregnancyCalculator.calculateDueDate(_selectedHPHT!);
-      final trimester = PregnancyCalculator.getTrimester(
-        gestationalAge['weeks']!,
-      );
-
-      // Show success message with pregnancy info
-      if (mounted) {
-        showDialog(
-          context: context,
-          barrierDismissible: false, // Prevent dismissing by tapping outside
-          builder: (BuildContext context) {
-            return AlertDialog(
-              title: Row(
-                children: [
-                  Icon(Icons.check_circle, color: Colors.green, size: 24),
-                  const SizedBox(width: 8),
-                  Text(
-                    'HPHT Berhasil Disimpan',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Data HPHT Anda telah berhasil disimpan dan akan digunakan untuk:',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(
-                    'HPHT',
-                    PregnancyCalculator.formatDate(_selectedHPHT!),
-                  ),
-                  _buildInfoRow(
-                    'Usia Kehamilan',
-                    '${gestationalAge['weeks']} minggu ${gestationalAge['days']} hari',
-                  ),
-                  _buildInfoRow('Trimester', trimester),
-                  _buildInfoRow(
-                    'Perkiraan Lahir',
-                    PregnancyCalculator.formatDate(dueDate),
-                  ),
-                  _buildInfoRow(
-                    'Ukuran Janin',
-                    PregnancyCalculator.getFetalSizeComparison(
-                      gestationalAge['weeks']!,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.green.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: Colors.green.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.info_rounded, color: Colors.green, size: 20),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            'Data ini akan otomatis digunakan di fitur Kehamilanku dan informasi janin',
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              color: Colors.green[700],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                ElevatedButton(
-                  onPressed: () {
-                    Navigator.pop(context);
-                    // Navigate to home with updated user data
-                    RouteHelper.navigateToHomePasien(context, updatedUser);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF20B2AA),
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    'Lanjut ke Dashboard',
-                    style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-                  ),
-                ),
-              ],
-            );
-          },
+        // Get updated user data
+        final updatedUser = widget.user.copyWith(
+          hpht: _selectedHPHT,
+          pregnancyStatus: 'active',
+          pregnancyEndDate: null,
+          pregnancyEndReason: null,
+          pregnancyNotes: null,
         );
+
+        // Show success message for new pregnancy
+        if (mounted) {
+          _showNewPregnancySuccessDialog(updatedUser);
+        }
+      } else {
+        // This is the first pregnancy or normal HPHT update
+        final updatedUser = widget.user.copyWith(hpht: _selectedHPHT);
+        await _firebaseService.updateUser(updatedUser);
+
+        // Automatically create child data from HPHT
+        try {
+          await _firebaseService.createChildFromHPHT(
+            widget.user.id,
+            _selectedHPHT!,
+          );
+          print('Child data created automatically from HPHT');
+        } catch (e) {
+          print('Error creating child data: $e');
+          // Don't fail the whole process if child creation fails
+        }
+
+        // Show success message for first pregnancy
+        if (mounted) {
+          _showFirstPregnancySuccessDialog(updatedUser);
+        }
       }
     } catch (e) {
       String errorMessage = 'Terjadi kesalahan saat menyimpan HPHT';
@@ -216,6 +153,199 @@ class _HPHTFormScreenState extends State<HPHTFormScreen> {
         });
       }
     }
+  }
+
+  // Show success dialog for new pregnancy after miscarriage
+  void _showNewPregnancySuccessDialog(UserModel updatedUser) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'Kehamilan Baru Berhasil Dibuat',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Selamat! Kehamilan baru Anda telah berhasil dibuat dengan data:',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildInfoRow(
+                'HPHT Baru',
+                PregnancyCalculator.formatDate(_selectedHPHT!),
+              ),
+              _buildInfoRow('Status', 'Kehamilan Aktif'),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.blue.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.withValues(alpha: 0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_rounded, color: Colors.blue, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Data kehamilan sebelumnya telah disimpan dalam riwayat dan data anak baru telah dibuat otomatis',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.blue[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                RouteHelper.navigateToHomePasien(context, updatedUser);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF20B2AA),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Lanjut ke Dashboard',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  // Show success dialog for first pregnancy
+  void _showFirstPregnancySuccessDialog(UserModel updatedUser) {
+    // Calculate pregnancy information
+    final gestationalAge = PregnancyCalculator.calculateGestationalAge(
+      _selectedHPHT!,
+    );
+    final dueDate = PregnancyCalculator.calculateDueDate(_selectedHPHT!);
+    final trimester = PregnancyCalculator.getTrimester(
+      gestationalAge['weeks']!,
+    );
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green, size: 24),
+              const SizedBox(width: 8),
+              Text(
+                'HPHT Berhasil Disimpan',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Data HPHT Anda telah berhasil disimpan dan akan digunakan untuk:',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 16),
+              _buildInfoRow(
+                'HPHT',
+                PregnancyCalculator.formatDate(_selectedHPHT!),
+              ),
+              _buildInfoRow(
+                'Usia Kehamilan',
+                '${gestationalAge['weeks']} minggu ${gestationalAge['days']} hari',
+              ),
+              _buildInfoRow('Trimester', trimester),
+              _buildInfoRow(
+                'Perkiraan Lahir',
+                PregnancyCalculator.formatDate(dueDate),
+              ),
+              _buildInfoRow(
+                'Ukuran Janin',
+                PregnancyCalculator.getFetalSizeComparison(
+                  gestationalAge['weeks']!,
+                ),
+              ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: Colors.green.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(
+                    color: Colors.green.withValues(alpha: 0.3),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(Icons.info_rounded, color: Colors.green, size: 20),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Data ini akan otomatis digunakan di fitur Kehamilanku dan informasi janin',
+                        style: GoogleFonts.poppins(
+                          fontSize: 12,
+                          color: Colors.green[700],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+                RouteHelper.navigateToHomePasien(context, updatedUser);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF20B2AA),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                'Lanjut ke Dashboard',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Widget _buildInfoRow(String label, String value) {

@@ -5,6 +5,8 @@ import '../../models/user_model.dart';
 import '../../routes/route_helper.dart';
 import '../../providers/article_provider.dart';
 import '../../widgets/article_card.dart';
+import '../../services/firebase_service.dart';
+import '../../models/article_model.dart';
 
 class EdukasiScreen extends StatefulWidget {
   final UserModel user;
@@ -27,6 +29,13 @@ class _EdukasiScreenState extends State<EdukasiScreen>
   late ScrollController _scrollController; // New scroll controller
   late ScrollController
   _contentTypeScrollController; // New scroll controller for content type
+
+  // Firebase service for article interactions
+  final FirebaseService _firebaseService = FirebaseService();
+
+  // Streams for liked and bookmarked articles
+  Stream<List<String>>? _likedArticleIdsStream;
+  Stream<List<String>>? _bookmarkedArticleIdsStream;
 
   @override
   void initState() {
@@ -52,6 +61,14 @@ class _EdukasiScreenState extends State<EdukasiScreen>
     );
 
     _animationController.forward();
+
+    // Initialize liked and bookmarked article streams
+    _likedArticleIdsStream = _firebaseService.getLikedArticleIds(
+      widget.user.id,
+    );
+    _bookmarkedArticleIdsStream = _firebaseService.getBookmarkedArticleIds(
+      widget.user.id,
+    );
 
     // Initialize articles when screen loads
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -150,6 +167,35 @@ class _EdukasiScreenState extends State<EdukasiScreen>
     }
   }
 
+  // Handle article like action
+  Future<void> _handleArticleLike(Article article) async {
+    try {
+      await _firebaseService.toggleArticleLike(article.id, widget.user.id);
+      // The UI will automatically update through the stream
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  // Handle article bookmark action
+  Future<void> _handleArticleBookmark(Article article) async {
+    try {
+      await _firebaseService.toggleArticleBookmark(article.id, widget.user.id);
+      // The UI will automatically update through the stream
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
+    }
+  }
+
+  // Get filtered articles with like and bookmark status
   List<dynamic> _getFilteredArticles(ArticleProvider articleProvider) {
     try {
       List<dynamic> articles = articleProvider.activeArticles;
@@ -297,21 +343,54 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                 itemCount: filteredArticles.length,
                 itemBuilder: (context, index) {
                   final article = filteredArticles[index];
-                  return Container(
-                    margin: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 6,
-                    ),
-                    child: ArticleCard(
-                      article: article,
-                      onTap: () {
-                        Navigator.pushNamed(
-                          context,
-                          RouteHelper.articleDetail,
-                          arguments: {'article': article, 'user': widget.user},
-                        );
-                      },
-                    ),
+                  return StreamBuilder<List<String>>(
+                    stream: _likedArticleIdsStream,
+                    builder: (context, likedSnapshot) {
+                      return StreamBuilder<List<String>>(
+                        stream: _bookmarkedArticleIdsStream,
+                        builder: (context, bookmarkedSnapshot) {
+                          // Create article with current like and bookmark status
+                          final currentArticle = article.copyWith(
+                            isLiked:
+                                likedSnapshot.data?.contains(article.id) ??
+                                false,
+                            isBookmarked:
+                                bookmarkedSnapshot.data?.contains(article.id) ??
+                                false,
+                          );
+
+                          return Container(
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            child: ArticleCard(
+                              article: currentArticle,
+                              onTap: () async {
+                                final result = await Navigator.pushNamed(
+                                  context,
+                                  RouteHelper.articleDetail,
+                                  arguments: {
+                                    'article': currentArticle,
+                                    'user': widget.user,
+                                  },
+                                );
+
+                                // Refresh article status when returning from detail
+                                if (result == true) {
+                                  setState(() {
+                                    // This will trigger a rebuild and refresh the streams
+                                  });
+                                }
+                              },
+                              onLike: () => _handleArticleLike(currentArticle),
+                              onBookmark:
+                                  () => _handleArticleBookmark(currentArticle),
+                            ),
+                          );
+                        },
+                      );
+                    },
                   );
                 },
               ),

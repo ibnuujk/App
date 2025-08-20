@@ -562,7 +562,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                 borderRadius: BorderRadius.circular(12),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -596,12 +596,12 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: const Color(0xFFEC407A).withOpacity(0.2),
+                          color: const Color(0xFFEC407A).withValues(alpha: 0.2),
                           width: 1,
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 5),
                           ),
@@ -612,7 +612,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                         leading: Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC407A).withOpacity(0.1),
+                            color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: const Icon(
@@ -681,7 +681,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                               decoration: BoxDecoration(
                                 color: _getStatusColor(
                                   schedule['status'],
-                                ).withOpacity(0.1),
+                                ).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Text(
@@ -765,7 +765,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -826,7 +826,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 10,
                     offset: const Offset(0, 5),
                   ),
@@ -840,7 +840,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -866,7 +866,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                               'Kelola jadwal konsultasi pasien',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.8),
+                                color: Colors.white.withValues(alpha: 0.8),
                               ),
                             ),
                           ],
@@ -969,7 +969,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 5),
                                 ),
@@ -984,7 +984,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                     decoration: BoxDecoration(
                                       color: _getStatusColor(
                                         schedule['status'],
-                                      ).withOpacity(0.1),
+                                      ).withValues(alpha: 0.1),
                                       borderRadius: BorderRadius.circular(8),
                                     ),
                                     child: Icon(
@@ -1028,7 +1028,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                         decoration: BoxDecoration(
                                           color: _getStatusColor(
                                             schedule['status'],
-                                          ).withOpacity(0.1),
+                                          ).withValues(alpha: 0.1),
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
@@ -1134,10 +1134,10 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.green.withOpacity(0.1),
+                                        color: Colors.green.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
-                                          color: Colors.green.withOpacity(0.3),
+                                          color: Colors.green.withValues(alpha: 0.3),
                                         ),
                                       ),
                                       child: Row(
@@ -1174,10 +1174,10 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                     child: Container(
                                       padding: const EdgeInsets.all(12),
                                       decoration: BoxDecoration(
-                                        color: Colors.red.withOpacity(0.1),
+                                        color: Colors.red.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(8),
                                         border: Border.all(
-                                          color: Colors.red.withOpacity(0.3),
+                                          color: Colors.red.withValues(alpha: 0.3),
                                           width: 1,
                                         ),
                                       ),
@@ -1733,7 +1733,7 @@ class ConsultationScheduleDetailDialog extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: _getStatusColor(schedule['status']).withOpacity(0.1),
+                  color: _getStatusColor(schedule['status']).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(

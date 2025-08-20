@@ -163,10 +163,10 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                         },
                         child: Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC407A).withOpacity(0.1),
+                            color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(8),
                             border: Border.all(
-                              color: const Color(0xFFEC407A).withOpacity(0.3),
+                              color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                             ),
                           ),
                           child: Center(
@@ -551,7 +551,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                         gradient: LinearGradient(
                           colors: [
                             const Color(0xFFEC407A),
-                            const Color(0xFFEC407A).withOpacity(0.8),
+                            const Color(0xFFEC407A).withValues(alpha: 0.8),
                           ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
@@ -559,7 +559,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFEC407A).withOpacity(0.3),
+                            color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                             blurRadius: 15,
                             offset: const Offset(0, 8),
                           ),
@@ -574,10 +574,10 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                                 width: 60,
                                 height: 60,
                                 decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.2),
+                                  color: Colors.white.withValues(alpha: 0.2),
                                   borderRadius: BorderRadius.circular(15),
                                   border: Border.all(
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                     width: 2,
                                   ),
                                 ),
@@ -605,7 +605,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                                       'Pilih waktu yang sesuai untukmu',
                                       style: GoogleFonts.poppins(
                                         fontSize: 14,
-                                        color: Colors.white.withOpacity(0.9),
+                                        color: Colors.white.withValues(alpha: 0.9),
                                       ),
                                     ),
                                   ],
@@ -617,10 +617,10 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                           Container(
                             padding: const EdgeInsets.all(16),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                                 width: 1,
                               ),
                             ),
@@ -670,7 +670,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -755,7 +755,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -817,7 +817,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                                     _selectedTime != null
                                         ? const Color(
                                           0xFFEC407A,
-                                        ).withOpacity(0.1)
+                                        ).withValues(alpha: 0.1)
                                         : const Color(0xFFF7FAFC),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
@@ -905,7 +905,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -977,7 +977,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -1070,7 +1070,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
-                          shadowColor: const Color(0xFFEC407A).withOpacity(0.3),
+                          shadowColor: const Color(0xFFEC407A).withValues(alpha: 0.3),
                         ),
                         child:
                             _isSubmitting
@@ -1084,7 +1084,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                                         strokeWidth: 2,
                                         valueColor:
                                             AlwaysStoppedAnimation<Color>(
-                                              Colors.white.withOpacity(0.8),
+                                              Colors.white.withValues(alpha: 0.8),
                                             ),
                                       ),
                                     ),

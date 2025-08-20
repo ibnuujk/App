@@ -69,7 +69,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -149,7 +149,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),
@@ -206,7 +206,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                     gradient: LinearGradient(
                       colors: [
                         const Color(0xFFEC407A),
-                        const Color(0xFFEC407A).withOpacity(0.8),
+                        const Color(0xFFEC407A).withValues(alpha: 0.8),
                       ],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
@@ -214,7 +214,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFEC407A).withOpacity(0.3),
+                        color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),
@@ -229,10 +229,10 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                             width: 60,
                             height: 60,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
+                              color: Colors.white.withValues(alpha: 0.2),
                               borderRadius: BorderRadius.circular(15),
                               border: Border.all(
-                                color: Colors.white.withOpacity(0.3),
+                                color: Colors.white.withValues(alpha: 0.3),
                                 width: 2,
                               ),
                             ),
@@ -260,7 +260,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                                   'Kelola data pasien dan konsultasi dengan mudah',
                                   style: GoogleFonts.poppins(
                                     fontSize: 14,
-                                    color: Colors.white.withOpacity(0.9),
+                                    color: Colors.white.withValues(alpha: 0.9),
                                   ),
                                 ),
                               ],
@@ -344,7 +344,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: const Color(0xFFEC407A).withOpacity(0.1),
+          color: const Color(0xFFEC407A).withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Icon(icon, color: const Color(0xFFEC407A), size: 20),
@@ -362,7 +362,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -375,10 +375,10 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
               width: 60,
               height: 60,
               decoration: BoxDecoration(
-                color: const Color(0xFFEC407A).withOpacity(0.1),
+                color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: const Color(0xFFEC407A).withOpacity(0.2),
+                  color: const Color(0xFFEC407A).withValues(alpha: 0.2),
                   width: 2,
                 ),
               ),

@@ -164,7 +164,7 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                 gradient: LinearGradient(
                   colors: [
                     const Color(0xFFEC407A),
-                    const Color(0xFFEC407A).withOpacity(0.8),
+                    const Color(0xFFEC407A).withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -175,7 +175,7 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFEC407A).withOpacity(0.3),
+                    color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -189,7 +189,7 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
+                          color: Colors.white.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -215,7 +215,7 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                               'Pilih pasien untuk memulai percakapan',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
-                                color: Colors.white.withOpacity(0.9),
+                                color: Colors.white.withValues(alpha: 0.9),
                               ),
                             ),
                           ],
@@ -260,22 +260,22 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                     decoration: InputDecoration(
                       hintText: 'Cari pasien...',
                       hintStyle: GoogleFonts.poppins(
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                       prefixIcon: Icon(
                         Icons.search_rounded,
-                        color: Colors.white.withOpacity(0.7),
+                        color: Colors.white.withValues(alpha: 0.7),
                       ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                         ),
                       ),
                       focusedBorder: OutlineInputBorder(
@@ -283,7 +283,7 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                         borderSide: BorderSide(color: Colors.white, width: 2),
                       ),
                       filled: true,
-                      fillColor: Colors.white.withOpacity(0.1),
+                      fillColor: Colors.white.withValues(alpha: 0.1),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 20,
                         vertical: 16,
@@ -318,7 +318,7 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                               width: 120,
                               height: 120,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFEC407A).withOpacity(0.1),
+                                color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(60),
                               ),
                               child: Icon(
@@ -380,7 +380,7 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 15,
                                     offset: const Offset(0, 8),
                                   ),
@@ -396,12 +396,12 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                                       decoration: BoxDecoration(
                                         color: const Color(
                                           0xFFEC407A,
-                                        ).withOpacity(0.1),
+                                        ).withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(16),
                                         border: Border.all(
                                           color: const Color(
                                             0xFFEC407A,
-                                          ).withOpacity(0.2),
+                                          ).withValues(alpha: 0.2),
                                           width: 2,
                                         ),
                                       ),
@@ -551,9 +551,9 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Column(
           children: [
@@ -571,8 +571,8 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                 fontSize: 12,
                 color:
                     color == Colors.white
-                        ? Colors.white.withOpacity(0.9)
-                        : color.withOpacity(0.8),
+                        ? Colors.white.withValues(alpha: 0.9)
+                        : color.withValues(alpha: 0.8),
               ),
             ),
           ],
@@ -733,7 +733,7 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
             Text(
               widget.patient.noHp,
               style: GoogleFonts.poppins(
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
                 fontSize: 12,
               ),
             ),
@@ -766,7 +766,7 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
                             width: 120,
                             height: 120,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEC407A).withOpacity(0.1),
+                              color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(60),
                             ),
                             child: Icon(
@@ -821,7 +821,7 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(
                                     0xFFEC407A,
-                                  ).withOpacity(0.1),
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -852,7 +852,7 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
                                   borderRadius: BorderRadius.circular(18),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: Colors.black.withValues(alpha: 0.05),
                                       blurRadius: 5,
                                       offset: const Offset(0, 2),
                                     ),
@@ -882,7 +882,7 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
                                         fontSize: 10,
                                         color:
                                             isAdmin
-                                                ? Colors.white.withOpacity(0.7)
+                                                ? Colors.white.withValues(alpha: 0.7)
                                                 : Colors.grey[600],
                                       ),
                                     ),
@@ -903,7 +903,7 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),

@@ -83,7 +83,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),
@@ -94,7 +94,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC407A).withOpacity(0.1),
+                          color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -225,13 +225,13 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: const Color(0xFFEC407A).withOpacity(0.1),
+                color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(60),
               ),
               child: Icon(
                 Icons.medical_services_outlined,
                 size: 60,
-                color: const Color(0xFFEC407A).withOpacity(0.7),
+                color: const Color(0xFFEC407A).withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 24),
@@ -261,7 +261,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -319,7 +319,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -341,7 +341,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFEC407A).withOpacity(0.1),
+                        color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Icon(
@@ -397,6 +397,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                   ),
                   child: Column(
                     children: [
+                      // Data Fisik
                       Row(
                         children: [
                           Expanded(
@@ -408,30 +409,45 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                           ),
                           Expanded(
                             child: _buildVitalInfo(
-                              'Tekanan Darah',
-                              pemeriksaan['tekananDarah']?.toString() ?? '-',
-                              Icons.favorite_rounded,
+                              'Tinggi Badan',
+                              '${pemeriksaan['tinggiBadan']?.toString() ?? '-'} cm',
+                              Icons.straighten_rounded,
                             ),
                           ),
                         ],
                       ),
                       const SizedBox(height: 12),
+                      // Tanda Vital
                       Row(
                         children: [
                           Expanded(
                             child: _buildVitalInfo(
-                              'Hemoglobin',
-                              '${pemeriksaan['hemoglobin']?.toString() ?? '-'} g/dL',
-                              Icons.bloodtype_rounded,
+                              'Tekanan Darah',
+                              pemeriksaan['tekananDarah']?.toString() ?? '-',
+                              Icons.favorite_rounded,
                             ),
                           ),
                           Expanded(
                             child: _buildVitalInfo(
-                              'Gula Darah',
-                              '${pemeriksaan['gulaDarah']?.toString() ?? '-'} mg/dL',
-                              Icons.water_drop_rounded,
+                              'HB (Hemoglobin)',
+                              '${pemeriksaan['hb']?.toString() ?? '-'} g/dL',
+                              Icons.bloodtype_rounded,
                             ),
                           ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      // DJJ (Detak Jantung Janin)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildVitalInfo(
+                              'DJJ',
+                              '${pemeriksaan['djj']?.toString() ?? '-'}',
+                              Icons.favorite_rounded,
+                            ),
+                          ),
+                          const Expanded(child: SizedBox()),
                         ],
                       ),
                     ],
@@ -448,7 +464,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                       color: const Color(0xFFFFF8E1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: const Color(0xFFFFCC02).withOpacity(0.3),
+                        color: const Color(0xFFFFCC02).withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -488,7 +504,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
           width: 32,
           height: 32,
           decoration: BoxDecoration(
-            color: const Color(0xFFEC407A).withOpacity(0.1),
+            color: const Color(0xFFEC407A).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(8),
           ),
           child: Icon(icon, color: const Color(0xFFEC407A), size: 16),
@@ -580,7 +596,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC407A).withOpacity(0.1),
+                          color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -659,28 +675,33 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
 
                   const SizedBox(height: 20),
 
-                  _buildDetailSection('Laboratorium', [
-                    _buildDetailItem(
-                      'Hemoglobin',
-                      '${pemeriksaan['hemoglobin']?.toString() ?? '-'} g/dL',
-                      Icons.bloodtype_rounded,
-                    ),
-                    _buildDetailItem(
-                      'Gula Darah',
-                      '${pemeriksaan['gulaDarah']?.toString() ?? '-'} mg/dL',
-                      Icons.water_drop_rounded,
-                    ),
-                    _buildDetailItem(
-                      'Protein Urin',
-                      pemeriksaan['proteinUrin']?.toString() ?? '-',
-                      Icons.science_rounded,
+                  _buildDetailSection('Catatan', [
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF3E5F5),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: const Color(0xFF9C27B0).withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        pemeriksaan['catatan']?.toString() ??
+                            'Tidak ada catatan',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF6A1B9A),
+                          height: 1.5,
+                        ),
+                      ),
                     ),
                   ]),
 
-                  const SizedBox(height: 20),
-
                   if (pemeriksaan['keluhan'] != null &&
-                      pemeriksaan['keluhan'].toString().isNotEmpty)
+                      pemeriksaan['keluhan'].toString().isNotEmpty) ...[
+                    const SizedBox(height: 20),
                     _buildDetailSection('Keluhan', [
                       Container(
                         width: double.infinity,
@@ -689,7 +710,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                           color: const Color(0xFFFFF8E1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFFFCC02).withOpacity(0.3),
+                            color: const Color(0xFFFFCC02).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -703,6 +724,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                         ),
                       ),
                     ]),
+                  ],
 
                   if (pemeriksaan['diagnosis'] != null &&
                       pemeriksaan['diagnosis'].toString().isNotEmpty) ...[
@@ -715,7 +737,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                           color: const Color(0xFFE3F2FD),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF2196F3).withOpacity(0.3),
+                            color: const Color(0xFF2196F3).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -742,7 +764,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                           color: const Color(0xFFE8F5E8),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF4CAF50).withOpacity(0.3),
+                            color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -801,7 +823,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: const Color(0xFFEC407A).withOpacity(0.1),
+              color: const Color(0xFFEC407A).withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(icon, color: const Color(0xFFEC407A), size: 20),

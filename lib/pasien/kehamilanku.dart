@@ -341,13 +341,13 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
               width: 120,
               height: 120,
               decoration: BoxDecoration(
-                color: const Color(0xFFEC407A).withOpacity(0.1),
+                color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(60),
               ),
               child: Icon(
                 Icons.pregnant_woman_rounded,
                 size: 60,
-                color: const Color(0xFFEC407A).withOpacity(0.7),
+                color: const Color(0xFFEC407A).withValues(alpha: 0.7),
               ),
             ),
             const SizedBox(height: 24),
@@ -381,7 +381,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -466,178 +466,299 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
-                    blurRadius: 15,
-                    offset: const Offset(0, 8),
+            // Show miscarriage details if pregnancy status is miscarriage
+            if (widget.user.pregnancyStatus == 'miscarriage') ...[
+              const SizedBox(height: 16),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFEBEE),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFE53E3E).withValues(alpha: 0.3),
+                    width: 1,
                   ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Container(
-                        width: 80,
-                        height: 80,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFFFCDD2),
-                          borderRadius: BorderRadius.circular(40),
-                          border: Border.all(
-                            color: const Color(0xFFEC407A).withOpacity(0.2),
-                            width: 2,
-                          ),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Image.asset(
-                            'assets/icons/bayi.png',
-                            width: 48,
-                            height: 48,
-                            color: const Color(0xFFEC407A),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 20),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Bayimu sekarang',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w500,
-                                color: Colors.grey[600],
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              widget.user.hpht != null && _fetalSize != null
-                                  ? _fetalSize!
-                                  : 'Belum ada data',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                                color: const Color(0xFF2D3748),
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFEC407A).withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(20),
-                                border: Border.all(
-                                  color: const Color(
-                                    0xFFEC407A,
-                                  ).withOpacity(0.3),
-                                  width: 1,
-                                ),
-                              ),
-                              child: Text(
-                                'Minggu $_gestationalAgeWeeks',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFFEC407A),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-                  // Information Grid
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF7FAFC),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: const Color(0xFFE2E8F0),
-                        width: 1,
-                      ),
-                    ),
-                    child: Column(
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        // First row
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildFetalInfoColumn(
-                                'Panjang Bayi',
-                                '${_fetalLength?.toStringAsFixed(1) ?? '0.0'} cm',
-                                Icons.straighten_rounded,
-                              ),
-                            ),
-                            Expanded(
-                              child: _buildFetalInfoColumn(
-                                'Berat Bayi',
-                                '${_fetalWeight?.toStringAsFixed(0) ?? '0'} gr',
-                                Icons.monitor_weight_rounded,
-                              ),
-                            ),
-                            Expanded(
-                              child: _buildFetalInfoColumn(
-                                'Prakiraan Lahir',
-                                _formatDate(_estimatedDueDate!),
-                                Icons.calendar_today_rounded,
-                              ),
-                            ),
-                          ],
+                        Icon(
+                          Icons.cancel_rounded,
+                          color: const Color(0xFFE53E3E),
+                          size: 24,
                         ),
-                        const SizedBox(height: 16),
-                        // Second row
-                        Row(
-                          children: [
-                            Expanded(
-                              child: _buildFetalInfoColumn(
-                                'Trimester',
-                                _trimester!,
-                                Icons.pregnant_woman_rounded,
-                              ),
-                            ),
-                            Expanded(
-                              child: _buildFetalInfoColumn(
-                                'Umur Janin',
-                                '$_gestationalAgeWeeks minggu $_gestationalAgeDays hari',
-                                Icons.timer_rounded,
-                              ),
-                            ),
-                            Expanded(
-                              child: _buildFetalInfoColumn(
-                                'Hari Tersisa',
-                                '${_calculateRemainingDays()} hari',
-                                Icons.schedule_rounded,
-                              ),
-                            ),
-                          ],
+                        const SizedBox(width: 12),
+                        Text(
+                          'Status Keguguran',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFFE53E3E),
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 16),
+                    if (widget.user.pregnancyEndDate != null) ...[
+                      Text(
+                        'Tanggal: ${_formatDate(widget.user.pregnancyEndDate!)}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    if (widget.user.pregnancyEndReason != null) ...[
+                      Text(
+                        'Alasan: ${_getReasonText(widget.user.pregnancyEndReason!)}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF2D3748),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                    ],
+                    if (widget.user.pregnancyNotes != null &&
+                        widget.user.pregnancyNotes!.isNotEmpty) ...[
+                      Text(
+                        'Catatan: ${widget.user.pregnancyNotes}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          color: const Color(0xFF2D3748),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 32),
+            ],
+
+            const SizedBox(height: 24),
+
+            // Pregnancy Information Container - Only show if not miscarriage
+            if (widget.user.pregnancyStatus != 'miscarriage') ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.1),
+                      blurRadius: 15,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFFFCDD2),
+                            borderRadius: BorderRadius.circular(40),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFEC407A,
+                              ).withValues(alpha: 0.2),
+                              width: 2,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16),
+                            child: Image.asset(
+                              'assets/icons/bayi.png',
+                              width: 48,
+                              height: 48,
+                              color: const Color(0xFFEC407A),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Bayimu sekarang',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                  color: Colors.grey[600],
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                widget.user.hpht != null && _fetalSize != null
+                                    ? _fetalSize!
+                                    : 'Belum ada data',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: const Color(0xFF2D3748),
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                      vertical: 6,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: const Color(
+                                        0xFFEC407A,
+                                      ).withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFFEC407A,
+                                        ).withValues(alpha: 0.3),
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Text(
+                                      'Minggu $_gestationalAgeWeeks',
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                        color: const Color(0xFFEC407A),
+                                      ),
+                                    ),
+                                  ),
+                                  // Status indicator for active pregnancy
+                                  if (widget.user.pregnancyStatus == 'active' ||
+                                      widget.user.pregnancyStatus == null) ...[
+                                    const SizedBox(width: 8),
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 4,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                          0xFFFFE4F3,
+                                        ), // Soft pink background
+                                        borderRadius: BorderRadius.circular(8),
+                                        border: Border.all(
+                                          color: const Color(
+                                            0xFFEC407A,
+                                          ).withValues(
+                                            alpha: 0.3, // Pink border
+                                          ),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        'Aktif',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(
+                                            0xFFEC407A,
+                                          ), // Pink text
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Information Grid - Only show if not miscarriage
+            if (widget.user.pregnancyStatus != 'miscarriage') ...[
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF7FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                ),
+                child: Column(
+                  children: [
+                    // First row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildFetalInfoColumn(
+                            'Panjang Bayi',
+                            '${_fetalLength?.toStringAsFixed(1) ?? '0.0'} cm',
+                            Icons.straighten_rounded,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildFetalInfoColumn(
+                            'Berat Bayi',
+                            '${_fetalWeight?.toStringAsFixed(0) ?? '0'} gr',
+                            Icons.monitor_weight_rounded,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildFetalInfoColumn(
+                            'Prakiraan Lahir',
+                            _formatDate(_estimatedDueDate!),
+                            Icons.calendar_today_rounded,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // Second row
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildFetalInfoColumn(
+                            'Trimester',
+                            _trimester!,
+                            Icons.pregnant_woman_rounded,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildFetalInfoColumn(
+                            'Umur Janin',
+                            '$_gestationalAgeWeeks minggu $_gestationalAgeDays hari',
+                            Icons.timer_rounded,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildFetalInfoColumn(
+                            'Hari Tersisa',
+                            '${_calculateRemainingDays()} hari',
+                            Icons.schedule_rounded,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+
             // Development Information
             Text(
-              'Informasi Perkembangan',
+              widget.user.pregnancyStatus == 'miscarriage'
+                  ? 'Riwayat Janin'
+                  : 'Informasi Perkembangan',
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -653,7 +774,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -671,7 +792,9 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Perkembangan Janin',
+                        widget.user.pregnancyStatus == 'miscarriage'
+                            ? 'Riwayat Janin Lalu'
+                            : 'Perkembangan Janin',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
@@ -696,7 +819,9 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                       children: [
                         // Current week development info
                         _buildDevelopmentTimelineItem(
-                          'Perkembangan Saat Ini',
+                          widget.user.pregnancyStatus == 'miscarriage'
+                              ? 'Perkembangan Terakhir'
+                              : 'Perkembangan Saat Ini',
                           _developmentInfo!,
                           const Color(0xFFEC407A),
                         ),
@@ -727,7 +852,9 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
 
             // Pregnancy Tips
             Text(
-              'Tips Kehamilan',
+              widget.user.pregnancyStatus == 'miscarriage'
+                  ? 'Tips Pemulihan'
+                  : 'Tips Kehamilan',
               style: GoogleFonts.poppins(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -736,7 +863,9 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              'Sesuai dengan $_trimester Anda',
+              widget.user.pregnancyStatus == 'miscarriage'
+                  ? 'Untuk membantu Anda tetap semangat'
+                  : 'Sesuai dengan $_trimester Anda',
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
@@ -755,10 +884,10 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
           width: 40,
           height: 40,
           decoration: BoxDecoration(
-            color: const Color(0xFFEC407A).withOpacity(0.1),
+            color: const Color(0xFFEC407A).withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: const Color(0xFFEC407A).withOpacity(0.3),
+              color: const Color(0xFFEC407A).withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -893,7 +1022,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
             Container(
               width: 2,
               height: 60,
-              color: bulletColor.withOpacity(0.3),
+              color: bulletColor.withValues(alpha: 0.3),
             ),
           ],
         ),
@@ -928,6 +1057,120 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
   }
 
   Widget _buildPregnancyTips() {
+    // If pregnancy status is miscarriage, show recovery tips
+    if (widget.user.pregnancyStatus == 'miscarriage') {
+      List<Map<String, dynamic>> recoveryTips = [
+        {
+          'title': 'Istirahat Cukup',
+          'description':
+              'Berikan waktu tubuh Anda untuk pulih, tidur 8-10 jam per hari',
+          'icon': Icons.bedtime_rounded,
+          'color': Colors.purple,
+        },
+        {
+          'title': 'Nutrisi Seimbang',
+          'description':
+              'Konsumsi makanan bergizi untuk membantu pemulihan fisik dan mental',
+          'icon': Icons.restaurant_rounded,
+          'color': Colors.green,
+        },
+        {
+          'title': 'Dukungan Emosional',
+          'description':
+              'Jangan ragu untuk berbicara dengan keluarga, teman, atau konselor',
+          'icon': Icons.psychology_rounded,
+          'color': Colors.blue,
+        },
+        {
+          'title': 'Kontrol Rutin',
+          'description':
+              'Lakukan pemeriksaan rutin dengan bidan untuk memantau pemulihan',
+          'icon': Icons.medical_services_rounded,
+          'color': Colors.red,
+        },
+        {
+          'title': 'Aktivitas Ringan',
+          'description':
+              'Mulai dengan aktivitas ringan seperti jalan kaki setelah izin dokter',
+          'icon': Icons.directions_walk_rounded,
+          'color': Colors.orange,
+        },
+        {
+          'title': 'Tetap Semangat',
+          'description':
+              'Ingat bahwa Anda kuat dan bisa melewati masa sulit ini',
+          'icon': Icons.favorite_rounded,
+          'color': const Color(0xFFEC407A),
+        },
+      ];
+
+      return Column(
+        children:
+            recoveryTips
+                .map(
+                  (tip) => Container(
+                    margin: const EdgeInsets.only(bottom: 16),
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.05),
+                          blurRadius: 10,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 50,
+                          height: 50,
+                          decoration: BoxDecoration(
+                            color: tip['color'].withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(25),
+                          ),
+                          child: Icon(
+                            tip['icon'],
+                            color: tip['color'],
+                            size: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                tip['title'],
+                                style: GoogleFonts.poppins(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFF2D3748),
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                tip['description'],
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: Colors.grey[600],
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
+      );
+    }
+
+    // Original pregnancy tips for active pregnancy
     List<Map<String, dynamic>> tips = [];
 
     switch (_trimester) {
@@ -1018,7 +1261,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -1030,7 +1273,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                         width: 50,
                         height: 50,
                         decoration: BoxDecoration(
-                          color: tip['color'].withOpacity(0.1),
+                          color: tip['color'].withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(tip['icon'], color: tip['color'], size: 24),
@@ -1065,6 +1308,181 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                 ),
               )
               .toList(),
+    );
+  }
+
+  Widget _buildPregnancyStatusCard() {
+    // Default status jika belum ada
+    final status = widget.user.pregnancyStatus ?? 'active';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                _getStatusIcon(status),
+                color: _getStatusColor(status),
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  'Status Kehamilan',
+                  style: GoogleFonts.poppins(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF2D3748),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: _getStatusColor(status).withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: _getStatusColor(status).withValues(alpha: 0.3),
+                width: 1,
+              ),
+            ),
+            child: Text(
+              _getStatusText(status),
+              style: GoogleFonts.poppins(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: _getStatusColor(status),
+              ),
+            ),
+          ),
+          if (status != 'active') ...[
+            const SizedBox(height: 16),
+            if (widget.user.pregnancyEndDate != null) ...[
+              Text(
+                'Tanggal: ${_formatDate(widget.user.pregnancyEndDate!)}',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (widget.user.pregnancyEndReason != null) ...[
+              Text(
+                'Alasan: ${_getReasonText(widget.user.pregnancyEndReason!)}',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                ),
+              ),
+              const SizedBox(height: 8),
+            ],
+            if (widget.user.pregnancyNotes != null) ...[
+              Text(
+                'Catatan: ${widget.user.pregnancyNotes}',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: Colors.grey[600],
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+
+  IconData _getStatusIcon(String status) {
+    switch (status) {
+      case 'active':
+        return Icons.pregnant_woman_rounded;
+      case 'miscarriage':
+        return Icons.cancel_rounded;
+      case 'complication':
+        return Icons.warning_rounded;
+      case 'completed':
+        return Icons.check_circle_rounded;
+      default:
+        return Icons.pregnant_woman_rounded;
+    }
+  }
+
+  Color _getStatusColor(String status) {
+    switch (status) {
+      case 'active':
+        return const Color(0xFFEC407A); // Pink
+      case 'miscarriage':
+        return Colors.red[600]!; // Red
+      case 'complication':
+        return Colors.orange[600]!; // Orange
+      case 'completed':
+        return Colors.green[600]!; // Green
+      default:
+        return const Color(0xFFEC407A);
+    }
+  }
+
+  String _getStatusText(String status) {
+    switch (status) {
+      case 'active':
+        return 'Kehamilan Aktif';
+      case 'miscarriage':
+        return 'Keguguran';
+      case 'complication':
+        return 'Komplikasi Serius';
+      case 'completed':
+        return 'Kehamilan Selesai';
+      default:
+        return 'Kehamilan Aktif';
+    }
+  }
+
+  String _getReasonText(String reason) {
+    switch (reason) {
+      case 'miscarriage':
+        return 'Keguguran';
+      case 'complication':
+        return 'Komplikasi Medis';
+      case 'birth':
+        return 'Kelahiran';
+      default:
+        return reason;
+    }
+  }
+
+  Widget _buildMiscarriageDetailRow(String label, String value, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, color: const Color(0xFFE53E3E), size: 24),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Text(
+            '$label: $value',
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              color: const Color(0xFF2D3748),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

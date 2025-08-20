@@ -10,6 +10,7 @@ import '../models/chat_model.dart';
 import '../models/laporan_persalinan_model.dart';
 import '../models/laporan_pasca_persalinan_model.dart';
 import '../models/keterangan_kelahiran_model.dart';
+import '../models/article_model.dart';
 
 class FirebaseService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
@@ -216,11 +217,7 @@ class FirebaseService {
                   .map(
                     (snapshot) =>
                         snapshot.docs
-                            .map(
-                              (doc) => UserModel.fromMap(
-                                doc.data() as Map<String, dynamic>,
-                              ),
-                            )
+                            .map((doc) => UserModel.fromMap(doc.data()))
                             .toList(),
                   );
             });
@@ -541,7 +538,7 @@ class FirebaseService {
                       'patientName': chat.senderName,
                       'lastMessage': chat.message,
                       'lastMessageTime': chat.timestamp,
-                      'unreadCount': 0, // TODO: Implement unread count
+                      'unreadCount': 0,
                     };
                   }
                 }
@@ -574,7 +571,7 @@ class FirebaseService {
                   'adminName': 'Admin',
                   'lastMessage': lastMessage.message,
                   'lastMessageTime': lastMessage.timestamp,
-                  'unreadCount': 0, // TODO: Implement unread count
+                  'unreadCount': 0,
                 },
               ];
             })
@@ -1506,6 +1503,296 @@ class FirebaseService {
     } catch (e) {
       print('Firebase connection error: $e');
       return false;
+    }
+  }
+
+  // Article interaction methods
+  Future<void> toggleArticleLike(String articleId, String userId) async {
+    try {
+      await ensureAuthenticated();
+
+      // Get current like status
+      final likeDoc =
+          await _firestore
+              .collection('user_article_likes')
+              .doc('${userId}_$articleId')
+              .get();
+
+      if (likeDoc.exists) {
+        // Unlike: remove the document
+        await _firestore
+            .collection('user_article_likes')
+            .doc('${userId}_$articleId')
+            .delete();
+        print('Article unliked: $articleId');
+      } else {
+        // Like: create the document
+        await _firestore
+            .collection('user_article_likes')
+            .doc('${userId}_$articleId')
+            .set({
+              'userId': userId,
+              'articleId': articleId,
+              'createdAt': DateTime.now().toIso8601String(),
+            });
+        print('Article liked: $articleId');
+      }
+    } catch (e) {
+      print('Error toggling article like: $e');
+      rethrow;
+    }
+  }
+
+  Future<void> toggleArticleBookmark(String articleId, String userId) async {
+    try {
+      await ensureAuthenticated();
+
+      // Get current bookmark status
+      final bookmarkDoc =
+          await _firestore
+              .collection('user_article_bookmarks')
+              .doc('${userId}_$articleId')
+              .get();
+
+      if (bookmarkDoc.exists) {
+        // Remove bookmark: remove the document
+        await _firestore
+            .collection('user_article_bookmarks')
+            .doc('${userId}_$articleId')
+            .delete();
+        print('Article bookmark removed: $articleId');
+      } else {
+        // Add bookmark: create the document
+        await _firestore
+            .collection('user_article_bookmarks')
+            .doc('${userId}_$articleId')
+            .set({
+              'userId': userId,
+              'articleId': articleId,
+              'createdAt': DateTime.now().toIso8601String(),
+            });
+        print('Article bookmarked: $articleId');
+      }
+    } catch (e) {
+      print('Error toggling article bookmark: $e');
+      rethrow;
+    }
+  }
+
+  // Get liked articles for a user
+  Stream<List<String>> getLikedArticleIds(String userId) {
+    try {
+      return _firestore
+          .collection('user_article_likes')
+          .where('userId', isEqualTo: userId)
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => doc.data()['articleId'] as String)
+                    .toList(),
+          );
+    } catch (e) {
+      print('Error getting liked article IDs: $e');
+      return Stream.value([]);
+    }
+  }
+
+  // Get bookmarked articles for a user
+  Stream<List<String>> getBookmarkedArticleIds(String userId) {
+    try {
+      return _firestore
+          .collection('user_article_bookmarks')
+          .where('userId', isEqualTo: userId)
+          .snapshots()
+          .map(
+            (snapshot) =>
+                snapshot.docs
+                    .map((doc) => doc.data()['articleId'] as String)
+                    .toList(),
+          );
+    } catch (e) {
+      print('Error getting bookmarked article IDs: $e');
+      return Stream.value([]);
+    }
+  }
+
+  // Check if article is liked by user
+  Future<bool> isArticleLiked(String articleId, String userId) async {
+    try {
+      await ensureAuthenticated();
+      final doc =
+          await _firestore
+              .collection('user_article_likes')
+              .doc('${userId}_$articleId')
+              .get();
+      return doc.exists;
+    } catch (e) {
+      print('Error checking if article is liked: $e');
+      return false;
+    }
+  }
+
+  // Check if article is bookmarked by user
+  Future<bool> isArticleBookmarked(String articleId, String userId) async {
+    try {
+      final doc =
+          await _firestore
+              .collection('user_article_bookmarks')
+              .doc('${userId}_$articleId')
+              .get();
+      return doc.exists;
+    } catch (e) {
+      print('Error checking if article is bookmarked: $e');
+      return false;
+    }
+  }
+
+  // Get articles by IDs
+  Stream<List<Article>> getArticlesByIds(List<String> articleIds) {
+    if (articleIds.isEmpty) {
+      return Stream.value([]);
+    }
+
+    return _firestore
+        .collection('articles')
+        .where(FieldPath.documentId, whereIn: articleIds)
+        .snapshots()
+        .map((snapshot) {
+          return snapshot.docs
+              .map((doc) => Article.fromMap({'id': doc.id, ...doc.data()}))
+              .toList();
+        })
+        .handleError((error) {
+          print('Error getting articles by IDs: $error');
+          return <Article>[];
+        });
+  }
+
+  // Update pregnancy status
+  Future<void> updatePregnancyStatus(
+    String userId,
+    String status,
+    String reason,
+    String notes,
+    DateTime endDate,
+  ) async {
+    try {
+      await ensureAuthenticated();
+
+      final updateData = {
+        'pregnancyStatus': status,
+        'pregnancyEndDate': endDate.toIso8601String(),
+        'pregnancyEndReason': reason,
+        'pregnancyNotes': notes,
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+
+      await _firestore.collection('users').doc(userId).update(updateData);
+
+      print('Pregnancy status updated successfully for user: $userId');
+    } catch (e) {
+      print('Error updating pregnancy status: $e');
+      rethrow;
+    }
+  }
+
+  // Reset pregnancy status to active (for new pregnancy)
+  Future<void> resetPregnancyStatus(String userId) async {
+    try {
+      await ensureAuthenticated();
+
+      final updateData = {
+        'pregnancyStatus': 'active',
+        'pregnancyEndDate': null,
+        'pregnancyEndReason': null,
+        'pregnancyNotes': null,
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+
+      await _firestore.collection('users').doc(userId).update(updateData);
+
+      print('Pregnancy status reset to active for user: $userId');
+    } catch (e) {
+      print('Error resetting pregnancy status: $e');
+      rethrow;
+    }
+  }
+
+  // Add new HPHT for next pregnancy (for users who had miscarriage)
+  Future<void> addNewHPHTForNextPregnancy(
+    String userId,
+    DateTime newHpht,
+  ) async {
+    try {
+      await ensureAuthenticated();
+
+      // Get current user data to check pregnancy history
+      final userDoc = await _firestore.collection('users').doc(userId).get();
+      if (!userDoc.exists) {
+        throw Exception('User not found');
+      }
+
+      final userData = userDoc.data()!;
+      final currentHpht = userData['hpht'];
+      final pregnancyStatus = userData['pregnancyStatus'];
+      final pregnancyEndDate = userData['pregnancyEndDate'];
+      final pregnancyEndReason = userData['pregnancyEndReason'];
+      final pregnancyNotes = userData['pregnancyNotes'];
+
+      // Create pregnancy history entry for the previous pregnancy
+      final pregnancyHistoryEntry = {
+        'hpht': currentHpht,
+        'pregnancyStatus': pregnancyStatus,
+        'pregnancyEndDate': pregnancyEndDate,
+        'pregnancyEndReason': pregnancyEndReason,
+        'pregnancyNotes': pregnancyNotes,
+        'createdAt': DateTime.now().toIso8601String(),
+      };
+
+      // Get existing pregnancy history or create new list
+      final existingHistory = userData['pregnancyHistory'] ?? [];
+      final updatedHistory = List<Map<String, dynamic>>.from(existingHistory);
+      updatedHistory.add(pregnancyHistoryEntry);
+
+      // Update user with new HPHT and pregnancy history
+      final updateData = {
+        'hpht': newHpht.toIso8601String(),
+        'newHpht': newHpht.toIso8601String(),
+        'pregnancyStatus': 'active',
+        'pregnancyEndDate': null,
+        'pregnancyEndReason': null,
+        'pregnancyNotes': null,
+        'pregnancyHistory': updatedHistory,
+        'updatedAt': DateTime.now().toIso8601String(),
+      };
+
+      await _firestore.collection('users').doc(userId).update(updateData);
+
+      // Create new child data for the new pregnancy
+      await createChildFromHPHT(userId, newHpht);
+
+      print('New HPHT added successfully for user: $userId');
+    } catch (e) {
+      print('Error adding new HPHT: $e');
+      rethrow;
+    }
+  }
+
+  // Get pregnancy history for a user
+  Stream<List<Map<String, dynamic>>> getPregnancyHistory(String userId) {
+    try {
+      return _firestore.collection('users').doc(userId).snapshots().map((doc) {
+        if (doc.exists) {
+          final data = doc.data()!;
+          final history = data['pregnancyHistory'] ?? [];
+          return List<Map<String, dynamic>>.from(history);
+        }
+        return <Map<String, dynamic>>[];
+      });
+    } catch (e) {
+      print('Error getting pregnancy history: $e');
+      return Stream.value(<Map<String, dynamic>>[]);
     }
   }
 }

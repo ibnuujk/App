@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../models/user_model.dart';
+import '../../models/article_model.dart';
 import '../../services/firebase_service.dart';
 import '../../routes/route_helper.dart';
 
@@ -27,18 +28,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
   final _alamatController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
 
+  // Local user data for display
+  late UserModel _currentUser;
+
   @override
   void initState() {
     super.initState();
+    _currentUser = widget.user;
     _loadChildren();
     _initializeControllers();
   }
 
   void _initializeControllers() {
-    _namaController.text = widget.user.nama;
-    _emailController.text = widget.user.email;
-    _noHpController.text = widget.user.noHp;
-    _alamatController.text = widget.user.alamat;
+    _namaController.text = _currentUser.nama;
+    _emailController.text = _currentUser.email;
+    _noHpController.text = _currentUser.noHp;
+    _alamatController.text = _currentUser.alamat;
   }
 
   @override
@@ -93,7 +98,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           (context) => AlertDialog(
             title: Text(
               'Hapus Data Anak',
-              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              style: GoogleFonts.poppins(fontWeight: FontWeight.w700),
             ),
             content: Text(
               'Apakah Anda yakin ingin menghapus data anak "${child['nama']}"?',
@@ -142,29 +147,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     try {
-      final updatedUser = widget.user.copyWith(
-        nama: _namaController.text,
-        email: _emailController.text,
-        noHp: _noHpController.text,
-        alamat: _alamatController.text,
+      // Create updated user with only editable fields
+      final updatedUser = _currentUser.copyWith(
+        nama: _namaController.text.trim(),
+        noHp: _noHpController.text.trim(),
+        alamat: _alamatController.text.trim(),
+        // Note: email, umur, tanggalLahir are not editable in profile
       );
 
-      await _firebaseService.updateUser(updatedUser);
-
+      // Show loading state
       setState(() {
-        _isEditing = false;
+        _isLoading = true;
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profil berhasil diperbarui'),
-          backgroundColor: Color(0xFFEC407A),
-        ),
-      );
+      // Update user in Firebase
+      await _firebaseService.updateUser(updatedUser);
+
+      // Update the local state to reflect changes
+      setState(() {
+        _currentUser = updatedUser;
+        _isEditing = false;
+        _isLoading = false;
+      });
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Profil berhasil diperbarui'),
+            backgroundColor: Color(0xFFEC407A),
+          ),
+        );
+      }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
+      setState(() {
+        _isLoading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
@@ -200,7 +224,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 gradient: LinearGradient(
                   colors: [
                     const Color(0xFFEC407A),
-                    const Color(0xFFEC407A).withOpacity(0.8),
+                    const Color(0xFFEC407A).withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -208,7 +232,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: const Color(0xFFEC407A).withOpacity(0.3),
+                    color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                     blurRadius: 15,
                     offset: const Offset(0, 8),
                   ),
@@ -218,24 +242,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   CircleAvatar(
                     radius: 50,
-                    backgroundColor: Colors.white.withOpacity(0.2),
+                    backgroundColor: Colors.white.withValues(alpha: 0.2),
                     child: Text(
-                      widget.user.nama.isNotEmpty
-                          ? widget.user.nama[0].toUpperCase()
+                      _currentUser.nama.isNotEmpty
+                          ? _currentUser.nama[0].toUpperCase()
                           : 'P',
                       style: GoogleFonts.poppins(
                         fontSize: 32,
-                        fontWeight: FontWeight.bold,
+                        fontWeight: FontWeight.w700,
                         color: Colors.white,
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    widget.user.nama,
+                    _currentUser.nama,
                     style: GoogleFonts.poppins(
                       fontSize: 24,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w700,
                       color: Colors.white,
                     ),
                   ),
@@ -243,7 +267,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Pasien Sistem Persalinan',
                     style: GoogleFonts.poppins(
                       fontSize: 14,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -259,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -275,7 +299,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         'Informasi Pribadi',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: const Color(0xFF2d3748),
                         ),
                       ),
@@ -304,13 +328,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         children: [
                           TextFormField(
                             controller: _namaController,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Nama Lengkap',
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.person),
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Nama tidak boleh kosong';
+                              }
+                              if (value.trim().length < 2) {
+                                return 'Nama minimal 2 karakter';
                               }
                               return null;
                             },
@@ -318,27 +346,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _emailController,
-                            decoration: const InputDecoration(
-                              labelText: 'Email',
-                              border: OutlineInputBorder(),
+                            enabled: false, // Email tidak bisa diubah
+                            decoration: InputDecoration(
+                              labelText: 'Email (Tidak bisa diubah)',
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.email),
+                              filled: true,
+                              fillColor: Colors.grey[100],
                             ),
-                            validator: (value) {
-                              if (value == null || value.isEmpty) {
-                                return 'Email tidak boleh kosong';
-                              }
-                              return null;
-                            },
                           ),
                           const SizedBox(height: 16),
                           TextFormField(
                             controller: _noHpController,
-                            decoration: const InputDecoration(
+                            keyboardType: TextInputType.phone,
+                            decoration: InputDecoration(
                               labelText: 'No HP',
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.phone),
+                              hintText: 'Contoh: 08123456789',
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'No HP tidak boleh kosong';
+                              }
+                              if (value.trim().length < 10) {
+                                return 'No HP minimal 10 digit';
+                              }
+                              if (!RegExp(r'^[0-9]+$').hasMatch(value.trim())) {
+                                return 'No HP hanya boleh berisi angka';
                               }
                               return null;
                             },
@@ -347,13 +382,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           TextFormField(
                             controller: _alamatController,
                             maxLines: 3,
-                            decoration: const InputDecoration(
+                            decoration: InputDecoration(
                               labelText: 'Alamat',
-                              border: OutlineInputBorder(),
+                              border: const OutlineInputBorder(),
+                              prefixIcon: const Icon(Icons.location_on),
+                              hintText: 'Masukkan alamat lengkap',
                             ),
                             validator: (value) {
                               if (value == null || value.isEmpty) {
                                 return 'Alamat tidak boleh kosong';
+                              }
+                              if (value.trim().length < 10) {
+                                return 'Alamat minimal 10 karakter';
                               }
                               return null;
                             },
@@ -363,29 +403,51 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             children: [
                               Expanded(
                                 child: TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      _isEditing = false;
-                                      _initializeControllers();
-                                    });
-                                  },
+                                  onPressed:
+                                      _isLoading
+                                          ? null
+                                          : () {
+                                            setState(() {
+                                              _isEditing = false;
+                                              _initializeControllers();
+                                            });
+                                          },
                                   child: Text(
                                     'Batal',
                                     style: GoogleFonts.poppins(),
                                   ),
                                 ),
                               ),
+                              const SizedBox(width: 16),
                               Expanded(
                                 child: ElevatedButton(
-                                  onPressed: _saveProfile,
+                                  onPressed: _isLoading ? null : _saveProfile,
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: const Color(0xFFEC407A),
                                     foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
                                   ),
-                                  child: Text(
-                                    'Simpan',
-                                    style: GoogleFonts.poppins(),
-                                  ),
+                                  child:
+                                      _isLoading
+                                          ? const SizedBox(
+                                            width: 20,
+                                            height: 20,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation<Color>(
+                                                    Colors.white,
+                                                  ),
+                                            ),
+                                          )
+                                          : Text(
+                                            'Simpan',
+                                            style: GoogleFonts.poppins(
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
                                 ),
                               ),
                             ],
@@ -394,11 +456,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                   ] else ...[
-                    _buildInfoRow('Nama', widget.user.nama),
-                    _buildInfoRow('Email', widget.user.email),
-                    _buildInfoRow('No HP', widget.user.noHp),
-                    _buildInfoRow('Umur', '${widget.user.umur} tahun'),
-                    _buildInfoRow('Alamat', widget.user.alamat),
+                    _buildInfoRow('Nama', _currentUser.nama),
+                    _buildInfoRow('Email', _currentUser.email),
+                    _buildInfoRow('No HP', _currentUser.noHp),
+                    _buildInfoRow(
+                      'Tanggal Lahir',
+                      DateFormat(
+                        'dd/MM/yyyy',
+                      ).format(_currentUser.tanggalLahir),
+                    ),
+                    _buildInfoRow('Umur', '${_currentUser.umur} tahun'),
+                    _buildInfoRow('Alamat', _currentUser.alamat),
                   ],
                 ],
               ),
@@ -413,7 +481,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withValues(alpha: 0.05),
                     blurRadius: 10,
                     offset: const Offset(0, 4),
                   ),
@@ -426,29 +494,33 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Data Anak',
+                        widget.user.pregnancyStatus == 'miscarriage'
+                            ? 'Keguguran'
+                            : 'Data Anak',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
-                          fontWeight: FontWeight.bold,
+                          fontWeight: FontWeight.w700,
                           color: const Color(0xFF2d3748),
                         ),
                       ),
-                      ElevatedButton.icon(
-                        onPressed: _showAddChildDialog,
-                        icon: const Icon(Icons.add, size: 18),
-                        label: Text(
-                          'Tambah Anak',
-                          style: GoogleFonts.poppins(fontSize: 12),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFEC407A),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                      if (widget.user.pregnancyStatus != 'miscarriage') ...[
+                        ElevatedButton.icon(
+                          onPressed: _showAddChildDialog,
+                          icon: const Icon(Icons.add, size: 18),
+                          label: Text(
+                            'Tambah Anak',
+                            style: GoogleFonts.poppins(fontSize: 12),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFEC407A),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
                     ],
                   ),
                   const SizedBox(height: 16),
@@ -460,13 +532,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       child: Column(
                         children: [
                           Icon(
-                            Icons.child_care_outlined,
+                            widget.user.pregnancyStatus == 'miscarriage'
+                                ? Icons.cancel_rounded
+                                : Icons.child_care_outlined,
                             size: 64,
-                            color: Colors.grey[400],
+                            color:
+                                widget.user.pregnancyStatus == 'miscarriage'
+                                    ? const Color(0xFFE53E3E)
+                                    : Colors.grey[400],
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            'Belum ada data anak',
+                            widget.user.pregnancyStatus == 'miscarriage'
+                                ? 'Tidak ada data keguguran'
+                                : 'Belum ada data anak',
                             style: GoogleFonts.poppins(
                               fontSize: 16,
                               color: Colors.grey[600],
@@ -474,7 +553,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Tambahkan data anak Anda',
+                            widget.user.pregnancyStatus == 'miscarriage'
+                                ? 'Data keguguran akan ditampilkan di sini'
+                                : 'Tambahkan data anak Anda',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               color: Colors.grey[500],
@@ -484,107 +565,238 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     )
                   else
-                    ListView.builder(
-                      shrinkWrap: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: _children.length,
-                      itemBuilder: (context, index) {
-                        final child = _children[index];
-                        return Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.grey[50],
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: Colors.grey[300]!),
-                          ),
-                          child: Row(
-                            children: [
-                              CircleAvatar(
-                                backgroundColor: const Color(0xFFEC407A),
-                                child: Icon(
-                                  Icons.child_care_rounded,
-                                  color: Colors.white,
-                                ),
+                    widget.user.pregnancyStatus == 'miscarriage'
+                        ? _buildMiscarriageInfo()
+                        : ListView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: _children.length,
+                          itemBuilder: (context, index) {
+                            final child = _children[index];
+                            return Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.grey[50],
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey[300]!),
                               ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      child['nama'] ?? 'Nama Anak',
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                        fontSize: 16,
-                                      ),
+                              child: Row(
+                                children: [
+                                  CircleAvatar(
+                                    backgroundColor: const Color(0xFFEC407A),
+                                    child: Icon(
+                                      Icons.child_care_rounded,
+                                      color: Colors.white,
                                     ),
-                                    Text(
-                                      'Tanggal Lahir: ${child['tanggalLahir'] is DateTime ? DateFormat('dd/MM/yyyy').format(child['tanggalLahir']) : child['tanggalLahir']}',
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                    Text(
-                                      'Jenis Kelamin: ${child['jenisKelamin']}',
-                                      style: GoogleFonts.poppins(
-                                        color: Colors.grey[600],
-                                        fontSize: 12,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              PopupMenuButton<String>(
-                                onSelected: (value) {
-                                  if (value == 'edit') {
-                                    _showEditChildDialog(child);
-                                  } else if (value == 'delete') {
-                                    _showDeleteChildDialog(child);
-                                  }
-                                },
-                                itemBuilder:
-                                    (context) => [
-                                      PopupMenuItem(
-                                        value: 'edit',
-                                        child: Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.edit_rounded,
-                                              color: Color(0xFFEC407A),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'Edit',
-                                              style: GoogleFonts.poppins(),
-                                            ),
-                                          ],
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          child['nama'] ?? 'Nama Anak',
+                                          style: GoogleFonts.poppins(
+                                            fontWeight: FontWeight.w600,
+                                            fontSize: 16,
+                                          ),
                                         ),
-                                      ),
-                                      PopupMenuItem(
-                                        value: 'delete',
-                                        child: Row(
-                                          children: [
-                                            const Icon(
-                                              Icons.delete,
-                                              color: Colors.red,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Text(
-                                              'Hapus',
-                                              style: GoogleFonts.poppins(),
-                                            ),
-                                          ],
+                                        Text(
+                                          'Tanggal Lahir: ${child['tanggalLahir'] is DateTime ? DateFormat('dd/MM/yyyy').format(child['tanggalLahir']) : child['tanggalLahir']}',
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                        Text(
+                                          'Jenis Kelamin: ${child['jenisKelamin']}',
+                                          style: GoogleFonts.poppins(
+                                            color: Colors.grey[600],
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  PopupMenuButton<String>(
+                                    onSelected: (value) {
+                                      if (value == 'edit') {
+                                        _showEditChildDialog(child);
+                                      } else if (value == 'delete') {
+                                        _showDeleteChildDialog(child);
+                                      }
+                                    },
+                                    itemBuilder:
+                                        (context) => [
+                                          PopupMenuItem(
+                                            value: 'edit',
+                                            child: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.edit,
+                                                  color: Color(0xFFEC407A),
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  'Edit',
+                                                  style: GoogleFonts.poppins(),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                          PopupMenuItem(
+                                            value: 'delete',
+                                            child: Row(
+                                              children: [
+                                                const Icon(
+                                                  Icons.delete,
+                                                  color: Colors.red,
+                                                ),
+                                                const SizedBox(width: 8),
+                                                Text(
+                                                  'Hapus',
+                                                  style: GoogleFonts.poppins(),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+                                        ],
+                                  ),
+                                ],
                               ),
-                            ],
-                          ),
-                        );
-                      },
+                            );
+                          },
+                        ),
+                ],
+              ),
+            ),
+
+            // Riwayat Kehamilan Section (if user has pregnancy history)
+            if (widget.user.pregnancyHistory.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              Container(
+                padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 2),
                     ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.history,
+                          color: const Color(0xFFEC407A),
+                          size: 24,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Riwayat Kehamilan',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF2d3748),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    _buildPregnancyHistorySection(),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 24),
+            ],
+
+            // Liked Articles Section
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.favorite,
+                        color: const Color(0xFFEC407A),
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Artikel yang Disukai',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF2d3748),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildLikedArticlesSection(),
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // Bookmarked Articles Section
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    blurRadius: 10,
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.bookmark,
+                        color: const Color(0xFFEC407A),
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Baca Nanti',
+                        style: GoogleFonts.poppins(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF2d3748),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  _buildBookmarkedArticlesSection(),
                 ],
               ),
             ),
@@ -618,6 +830,530 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLikedArticlesSection() {
+    return StreamBuilder<List<String>>(
+      stream: _firebaseService.getLikedArticleIds(_currentUser.id),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: GoogleFonts.poppins(color: Colors.red),
+            ),
+          );
+        }
+
+        final likedArticleIds = snapshot.data ?? [];
+
+        if (likedArticleIds.isEmpty) {
+          return Center(
+            child: Column(
+              children: [
+                Icon(Icons.favorite_border, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 16),
+                Text(
+                  'Belum ada artikel yang disukai',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Suka artikel yang menarik untuk melihatnya di sini',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            // Display actual liked articles
+            StreamBuilder<List<Article>>(
+              stream: _firebaseService.getArticlesByIds(likedArticleIds),
+              builder: (context, articlesSnapshot) {
+                if (articlesSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (articlesSnapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Error: ${articlesSnapshot.error}',
+                      style: GoogleFonts.poppins(color: Colors.red),
+                    ),
+                  );
+                }
+
+                final articles = articlesSnapshot.data ?? [];
+
+                if (articles.isEmpty) {
+                  return const Center(
+                    child: Text('Tidak ada artikel yang ditemukan'),
+                  );
+                }
+
+                return Column(
+                  children:
+                      articles.map((article) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  RouteHelper.articleDetail,
+                                  arguments: {
+                                    'article': article,
+                                    'user': _currentUser,
+                                  },
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withValues(alpha: 0.1),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.favorite,
+                                      color: const Color(0xFFEC407A),
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            article.title,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey[800],
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            article.category,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildBookmarkedArticlesSection() {
+    return StreamBuilder<List<String>>(
+      stream: _firebaseService.getBookmarkedArticleIds(_currentUser.id),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        if (snapshot.hasError) {
+          return Center(
+            child: Text(
+              'Error: ${snapshot.error}',
+              style: GoogleFonts.poppins(color: Colors.red),
+            ),
+          );
+        }
+
+        final bookmarkedArticleIds = snapshot.data ?? [];
+
+        if (bookmarkedArticleIds.isEmpty) {
+          return Center(
+            child: Column(
+              children: [
+                Icon(Icons.bookmark_border, size: 64, color: Colors.grey[400]),
+                const SizedBox(height: 12),
+                Text(
+                  'Belum ada artikel yang disimpan',
+                  style: GoogleFonts.poppins(
+                    fontSize: 16,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Simpan artikel untuk dibaca nanti',
+                  style: GoogleFonts.poppins(
+                    fontSize: 12,
+                    color: Colors.grey[500],
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+
+        return Column(
+          children: [
+            // Display actual bookmarked articles
+            StreamBuilder<List<Article>>(
+              stream: _firebaseService.getArticlesByIds(bookmarkedArticleIds),
+              builder: (context, articlesSnapshot) {
+                if (articlesSnapshot.connectionState ==
+                    ConnectionState.waiting) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                if (articlesSnapshot.hasError) {
+                  return Center(
+                    child: Text(
+                      'Error: ${articlesSnapshot.error}',
+                      style: GoogleFonts.poppins(color: Colors.red),
+                    ),
+                  );
+                }
+
+                final articles = articlesSnapshot.data ?? [];
+
+                if (articles.isEmpty) {
+                  return const Center(
+                    child: Text('Tidak ada artikel yang ditemukan'),
+                  );
+                }
+
+                return Column(
+                  children:
+                      articles.map((article) {
+                        return Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                Navigator.pushNamed(
+                                  context,
+                                  RouteHelper.articleDetail,
+                                  arguments: {
+                                    'article': article,
+                                    'user': _currentUser,
+                                  },
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(color: Colors.grey[300]!),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.grey.withValues(alpha: 0.1),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.bookmark,
+                                      color: const Color(0xFFEC407A),
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            article.title,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w600,
+                                              color: Colors.grey[800],
+                                            ),
+                                            maxLines: 2,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            article.category,
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              color: Colors.grey[600],
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    Icon(
+                                      Icons.arrow_forward_ios,
+                                      size: 16,
+                                      color: Colors.grey[400],
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildMiscarriageInfo() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFFEBEE),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: const Color(0xFFE53E3E).withValues(alpha: 0.3),
+              width: 1,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.cancel_rounded,
+                    color: const Color(0xFFE53E3E),
+                    size: 24,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Status Keguguran',
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: const Color(0xFFE53E3E),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Tanggal: ${widget.user.pregnancyEndDate != null ? DateFormat('dd/MM/yyyy').format(widget.user.pregnancyEndDate!) : '-'}',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF2D3748),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Alasan: ${widget.user.pregnancyEndReason != null ? widget.user.pregnancyEndReason! : 'keguguran'}',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF2D3748),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Catatan: ${widget.user.pregnancyNotes != null && widget.user.pregnancyNotes!.isNotEmpty ? widget.user.pregnancyNotes! : '-'}',
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  color: const Color(0xFF2D3748),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPregnancyHistorySection() {
+    return Column(
+      children:
+          widget.user.pregnancyHistory.map((history) {
+            final hpht =
+                history['hpht'] is String
+                    ? DateTime.tryParse(history['hpht'])
+                    : history['hpht'] as DateTime?;
+            final endDate =
+                history['pregnancyEndDate'] is String
+                    ? DateTime.tryParse(history['pregnancyEndDate'])
+                    : history['pregnancyEndDate'] as DateTime?;
+            final status = history['pregnancyStatus'] as String?;
+            final reason = history['pregnancyEndReason'] as String?;
+            final notes = history['pregnancyNotes'] as String?;
+            final createdAt =
+                history['createdAt'] is String
+                    ? DateTime.tryParse(history['createdAt'])
+                    : history['createdAt'] as DateTime?;
+
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color:
+                    status == 'miscarriage'
+                        ? const Color(0xFFFFEBEE)
+                        : status == 'completed'
+                        ? const Color(0xFFE8F5E8)
+                        : Colors.grey[50],
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color:
+                      status == 'miscarriage'
+                          ? const Color(0xFFE53E3E).withValues(alpha: 0.3)
+                          : status == 'completed'
+                          ? const Color(0xFF4CAF50).withValues(alpha: 0.3)
+                          : Colors.grey[300]!,
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Icon(
+                        status == 'miscarriage'
+                            ? Icons.cancel_rounded
+                            : status == 'completed'
+                            ? Icons.check_circle_rounded
+                            : Icons.pregnant_woman_rounded,
+                        color:
+                            status == 'miscarriage'
+                                ? const Color(0xFFE53E3E)
+                                : status == 'completed'
+                                ? const Color(0xFF4CAF50)
+                                : const Color(0xFFEC407A),
+                        size: 20,
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Kehamilan ${status == 'miscarriage'
+                            ? 'Keguguran'
+                            : status == 'completed'
+                            ? 'Selesai'
+                            : 'Aktif'}',
+                        style: GoogleFonts.poppins(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color:
+                              status == 'miscarriage'
+                                  ? const Color(0xFFE53E3E)
+                                  : status == 'completed'
+                                  ? const Color(0xFF4CAF50)
+                                  : const Color(0xFFEC407A),
+                        ),
+                      ),
+                      if (createdAt != null) ...[
+                        const Spacer(),
+                        Text(
+                          DateFormat('dd/MM/yyyy').format(createdAt),
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  if (hpht != null) ...[
+                    Text(
+                      'HPHT: ${DateFormat('dd/MM/yyyy').format(hpht)}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFF2D3748),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  if (endDate != null) ...[
+                    Text(
+                      'Tanggal Berakhir: ${DateFormat('dd/MM/yyyy').format(endDate)}',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFF2D3748),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  if (reason != null && reason.isNotEmpty) ...[
+                    Text(
+                      'Alasan: $reason',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFF2D3748),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  if (notes != null && notes.isNotEmpty) ...[
+                    Text(
+                      'Catatan: $notes',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFF2D3748),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            );
+          }).toList(),
     );
   }
 }
@@ -726,7 +1462,7 @@ class _AddChildDialogState extends State<AddChildDialog> {
                 gradient: LinearGradient(
                   colors: [
                     const Color(0xFFEC407A),
-                    const Color(0xFFEC407A).withOpacity(0.8),
+                    const Color(0xFFEC407A).withValues(alpha: 0.8),
                   ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -742,10 +1478,10 @@ class _AddChildDialogState extends State<AddChildDialog> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
+                        color: Colors.white.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -826,12 +1562,12 @@ class _AddChildDialogState extends State<AddChildDialog> {
                         labelText: 'Jenis Kelamin *',
                         border: OutlineInputBorder(),
                       ),
-                      items: [
-                        DropdownMenuItem(
+                      items: const [
+                        DropdownMenuItem<String>(
                           value: 'Laki-laki',
                           child: Text('Laki-laki'),
                         ),
-                        DropdownMenuItem(
+                        DropdownMenuItem<String>(
                           value: 'Perempuan',
                           child: Text('Perempuan'),
                         ),
@@ -918,9 +1654,34 @@ class _EditChildDialogState extends State<EditChildDialog> {
   @override
   void initState() {
     super.initState();
+
+    // Debug: Print child data untuk debugging
+    print('EditChildDialog - Child data: ${widget.child}');
+
     _namaController.text = widget.child['nama'] ?? '';
-    _selectedDate = widget.child['tanggalLahir'];
-    _selectedGender = widget.child['jenisKelamin'] ?? 'Laki-laki';
+
+    // Handle tanggal lahir dengan berbagai format
+    final tanggalLahirData = widget.child['tanggalLahir'];
+    if (tanggalLahirData != null) {
+      if (tanggalLahirData is String) {
+        _selectedDate = DateTime.tryParse(tanggalLahirData);
+      } else if (tanggalLahirData is DateTime) {
+        _selectedDate = tanggalLahirData;
+      }
+    }
+
+    // Validasi gender value untuk memastikan sesuai dengan options yang tersedia
+    final genderFromData = widget.child['jenisKelamin'];
+    print('EditChildDialog - Gender from data: $genderFromData');
+
+    if (genderFromData == 'Laki-laki' || genderFromData == 'Perempuan') {
+      _selectedGender = genderFromData;
+    } else {
+      print('EditChildDialog - Invalid gender value, using default: Laki-laki');
+      _selectedGender = 'Laki-laki'; // default value
+    }
+
+    print('EditChildDialog - Selected gender: $_selectedGender');
   }
 
   @override
@@ -965,10 +1726,10 @@ class _EditChildDialogState extends State<EditChildDialog> {
     try {
       final updatedChildData = {
         ...widget.child,
-        'nama': _namaController.text,
-        'tanggalLahir': _selectedDate,
+        'nama': _namaController.text.trim(),
+        'tanggalLahir': _selectedDate!.toIso8601String(),
         'jenisKelamin': _selectedGender,
-        'updatedAt': DateTime.now(),
+        'updatedAt': DateTime.now().toIso8601String(),
       };
 
       await _firebaseService.updateChild(updatedChildData);
@@ -981,148 +1742,215 @@ class _EditChildDialogState extends State<EditChildDialog> {
         ),
       );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
-      );
-    } finally {
       setState(() {
         _isLoading = false;
       });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+        );
+      }
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
       child: Container(
         width: double.maxFinite,
-        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          color: Colors.white,
+        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              'Edit Data Anak',
-              style: GoogleFonts.poppins(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    const Color(0xFFEC407A),
+                    const Color(0xFFEC407A).withValues(alpha: 0.8),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(20),
+                  topRight: Radius.circular(20),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Form(
-              key: _formKey,
-              child: Column(
+              child: Row(
                 children: [
-                  TextFormField(
-                    controller: _namaController,
-                    decoration: const InputDecoration(
-                      labelText: 'Nama Anak *',
-                      border: OutlineInputBorder(),
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(
+                        color: Colors.white.withValues(alpha: 0.3),
+                        width: 1,
+                      ),
                     ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Nama anak tidak boleh kosong';
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  InkWell(
-                    onTap: _selectDate,
-                    child: Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        border: Border.all(color: Colors.grey),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            _selectedDate == null
-                                ? 'Pilih Tanggal Lahir *'
-                                : DateFormat(
-                                  'dd/MM/yyyy',
-                                ).format(_selectedDate!),
-                            style: GoogleFonts.poppins(
-                              color:
-                                  _selectedDate == null
-                                      ? Colors.grey
-                                      : Colors.black,
-                            ),
-                          ),
-                          const Icon(Icons.calendar_today),
-                        ],
-                      ),
+                    child: const Icon(
+                      Icons.edit,
+                      color: Colors.white,
+                      size: 20,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<String>(
-                    value: _selectedGender,
-                    decoration: const InputDecoration(
-                      labelText: 'Jenis Kelamin *',
-                      border: OutlineInputBorder(),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      'Edit Data Anak',
+                      style: GoogleFonts.poppins(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
                     ),
-                    items: [
-                      DropdownMenuItem(
-                        value: 'Laki-laki',
-                        child: Text('Laki-laki'),
-                      ),
-                      DropdownMenuItem(
-                        value: 'Perempuan',
-                        child: Text('Perempuan'),
-                      ),
-                    ],
-                    onChanged: (String? value) {
-                      if (value != null) {
-                        setState(() {
-                          _selectedGender = value;
-                        });
-                      }
-                    },
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'Pilih jenis kelamin';
-                      }
-                      return null;
-                    },
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 16),
-            Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Text('Batal', style: GoogleFonts.poppins()),
-                  ),
-                ),
-                Expanded(
-                  child: ElevatedButton(
-                    onPressed: _isLoading ? null : _updateChild,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF667eea),
-                      foregroundColor: Colors.white,
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  children: [
+                    TextFormField(
+                      controller: _namaController,
+                      decoration: InputDecoration(
+                        labelText: 'Nama Anak *',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.child_care_rounded),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Nama anak tidak boleh kosong';
+                        }
+                        if (value.trim().length < 2) {
+                          return 'Nama minimal 2 karakter';
+                        }
+                        return null;
+                      },
                     ),
-                    child:
-                        _isLoading
-                            ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
+                    const SizedBox(height: 16),
+                    InkWell(
+                      onTap: _selectDate,
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              _selectedDate == null
+                                  ? 'Pilih Tanggal Lahir *'
+                                  : DateFormat(
+                                    'dd/MM/yyyy',
+                                  ).format(_selectedDate!),
+                              style: GoogleFonts.poppins(
+                                color:
+                                    _selectedDate == null
+                                        ? Colors.grey
+                                        : Colors.black,
+                              ),
+                            ),
+                            const Icon(Icons.calendar_today),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    DropdownButtonFormField<String>(
+                      value: _selectedGender,
+                      decoration: InputDecoration(
+                        labelText: 'Jenis Kelamin *',
+                        border: const OutlineInputBorder(),
+                        prefixIcon: const Icon(Icons.person_outline),
+                      ),
+                      items: const [
+                        DropdownMenuItem<String>(
+                          value: 'Laki-laki',
+                          child: Text('Laki-laki'),
+                        ),
+                        DropdownMenuItem<String>(
+                          value: 'Perempuan',
+                          child: Text('Perempuan'),
+                        ),
+                      ],
+                      onChanged: (String? value) {
+                        if (value != null) {
+                          setState(() {
+                            _selectedGender = value;
+                          });
+                        }
+                      },
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'Pilih jenis kelamin';
+                        }
+                        return null;
+                      },
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      onPressed:
+                          _isLoading ? null : () => Navigator.pop(context),
+                      child: Text('Batal', style: GoogleFonts.poppins()),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: _isLoading ? null : _updateChild,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFEC407A),
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child:
+                          _isLoading
+                              ? const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Colors.white,
+                                  ),
+                                ),
+                              )
+                              : Text(
+                                'Update',
+                                style: GoogleFonts.poppins(
+                                  fontWeight: FontWeight.w600,
                                 ),
                               ),
-                            )
-                            : Text('Update', style: GoogleFonts.poppins()),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
+            const SizedBox(height: 20),
           ],
         ),
       ),

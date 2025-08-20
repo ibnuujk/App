@@ -483,7 +483,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                   gradient: LinearGradient(
                     colors: [
                       const Color(0xFFEC407A),
-                      const Color(0xFFEC407A).withOpacity(0.8),
+                      const Color(0xFFEC407A).withValues(alpha: 0.8),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -491,7 +491,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFEC407A).withOpacity(0.3),
+                      color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -505,7 +505,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -531,7 +531,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                                 'Kelola data pasien',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -558,7 +558,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                           color: const Color(0xFFEC407A),
                         ),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.9),
+                        fillColor: Colors.white.withValues(alpha: 0.9),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide: BorderSide.none,
@@ -652,7 +652,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                                       radius: 30,
                                       backgroundColor: const Color(
                                         0xFFEC407A,
-                                      ).withOpacity(0.1),
+                                      ).withValues(alpha: 0.1),
                                       child: Text(
                                         patient.nama.isNotEmpty
                                             ? patient.nama[0].toUpperCase()
@@ -768,7 +768,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFEC407A).withOpacity(0.3),
+              color: const Color(0xFFEC407A).withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -814,9 +814,9 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.9),
+        color: color.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white.withOpacity(0.3)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.3)),
       ),
       child: Column(
         children: [

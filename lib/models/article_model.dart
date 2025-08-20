@@ -7,6 +7,8 @@ class Article {
   final int views; // view counter
   final bool isActive; // admin toggle
   final DateTime createdAt;
+  final bool isLiked; // user liked this article
+  final bool isBookmarked; // user bookmarked this article
 
   Article({
     required this.id,
@@ -17,6 +19,8 @@ class Article {
     required this.views,
     required this.isActive,
     required this.createdAt,
+    this.isLiked = false,
+    this.isBookmarked = false,
   });
 
   factory Article.fromMap(Map<String, dynamic> map) {
@@ -32,6 +36,8 @@ class Article {
           map['createdAt'] != null
               ? DateTime.parse(map['createdAt'])
               : DateTime.now(),
+      isLiked: map['isLiked'] ?? false,
+      isBookmarked: map['isBookmarked'] ?? false,
     );
   }
 
@@ -45,6 +51,8 @@ class Article {
       'views': views,
       'isActive': isActive,
       'createdAt': createdAt.toIso8601String(),
+      'isLiked': isLiked,
+      'isBookmarked': isBookmarked,
     };
   }
 
@@ -57,6 +65,8 @@ class Article {
     int? views,
     bool? isActive,
     DateTime? createdAt,
+    bool? isLiked,
+    bool? isBookmarked,
   }) {
     return Article(
       id: id ?? this.id,
@@ -67,6 +77,8 @@ class Article {
       views: views ?? this.views,
       isActive: isActive ?? this.isActive,
       createdAt: createdAt ?? this.createdAt,
+      isLiked: isLiked ?? this.isLiked,
+      isBookmarked: isBookmarked ?? this.isBookmarked,
     );
   }
 }

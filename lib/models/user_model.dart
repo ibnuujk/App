@@ -10,6 +10,14 @@ class UserModel {
   final String role; // 'admin' atau 'pasien'
   final DateTime createdAt;
   final DateTime? hpht; // Hari Pertama Haid Terakhir
+  final String?
+  pregnancyStatus; // 'active', 'miscarriage', 'complication', 'completed'
+  final DateTime? pregnancyEndDate;
+  final String? pregnancyEndReason; // 'miscarriage', 'complication', 'birth'
+  final String? pregnancyNotes; // Catatan tambahan dari bidan
+  final DateTime? newHpht; // HPHT baru untuk kehamilan berikutnya
+  final List<Map<String, dynamic>>
+  pregnancyHistory; // Riwayat kehamilan sebelumnya
 
   UserModel({
     required this.id,
@@ -23,6 +31,12 @@ class UserModel {
     required this.role,
     required this.createdAt,
     this.hpht,
+    this.pregnancyStatus,
+    this.pregnancyEndDate,
+    this.pregnancyEndReason,
+    this.pregnancyNotes,
+    this.newHpht,
+    this.pregnancyHistory = const [],
   });
 
   Map<String, dynamic> toMap() {
@@ -38,6 +52,12 @@ class UserModel {
       'role': role,
       'createdAt': createdAt.toIso8601String(),
       'hpht': hpht?.toIso8601String(),
+      'pregnancyStatus': pregnancyStatus,
+      'pregnancyEndDate': pregnancyEndDate?.toIso8601String(),
+      'pregnancyEndReason': pregnancyEndReason,
+      'pregnancyNotes': pregnancyNotes,
+      'newHpht': newHpht?.toIso8601String(),
+      'pregnancyHistory': pregnancyHistory,
     };
   }
 
@@ -68,6 +88,17 @@ class UserModel {
       role: map['role'] ?? '',
       createdAt: parseDateTime(map['createdAt']),
       hpht: map['hpht'] != null ? parseDateTime(map['hpht']) : null,
+      pregnancyStatus: map['pregnancyStatus'],
+      pregnancyEndDate:
+          map['pregnancyEndDate'] != null
+              ? parseDateTime(map['pregnancyEndDate'])
+              : null,
+      pregnancyEndReason: map['pregnancyEndReason'],
+      pregnancyNotes: map['pregnancyNotes'],
+      newHpht: map['newHpht'] != null ? parseDateTime(map['newHpht']) : null,
+      pregnancyHistory: List<Map<String, dynamic>>.from(
+        map['pregnancyHistory'] ?? [],
+      ),
     );
   }
 
@@ -83,6 +114,12 @@ class UserModel {
     String? role,
     DateTime? createdAt,
     DateTime? hpht,
+    String? pregnancyStatus,
+    DateTime? pregnancyEndDate,
+    String? pregnancyEndReason,
+    String? pregnancyNotes,
+    DateTime? newHpht,
+    List<Map<String, dynamic>>? pregnancyHistory,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -96,6 +133,12 @@ class UserModel {
       role: role ?? this.role,
       createdAt: createdAt ?? this.createdAt,
       hpht: hpht ?? this.hpht,
+      pregnancyStatus: pregnancyStatus ?? this.pregnancyStatus,
+      pregnancyEndDate: pregnancyEndDate ?? this.pregnancyEndDate,
+      pregnancyEndReason: pregnancyEndReason ?? this.pregnancyEndReason,
+      pregnancyNotes: pregnancyNotes ?? this.pregnancyNotes,
+      newHpht: newHpht ?? this.newHpht,
+      pregnancyHistory: pregnancyHistory ?? this.pregnancyHistory,
     );
   }
 }

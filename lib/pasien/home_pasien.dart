@@ -325,7 +325,7 @@ class _HomePasienScreenState extends State<HomePasienScreen>
           borderRadius: BorderRadius.circular(25),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -412,7 +412,7 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),
@@ -472,7 +472,7 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       ),
@@ -491,7 +491,7 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withValues(alpha: 0.1),
                         blurRadius: 15,
                         offset: const Offset(0, 8),
                       ),
@@ -510,7 +510,7 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                               color: const Color(0xFFFFCDD2),
                               borderRadius: BorderRadius.circular(40),
                               border: Border.all(
-                                color: const Color(0xFFEC407A).withOpacity(0.2),
+                                color: const Color(0xFFEC407A).withValues(alpha: 0.2),
                                 width: 2,
                               ),
                             ),
@@ -531,13 +531,20 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                               children: [
                                 const SizedBox(height: 8),
                                 Text(
-                                  widget.user.hpht != null && _fetalSize != null
-                                      ? 'Bayimu sekarang $_fetalSize'
-                                      : 'Belum ada data HPHT',
+                                  widget.user.pregnancyStatus == 'miscarriage'
+                                      ? 'Status Kehamilan: Keguguran'
+                                      : (widget.user.hpht != null &&
+                                              _fetalSize != null
+                                          ? 'Bayimu sekarang $_fetalSize'
+                                          : 'Belum ada data HPHT'),
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
-                                    color: const Color(0xFF2D3748),
+                                    color:
+                                        widget.user.pregnancyStatus ==
+                                                'miscarriage'
+                                            ? const Color(0xFFE53E3E)
+                                            : const Color(0xFF2D3748),
                                   ),
                                 ),
                               ],
@@ -546,7 +553,8 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                         ],
                       ),
                       if (widget.user.hpht != null &&
-                          _gestationalAgeWeeks != null) ...[
+                          _gestationalAgeWeeks != null &&
+                          widget.user.pregnancyStatus != 'miscarriage') ...[
                         const SizedBox(height: 24),
                         // Bottom Section with 3 columns
                         Row(
@@ -576,10 +584,10 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFFFCDD2).withOpacity(0.3),
+                            color: const Color(0xFFFFCDD2).withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFFEC407A).withOpacity(0.2),
+                              color: const Color(0xFFEC407A).withValues(alpha: 0.2),
                               width: 1,
                             ),
                           ),
@@ -747,7 +755,7 @@ class _HomePasienScreenState extends State<HomePasienScreen>
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 10,
               offset: const Offset(0, 5),
             ),
@@ -763,7 +771,7 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(15),
                 border: Border.all(
-                  color: const Color(0xFFEC407A).withOpacity(0.2),
+                  color: const Color(0xFFEC407A).withValues(alpha: 0.2),
                   width: 1,
                 ),
               ),
@@ -797,7 +805,7 @@ class _HomePasienScreenState extends State<HomePasienScreen>
               style: GoogleFonts.poppins(
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ),

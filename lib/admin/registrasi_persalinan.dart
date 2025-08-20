@@ -146,7 +146,7 @@ class _RegistrasiPersalinanScreenState
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFEC407A).withOpacity(0.1),
+                                color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(8),
                               ),
                               child: Icon(
@@ -847,7 +847,7 @@ class _RegistrasiPersalinanScreenState
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC407A).withOpacity(0.1),
+                          color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
@@ -1031,7 +1031,7 @@ class _RegistrasiPersalinanScreenState
                   gradient: LinearGradient(
                     colors: [
                       const Color(0xFFEC407A),
-                      const Color(0xFFEC407A).withOpacity(0.8),
+                      const Color(0xFFEC407A).withValues(alpha: 0.8),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -1039,7 +1039,7 @@ class _RegistrasiPersalinanScreenState
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFEC407A).withOpacity(0.3),
+                      color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -1053,7 +1053,7 @@ class _RegistrasiPersalinanScreenState
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -1079,7 +1079,7 @@ class _RegistrasiPersalinanScreenState
                                 'Input dan kelola data registrasi persalinan',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -1174,7 +1174,7 @@ class _RegistrasiPersalinanScreenState
                                 decoration: BoxDecoration(
                                   color: const Color(
                                     0xFFEC407A,
-                                  ).withOpacity(0.1),
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(60),
                                 ),
                                 child: Icon(
@@ -1219,7 +1219,7 @@ class _RegistrasiPersalinanScreenState
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 15,
                                     offset: const Offset(0, 8),
                                   ),
@@ -1239,14 +1239,14 @@ class _RegistrasiPersalinanScreenState
                                           decoration: BoxDecoration(
                                             color: const Color(
                                               0xFFEC407A,
-                                            ).withOpacity(0.1),
+                                            ).withValues(alpha: 0.1),
                                             borderRadius: BorderRadius.circular(
                                               16,
                                             ),
                                             border: Border.all(
                                               color: const Color(
                                                 0xFFEC407A,
-                                              ).withOpacity(0.2),
+                                              ).withValues(alpha: 0.2),
                                               width: 2,
                                             ),
                                           ),
@@ -1373,12 +1373,12 @@ class _RegistrasiPersalinanScreenState
                                       decoration: BoxDecoration(
                                         color: const Color(
                                           0xFFEC407A,
-                                        ).withOpacity(0.1),
+                                        ).withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
                                           color: const Color(
                                             0xFFEC407A,
-                                          ).withOpacity(0.3),
+                                          ).withValues(alpha: 0.3),
                                           width: 1,
                                         ),
                                       ),
@@ -1451,7 +1451,7 @@ class _RegistrasiPersalinanScreenState
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFEC407A).withOpacity(0.3),
+              color: const Color(0xFFEC407A).withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -1492,9 +1492,9 @@ class _RegistrasiPersalinanScreenState
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
         child: Column(
           children: [
@@ -1512,8 +1512,8 @@ class _RegistrasiPersalinanScreenState
                 fontSize: 12,
                 color:
                     color == Colors.white
-                        ? Colors.white.withOpacity(0.9)
-                        : color.withOpacity(0.8),
+                        ? Colors.white.withValues(alpha: 0.9)
+                        : color.withValues(alpha: 0.8),
               ),
             ),
           ],

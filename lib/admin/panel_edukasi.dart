@@ -113,7 +113,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
           indicatorColor: Colors.white,
           indicatorWeight: 3,
           labelColor: Colors.white,
-          unselectedLabelColor: Colors.white.withOpacity(0.7),
+          unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
           labelStyle: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           tabs: const [
             Tab(icon: Icon(Icons.auto_awesome), text: 'Generator Artikel'),
@@ -230,7 +230,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.grey.withOpacity(0.1),
+                color: Colors.grey.withValues(alpha: 0.1),
                 spreadRadius: 1,
                 blurRadius: 10,
                 offset: const Offset(0, 2),
@@ -246,10 +246,10 @@ class _PanelEdukasiState extends State<PanelEdukasi>
                     width: 50,
                     height: 50,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFEC407A).withOpacity(0.1),
+                      color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(
-                        color: const Color(0xFFEC407A).withOpacity(0.2),
+                        color: const Color(0xFFEC407A).withValues(alpha: 0.2),
                         width: 2,
                       ),
                     ),
@@ -304,7 +304,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 0.1),
             spreadRadius: 1,
             blurRadius: 10,
             offset: const Offset(0, 2),
@@ -320,10 +320,10 @@ class _PanelEdukasiState extends State<PanelEdukasi>
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEC407A).withOpacity(0.1),
+                  color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: const Color(0xFFEC407A).withOpacity(0.2),
+                    color: const Color(0xFFEC407A).withValues(alpha: 0.2),
                     width: 2,
                   ),
                 ),
@@ -360,10 +360,10 @@ class _PanelEdukasiState extends State<PanelEdukasi>
               // Quick navigation to articles list
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEC407A).withOpacity(0.1),
+                  color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: const Color(0xFFEC407A).withOpacity(0.3),
+                    color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -655,7 +655,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
         gradient: LinearGradient(
           colors: [
             const Color(0xFFEC407A),
-            const Color(0xFFEC407A).withOpacity(0.8),
+            const Color(0xFFEC407A).withValues(alpha: 0.8),
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
@@ -663,7 +663,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFEC407A).withOpacity(0.3),
+            color: const Color(0xFFEC407A).withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -678,10 +678,10 @@ class _PanelEdukasiState extends State<PanelEdukasi>
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(15),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 2,
                   ),
                 ),
@@ -709,7 +709,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
                       'Ringkasan performa konten edukasi',
                       style: GoogleFonts.poppins(
                         fontSize: 14,
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
@@ -718,10 +718,10 @@ class _PanelEdukasiState extends State<PanelEdukasi>
               // Refresh button for view counts
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.2),
+                  color: Colors.white.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -777,7 +777,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
                   child: Text(
                     'Error loading statistics',
                     style: GoogleFonts.poppins(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Colors.white.withValues(alpha: 0.9),
                     ),
                   ),
                 );
@@ -838,9 +838,9 @@ class _PanelEdukasiState extends State<PanelEdukasi>
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
           ),
           child: Icon(icon, color: color, size: 24),
         ),
@@ -857,7 +857,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
           label,
           style: GoogleFonts.poppins(
             fontSize: 12,
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w500,
           ),
           textAlign: TextAlign.center,
@@ -873,11 +873,11 @@ class _PanelEdukasiState extends State<PanelEdukasi>
           width: 50,
           height: 50,
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.2),
+            color: Colors.white.withValues(alpha: 0.2),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.3), width: 1),
           ),
-          child: Icon(icon, color: Colors.white.withOpacity(0.9), size: 24),
+          child: Icon(icon, color: Colors.white.withValues(alpha: 0.9), size: 24),
         ),
         const SizedBox(height: 12),
         Text(
@@ -892,7 +892,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
           label,
           style: GoogleFonts.poppins(
             fontSize: 12,
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w500,
           ),
           textAlign: TextAlign.center,

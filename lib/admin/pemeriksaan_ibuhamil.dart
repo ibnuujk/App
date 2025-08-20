@@ -181,7 +181,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                   gradient: LinearGradient(
                     colors: [
                       const Color(0xFFEC407A),
-                      const Color(0xFFEC407A).withOpacity(0.8),
+                      const Color(0xFFEC407A).withValues(alpha: 0.8),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -189,7 +189,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFEC407A).withOpacity(0.3),
+                      color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -203,7 +203,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Icon(
@@ -229,7 +229,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                 'Input dan kelola data pemeriksaan kehamilan',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -284,7 +284,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(
                                     0xFFEC407A,
-                                  ).withOpacity(0.1),
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(60),
                                 ),
                                 child: Icon(
@@ -325,7 +325,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                 borderRadius: BorderRadius.circular(20),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 15,
                                     offset: const Offset(0, 8),
                                   ),
@@ -362,7 +362,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                                 height: 50,
                                                 decoration: BoxDecoration(
                                                   color: Colors.white
-                                                      .withOpacity(0.2),
+                                                      .withValues(alpha: 0.2),
                                                   borderRadius:
                                                       BorderRadius.circular(12),
                                                 ),
@@ -396,8 +396,8 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                                           GoogleFonts.poppins(
                                                             fontSize: 12,
                                                             color: Colors.white
-                                                                .withOpacity(
-                                                                  0.8,
+                                                                .withValues(
+                                                                  alpha: 0.8,
                                                                 ),
                                                           ),
                                                     ),
@@ -535,51 +535,55 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                     // Action Buttons
                                     Row(
                                       children: [
-                                        Expanded(
-                                          child: ElevatedButton.icon(
-                                            onPressed:
-                                                () =>
-                                                    _navigateToRegistrasiPersalinan(
-                                                      examination,
-                                                    ),
-                                            icon: Icon(
-                                              Icons.assignment_add,
-                                              size: 18,
-                                              color: Colors.white,
-                                            ),
-                                            label: Text(
-                                              'Lakukan Registrasi Persalinan',
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
+                                        // Only show "Lakukan Registrasi Persalinan" button if pregnancy status is not miscarriage
+                                        if (examination['pregnancyStatus'] !=
+                                            'miscarriage') ...[
+                                          Expanded(
+                                            child: ElevatedButton.icon(
+                                              onPressed:
+                                                  () =>
+                                                      _navigateToRegistrasiPersalinan(
+                                                        examination,
+                                                      ),
+                                              icon: Icon(
+                                                Icons.assignment_add,
+                                                size: 18,
                                                 color: Colors.white,
                                               ),
-                                            ),
-                                            style: ElevatedButton.styleFrom(
-                                              backgroundColor: const Color(
-                                                0xFF4CAF50,
+                                              label: Text(
+                                                'Lakukan Registrasi Persalinan',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.white,
+                                                ),
                                               ),
-                                              foregroundColor: Colors.white,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(12),
+                                              style: ElevatedButton.styleFrom(
+                                                backgroundColor: const Color(
+                                                  0xFF4CAF50,
+                                                ),
+                                                foregroundColor: Colors.white,
+                                                shape: RoundedRectangleBorder(
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                ),
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      vertical: 12,
+                                                      horizontal: 16,
+                                                    ),
                                               ),
-                                              padding:
-                                                  const EdgeInsets.symmetric(
-                                                    vertical: 12,
-                                                    horizontal: 16,
-                                                  ),
                                             ),
                                           ),
-                                        ),
-                                        const SizedBox(width: 12),
+                                          const SizedBox(width: 12),
+                                        ],
                                         PopupMenuButton<String>(
                                           icon: Container(
                                             padding: const EdgeInsets.all(8),
                                             decoration: BoxDecoration(
                                               color: const Color(
                                                 0xFFEC407A,
-                                              ).withOpacity(0.1),
+                                              ).withValues(alpha: 0.1),
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                             ),
@@ -688,12 +692,12 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                       decoration: BoxDecoration(
                                         color: const Color(
                                           0xFFEC407A,
-                                        ).withOpacity(0.1),
+                                        ).withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(20),
                                         border: Border.all(
                                           color: const Color(
                                             0xFFEC407A,
-                                          ).withOpacity(0.3),
+                                          ).withValues(alpha: 0.3),
                                           width: 1,
                                         ),
                                       ),
@@ -735,7 +739,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFEC407A).withOpacity(0.3),
+              color: const Color(0xFFEC407A).withValues(alpha: 0.3),
               blurRadius: 15,
               offset: const Offset(0, 8),
             ),
@@ -859,7 +863,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -867,14 +871,14 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: Colors.white.withOpacity(0.8)),
+              Icon(icon, size: 16, color: Colors.white.withValues(alpha: 0.8)),
               const SizedBox(width: 4),
               Text(
                 label,
                 style: GoogleFonts.poppins(
                   fontSize: 10,
                   fontWeight: FontWeight.w500,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                 ),
               ),
             ],
@@ -980,9 +984,12 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.2),
+          color: Colors.white.withValues(alpha: 0.2),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.3), width: 1),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.3),
+            width: 1,
+          ),
         ),
         child: Column(
           children: [
@@ -998,11 +1005,37 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
               title,
               style: GoogleFonts.poppins(
                 fontSize: 12,
-                color: Colors.white.withOpacity(0.9),
+                color: Colors.white.withValues(alpha: 0.9),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFEC407A), Color(0xFFE91E63)],
+        ),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: Colors.white, size: 20),
+          const SizedBox(width: 12),
+          Text(
+            title,
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+              color: Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1096,6 +1129,12 @@ class _AddPregnancyExaminationDialogState
 
   // Diagnosis Kebidanan
   final _catatanController = TextEditingController();
+
+  // Pregnancy Status
+  String _pregnancyStatus = 'active';
+  String? _pregnancyEndReason;
+  final _pregnancyEndDateController = TextEditingController();
+  final _pregnancyNotesController = TextEditingController();
 
   // Screening questions
   Map<String, bool> _screeningQuestions = {
@@ -1273,6 +1312,8 @@ class _AddPregnancyExaminationDialogState
     _hbController.dispose();
     _pemeriksaanDalamController.dispose();
     _catatanController.dispose();
+    _pregnancyEndDateController.dispose();
+    _pregnancyNotesController.dispose();
     super.dispose();
   }
 
@@ -1406,12 +1447,41 @@ class _AddPregnancyExaminationDialogState
         // Diagnosis Kebidanan
         'catatan': _catatanController.text,
 
+        // Pregnancy Status
+        'pregnancyStatus': _pregnancyStatus,
+        'pregnancyEndReason': _pregnancyEndReason,
+        'pregnancyEndDate':
+            _pregnancyEndDateController.text.isNotEmpty
+                ? DateFormat(
+                  'dd/MM/yyyy',
+                ).parse(_pregnancyEndDateController.text)
+                : null,
+        'pregnancyNotes': _pregnancyNotesController.text,
+
         'screeningQuestions': _screeningQuestions,
         'tanggalPemeriksaan': DateTime.now(), // Required for Firebase orderBy
         'createdAt': DateTime.now(),
       };
 
       await _firebaseService.createPemeriksaanIbuHamil(examinationData);
+
+      // Update user pregnancy status if not active
+      if (_pregnancyStatus != 'active' && _pasienId != null) {
+        final endDate =
+            _pregnancyEndDateController.text.isNotEmpty
+                ? DateFormat(
+                  'dd/MM/yyyy',
+                ).parse(_pregnancyEndDateController.text)
+                : DateTime.now();
+
+        await _firebaseService.updatePregnancyStatus(
+          _pasienId!,
+          _pregnancyStatus,
+          _pregnancyEndReason ?? '',
+          _pregnancyNotesController.text,
+          endDate,
+        );
+      }
 
       Navigator.pop(context);
       ScaffoldMessenger.of(context).showSnackBar(
@@ -1450,7 +1520,7 @@ class _AddPregnancyExaminationDialogState
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEC407A).withOpacity(0.1),
+                    color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
@@ -1481,10 +1551,14 @@ class _AddPregnancyExaminationDialogState
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC407A).withOpacity(0.05),
+                          color: const Color(
+                            0xFFEC407A,
+                          ).withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFEC407A).withOpacity(0.2),
+                            color: const Color(
+                              0xFFEC407A,
+                            ).withValues(alpha: 0.2),
                           ),
                         ),
                         child: Column(
@@ -1568,10 +1642,14 @@ class _AddPregnancyExaminationDialogState
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFEC407A).withOpacity(0.05),
+                          color: const Color(
+                            0xFFEC407A,
+                          ).withValues(alpha: 0.05),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFEC407A).withOpacity(0.2),
+                            color: const Color(
+                              0xFFEC407A,
+                            ).withValues(alpha: 0.2),
                           ),
                         ),
                         child: Column(
@@ -2626,6 +2704,134 @@ class _AddPregnancyExaminationDialogState
 
                       _buildScreeningQuestion('Shock', 'shock'),
                       const SizedBox(height: 24),
+
+                      const SizedBox(height: 24),
+
+                      // STATUS KEHAMILAN Section
+                      _buildSectionHeader(
+                        'STATUS KEHAMILAN',
+                        Icons.pregnant_woman_rounded,
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Pregnancy Status
+                      DropdownButtonFormField<String>(
+                        value: _pregnancyStatus,
+                        decoration: InputDecoration(
+                          labelText: 'Status Kehamilan *',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          prefixIcon: Icon(
+                            Icons.pregnant_woman_rounded,
+                            color: const Color(0xFFEC407A),
+                          ),
+                        ),
+                        items: [
+                          DropdownMenuItem(
+                            value: 'active',
+                            child: Text('Kehamilan Aktif'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'miscarriage',
+                            child: Text('Keguguran'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'complication',
+                            child: Text('Komplikasi Serius'),
+                          ),
+                          DropdownMenuItem(
+                            value: 'completed',
+                            child: Text('Kehamilan Selesai'),
+                          ),
+                        ],
+                        onChanged: (value) {
+                          setState(() {
+                            _pregnancyStatus = value!;
+                          });
+                        },
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Pilih status kehamilan';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Pregnancy End Reason (if not active)
+                      if (_pregnancyStatus != 'active') ...[
+                        DropdownButtonFormField<String>(
+                          value: _pregnancyEndReason,
+                          decoration: InputDecoration(
+                            labelText: 'Alasan Pengakhiran *',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: Icon(
+                              Icons.info_rounded,
+                              color: const Color(0xFFEC407A),
+                            ),
+                          ),
+                          items: _getPregnancyEndReasonItems(),
+                          onChanged: (value) {
+                            setState(() {
+                              _pregnancyEndReason = value!;
+                            });
+                          },
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Pilih alasan pengakhiran';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Pregnancy End Date
+                        TextFormField(
+                          controller: _pregnancyEndDateController,
+                          readOnly: true,
+                          decoration: InputDecoration(
+                            labelText: 'Tanggal Pengakhiran *',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: Icon(
+                              Icons.calendar_today_rounded,
+                              color: const Color(0xFFEC407A),
+                            ),
+                            suffixIcon: IconButton(
+                              icon: Icon(Icons.calendar_month_rounded),
+                              onPressed: () => _selectPregnancyEndDate(),
+                            ),
+                          ),
+                          validator: (value) {
+                            if (value == null || value.isEmpty) {
+                              return 'Pilih tanggal pengakhiran';
+                            }
+                            return null;
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Pregnancy Notes
+                        TextFormField(
+                          controller: _pregnancyNotesController,
+                          maxLines: 3,
+                          decoration: InputDecoration(
+                            labelText: 'Catatan Tambahan',
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            prefixIcon: Icon(
+                              Icons.note_rounded,
+                              color: const Color(0xFFEC407A),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
                     ],
                   ),
                 ),
@@ -2683,6 +2889,51 @@ class _AddPregnancyExaminationDialogState
       ),
     );
   }
+
+  // Get pregnancy end reason items based on status
+  List<DropdownMenuItem<String>> _getPregnancyEndReasonItems() {
+    switch (_pregnancyStatus) {
+      case 'miscarriage':
+        return [
+          DropdownMenuItem(value: 'miscarriage', child: Text('Keguguran')),
+        ];
+      case 'complication':
+        return [
+          DropdownMenuItem(
+            value: 'complication',
+            child: Text('Komplikasi Medis'),
+          ),
+        ];
+      case 'completed':
+        return [DropdownMenuItem(value: 'birth', child: Text('Kelahiran'))];
+      default:
+        return [
+          DropdownMenuItem(value: 'miscarriage', child: Text('Keguguran')),
+          DropdownMenuItem(
+            value: 'complication',
+            child: Text('Komplikasi Medis'),
+          ),
+          DropdownMenuItem(value: 'birth', child: Text('Kelahiran')),
+        ];
+    }
+  }
+
+  // Select pregnancy end date
+  Future<void> _selectPregnancyEndDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: DateTime(2020),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null) {
+      setState(() {
+        _pregnancyEndDateController.text = DateFormat(
+          'dd/MM/yyyy',
+        ).format(picked);
+      });
+    }
+  }
 }
 
 class PregnancyExaminationDetailDialog extends StatelessWidget {
@@ -2733,7 +2984,7 @@ class PregnancyExaminationDetailDialog extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFEC407A).withOpacity(0.1),
+                    color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(

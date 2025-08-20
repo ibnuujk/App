@@ -147,7 +147,7 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
               gradient: LinearGradient(
                 colors: [
                   const Color(0xFFEC407A),
-                  const Color(0xFFEC407A).withOpacity(0.8),
+                  const Color(0xFFEC407A).withValues(alpha: 0.8),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -155,7 +155,7 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
               borderRadius: BorderRadius.circular(20),
               boxShadow: [
                 BoxShadow(
-                  color: const Color(0xFFEC407A).withOpacity(0.3),
+                  color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                   blurRadius: 15,
                   offset: const Offset(0, 8),
                 ),
@@ -170,10 +170,10 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                       width: 60,
                       height: 60,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(15),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Colors.white.withValues(alpha: 0.3),
                           width: 2,
                         ),
                       ),
@@ -201,7 +201,7 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                             'Konsultasi langsung dengan bidan',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.9),
+                              color: Colors.white.withValues(alpha: 0.9),
                             ),
                           ),
                         ],
@@ -213,10 +213,10 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       width: 1,
                     ),
                   ),
@@ -305,7 +305,7 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                                 decoration: BoxDecoration(
                                   color: const Color(
                                     0xFFEC407A,
-                                  ).withOpacity(0.1),
+                                  ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(12),
                                 ),
                                 child: Text(
@@ -336,7 +336,7 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                                   borderRadius: BorderRadius.circular(18),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.05),
+                                      color: Colors.black.withValues(alpha: 0.05),
                                       blurRadius: 5,
                                       offset: const Offset(0, 2),
                                     ),
@@ -366,7 +366,7 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                                         fontSize: 10,
                                         color:
                                             isPatient
-                                                ? Colors.white.withOpacity(0.7)
+                                                ? Colors.white.withValues(alpha: 0.7)
                                                 : Colors.grey[600],
                                       ),
                                     ),
@@ -380,7 +380,7 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                                         color:
                                             message.isRead
                                                 ? Colors.blue[300]
-                                                : Colors.white.withOpacity(0.7),
+                                                : Colors.white.withValues(alpha: 0.7),
                                       ),
                                     ],
                                   ],
@@ -400,7 +400,7 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
               color: Colors.white,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),

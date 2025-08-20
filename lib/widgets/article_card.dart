@@ -5,9 +5,18 @@ import '../models/article_model.dart';
 class ArticleCard extends StatelessWidget {
   final Article article;
   final VoidCallback onTap;
+  final VoidCallback? onLike;
+  final VoidCallback? onBookmark;
+  final bool showActions;
 
-  const ArticleCard({Key? key, required this.article, required this.onTap})
-    : super(key: key);
+  const ArticleCard({
+    Key? key,
+    required this.article,
+    required this.onTap,
+    this.onLike,
+    this.onBookmark,
+    this.showActions = true,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -95,25 +104,124 @@ class ArticleCard extends StatelessWidget {
                       ),
                     ],
                   ),
+                ],
+              ),
 
-                  const Spacer(),
-
-                  // View Count
-                  Row(
-                    children: [
-                      Icon(Icons.visibility, size: 16, color: Colors.grey[500]),
-                      const SizedBox(width: 4),
-                      Text(
-                        '${article.views}',
-                        style: GoogleFonts.poppins(
-                          fontSize: 12,
-                          color: Colors.grey[500],
+              // Action Buttons (Like & Bookmark)
+              if (showActions && (onLike != null || onBookmark != null)) ...[
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    if (onLike != null) ...[
+                      Expanded(
+                        child: InkWell(
+                          onTap: onLike,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color:
+                                  article.isLiked
+                                      ? const Color(
+                                        0xFFEC407A,
+                                      ).withValues(alpha: 0.1)
+                                      : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color:
+                                    article.isLiked
+                                        ? const Color(0xFFEC407A)
+                                        : Colors.grey[300]!,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  article.isLiked
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  size: 16,
+                                  color:
+                                      article.isLiked
+                                          ? const Color(0xFFEC407A)
+                                          : Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Suka',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color:
+                                        article.isLiked
+                                            ? const Color(0xFFEC407A)
+                                            : Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                    ],
+                    if (onBookmark != null) ...[
+                      Expanded(
+                        child: InkWell(
+                          onTap: onBookmark,
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color:
+                                  article.isBookmarked
+                                      ? const Color(
+                                        0xFFEC407A,
+                                      ).withValues(alpha: 0.1)
+                                      : Colors.grey[100],
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color:
+                                    article.isBookmarked
+                                        ? const Color(0xFFEC407A)
+                                        : Colors.grey[300]!,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  article.isBookmarked
+                                      ? Icons.bookmark
+                                      : Icons.bookmark_border,
+                                  size: 16,
+                                  color:
+                                      article.isBookmarked
+                                          ? const Color(0xFFEC407A)
+                                          : Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Baca Nanti',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color:
+                                        article.isBookmarked
+                                            ? const Color(0xFFEC407A)
+                                            : Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
                       ),
                     ],
-                  ),
-                ],
-              ),
+                  ],
+                ),
+              ],
             ],
           ),
         ),

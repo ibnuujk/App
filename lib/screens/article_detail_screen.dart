@@ -4,6 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../models/article_model.dart';
 import '../models/user_model.dart';
 import '../providers/article_provider.dart';
+import '../services/firebase_service.dart';
 
 class ArticleDetailScreen extends StatefulWidget {
   final Article article;
@@ -20,9 +21,22 @@ class ArticleDetailScreen extends StatefulWidget {
 }
 
 class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
+  final FirebaseService _firebaseService = FirebaseService();
+  late Article _currentArticle;
+  bool _isLiked = false;
+  bool _isBookmarked = false;
+  bool _isLoading = false;
+
   @override
   void initState() {
     super.initState();
+    _currentArticle = widget.article;
+
+    // Initialize like and bookmark status
+    if (widget.user != null) {
+      _initializeArticleStatus();
+    }
+
     // Increment view count when article is opened
     WidgetsBinding.instance.addPostFrameCallback((_) {
       // Use user ID if available, otherwise use anonymous ID
@@ -31,6 +45,136 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           'anonymous_${DateTime.now().millisecondsSinceEpoch}';
       context.read<ArticleProvider>().incrementViews(widget.article.id, userId);
     });
+  }
+
+  Future<void> _initializeArticleStatus() async {
+    try {
+      final isLiked = await _firebaseService.isArticleLiked(
+        widget.article.id,
+        widget.user!.id,
+      );
+      final isBookmarked = await _firebaseService.isArticleBookmarked(
+        widget.article.id,
+        widget.user!.id,
+      );
+
+      if (mounted) {
+        setState(() {
+          _isLiked = isLiked;
+          _isBookmarked = isBookmarked;
+          _currentArticle = _currentArticle.copyWith(
+            isLiked: isLiked,
+            isBookmarked: isBookmarked,
+          );
+        });
+      }
+    } catch (e) {
+      print('Error initializing article status: $e');
+    }
+  }
+
+  Future<void> _handleLike() async {
+    if (widget.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan login untuk menyukai artikel'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _firebaseService.toggleArticleLike(
+        widget.article.id,
+        widget.user!.id,
+      );
+
+      // Update local state
+      setState(() {
+        _isLiked = !_isLiked;
+        _currentArticle = _currentArticle.copyWith(isLiked: _isLiked);
+        _isLoading = false;
+      });
+
+      // Show feedback
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isLiked ? 'Artikel disukai!' : 'Artikel tidak disukai',
+          ),
+          backgroundColor: _isLiked ? Colors.green : Colors.grey,
+        ),
+      );
+
+      // Return result to indicate status change
+      Navigator.pop(context, true);
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
+  }
+
+  Future<void> _handleBookmark() async {
+    if (widget.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Silakan login untuk menyimpan artikel'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await _firebaseService.toggleArticleBookmark(
+        widget.article.id,
+        widget.user!.id,
+      );
+
+      // Update local state
+      setState(() {
+        _isBookmarked = !_isBookmarked;
+        _currentArticle = _currentArticle.copyWith(isBookmarked: _isBookmarked);
+        _isLoading = false;
+      });
+
+      // Show feedback
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _isBookmarked
+                ? 'Artikel disimpan!'
+                : 'Artikel dihapus dari simpanan',
+          ),
+          backgroundColor: _isBookmarked ? Colors.green : Colors.grey,
+        ),
+      );
+
+      // Return result to indicate status change
+      Navigator.pop(context, true);
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error: $e'), backgroundColor: Colors.red),
+      );
+    }
   }
 
   @override
@@ -52,17 +196,6 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.share, color: Colors.white),
-            onPressed: () {
-              // TODO: Implement share functionality
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Fitur share akan segera hadir!')),
-              );
-            },
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -89,7 +222,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
+                      color: Colors.white.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -126,36 +259,14 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                           Icon(
                             Icons.access_time,
                             size: 18,
-                            color: Colors.white.withOpacity(0.8),
+                            color: Colors.white.withValues(alpha: 0.8),
                           ),
                           const SizedBox(width: 6),
                           Text(
                             '${widget.article.readTime} menit baca',
                             style: GoogleFonts.poppins(
                               fontSize: 14,
-                              color: Colors.white.withOpacity(0.8),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(width: 24),
-
-                      // View Count
-                      Row(
-                        children: [
-                          Icon(
-                            Icons.visibility,
-                            size: 18,
-                            color: Colors.white.withOpacity(0.8),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            '${widget.article.views} kali dibaca',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.white.withOpacity(0.8),
+                              color: Colors.white.withValues(alpha: 0.8),
                               fontWeight: FontWeight.w500,
                             ),
                           ),
@@ -222,26 +333,39 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                     children: [
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            // TODO: Implement bookmark functionality
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text(
-                                  'Artikel ditambahkan ke bookmark!',
-                                ),
-                              ),
-                            );
-                          },
-                          icon: const Icon(Icons.bookmark_border),
+                          onPressed: _isLoading ? null : _handleBookmark,
+                          icon:
+                              _isLoading
+                                  ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.grey,
+                                      ),
+                                    ),
+                                  )
+                                  : Icon(
+                                    _isBookmarked
+                                        ? Icons.bookmark
+                                        : Icons.bookmark_border,
+                                  ),
                           label: Text(
-                            'Bookmark',
+                            _isBookmarked ? 'Tidak Simpan' : 'Simpan',
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.grey[100],
-                            foregroundColor: Colors.grey[700],
+                            backgroundColor:
+                                _isBookmarked
+                                    ? Colors.grey[300]
+                                    : Colors.grey[100],
+                            foregroundColor:
+                                _isBookmarked
+                                    ? Colors.grey[800]
+                                    : Colors.grey[700],
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
@@ -255,23 +379,37 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
 
                       Expanded(
                         child: ElevatedButton.icon(
-                          onPressed: () {
-                            // TODO: Implement like functionality
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('Artikel disukai!')),
-                            );
-                          },
-                          icon: const Icon(Icons.thumb_up_outlined),
+                          onPressed: _isLoading ? null : _handleLike,
+                          icon:
+                              _isLoading
+                                  ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                  : Icon(
+                                    _isLiked
+                                        ? Icons.favorite
+                                        : Icons.favorite_border,
+                                  ),
                           label: Text(
-                            'Suka',
+                            _isLiked ? 'Tidak Suka' : 'Suka',
                             style: GoogleFonts.poppins(
                               fontWeight: FontWeight.w600,
                             ),
                           ),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: _getCategoryColor(
-                              widget.article.category,
-                            ),
+                            backgroundColor:
+                                _isLiked
+                                    ? Colors.red[400]
+                                    : _getCategoryColor(
+                                      widget.article.category,
+                                    ),
                             foregroundColor: Colors.white,
                             elevation: 0,
                             padding: const EdgeInsets.symmetric(vertical: 16),

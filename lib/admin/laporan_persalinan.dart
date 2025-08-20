@@ -180,7 +180,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                   gradient: LinearGradient(
                     colors: [
                       const Color(0xFFEC407A),
-                      const Color(0xFFEC407A).withOpacity(0.8),
+                      const Color(0xFFEC407A).withValues(alpha: 0.8),
                     ],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
@@ -188,7 +188,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                   borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFEC407A).withOpacity(0.3),
+                      color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
@@ -202,7 +202,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.2),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: const Icon(
@@ -228,7 +228,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                                 'Buat catatan persalinan pasien',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
-                                  color: Colors.white.withOpacity(0.9),
+                                  color: Colors.white.withValues(alpha: 0.9),
                                 ),
                               ),
                             ],
@@ -272,7 +272,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                                             decoration: BoxDecoration(
                                               color: const Color(
                                                 0xFFEC407A,
-                                              ).withOpacity(0.1),
+                                              ).withValues(alpha: 0.1),
                                               borderRadius:
                                                   BorderRadius.circular(10),
                                             ),
@@ -369,7 +369,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.green.withOpacity(0.1),
+                                        color: Colors.green.withValues(alpha: 0.1),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(
@@ -517,7 +517,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -530,7 +530,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
 
   Widget _buildInfoCard() {
     return _buildModernCard(
-      color: const Color(0xFFEC407A).withOpacity(0.05),
+      color: const Color(0xFFEC407A).withValues(alpha: 0.05),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -539,7 +539,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEC407A).withOpacity(0.1),
+                  color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: const Icon(
@@ -639,7 +639,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFEC407A).withOpacity(0.1),
+                  color: const Color(0xFFEC407A).withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: const Icon(
@@ -676,7 +676,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.green.withOpacity(0.1),
+                  color: Colors.green.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
