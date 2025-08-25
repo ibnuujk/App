@@ -83,6 +83,14 @@ class _LoginScreenState extends State<LoginScreen> {
             umur: 0,
             role: userRole,
             createdAt: DateTime.now(),
+
+            // New fields with default values
+            namaSuami: null,
+            pekerjaanSuami: null,
+            umurSuami: null,
+            agamaSuami: null,
+            agamaPasien: null,
+            pekerjaanPasien: null,
           );
 
           await _firebaseService.createUser(newUser);
@@ -167,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          padding: const EdgeInsets.all(10.0),
           child: Column(
             children: [
               // Top Section - Title
@@ -180,7 +188,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 5),
 
               // Logo Section
               Container(
@@ -191,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 6),
 
               // Main Message
               Text(

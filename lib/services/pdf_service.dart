@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -7,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../models/user_model.dart';
+import '../models/keterangan_kelahiran_model.dart';
 
 // Import for web platform (will be handled in code)
 
@@ -133,6 +133,35 @@ class PdfService {
             ],
           ),
           pw.SizedBox(height: 5),
+
+          // New fields
+          if (user.agamaPasien != null && user.agamaPasien!.isNotEmpty) ...[
+            pw.Row(
+              children: [
+                pw.Text(
+                  'Agama: ',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Expanded(child: pw.Text(user.agamaPasien!)),
+              ],
+            ),
+            pw.SizedBox(height: 5),
+          ],
+
+          if (user.pekerjaanPasien != null &&
+              user.pekerjaanPasien!.isNotEmpty) ...[
+            pw.Row(
+              children: [
+                pw.Text(
+                  'Pekerjaan: ',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Expanded(child: pw.Text(user.pekerjaanPasien!)),
+              ],
+            ),
+            pw.SizedBox(height: 5),
+          ],
+
           pw.Row(
             children: [
               pw.Text(
@@ -146,6 +175,64 @@ class PdfService {
               ),
             ],
           ),
+
+          // Husband information
+          if (user.namaSuami != null && user.namaSuami!.isNotEmpty) ...[
+            pw.SizedBox(height: 15),
+            pw.Text(
+              'INFORMASI SUAMI',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12),
+            ),
+            pw.SizedBox(height: 10),
+            pw.Row(
+              children: [
+                pw.Text(
+                  'Nama Suami: ',
+                  style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                ),
+                pw.Expanded(child: pw.Text(user.namaSuami!)),
+              ],
+            ),
+            pw.SizedBox(height: 5),
+            if (user.pekerjaanSuami != null &&
+                user.pekerjaanSuami!.isNotEmpty) ...[
+              pw.Row(
+                children: [
+                  pw.Text(
+                    'Pekerjaan Suami: ',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Expanded(child: pw.Text(user.pekerjaanSuami!)),
+                ],
+              ),
+              pw.SizedBox(height: 5),
+            ],
+            if (user.umurSuami != null) ...[
+              pw.Row(
+                children: [
+                  pw.Text(
+                    'Umur Suami: ',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Expanded(child: pw.Text('${user.umurSuami} tahun')),
+                ],
+              ),
+              pw.SizedBox(height: 5),
+            ],
+            if (user.agamaSuami != null && user.agamaSuami!.isNotEmpty) ...[
+              pw.Row(
+                children: [
+                  pw.Text(
+                    'Agama Suami: ',
+                    style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
+                  ),
+                  pw.Expanded(child: pw.Text(user.agamaSuami!)),
+                ],
+              ),
+              pw.SizedBox(height: 5),
+            ],
+          ],
+
           pw.SizedBox(height: 15),
         ],
       ),
@@ -826,5 +913,209 @@ class PdfService {
       // Permission request failed, but continue with limited access
       print('Permission request failed: $e');
     }
+  }
+
+  static Future<void> generateKeteranganKelahiranPDF(
+    KeteranganKelahiranModel keterangan,
+  ) async {
+    try {
+      final pdf = pw.Document();
+
+      // Add page to PDF
+      pdf.addPage(
+        pw.MultiPage(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.all(20),
+          build: (pw.Context context) {
+            return [
+              _buildKeteranganKelahiranHeader(),
+              pw.SizedBox(height: 20),
+              _buildKeteranganKelahiranContent(keterangan),
+              pw.SizedBox(height: 30),
+              _buildKeteranganKelahiranFooter(),
+            ];
+          },
+        ),
+      );
+
+      // Save and share PDF
+      await _savePdf(pdf, 'Keterangan_Kelahiran_${keterangan.namaAnak}');
+    } catch (e) {
+      print('Error generating Keterangan Kelahiran PDF: $e');
+      throw Exception('Gagal membuat PDF Keterangan Kelahiran: $e');
+    }
+  }
+
+  static pw.Widget _buildKeteranganKelahiranHeader() {
+    return pw.Container(
+      width: double.infinity,
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.center,
+        children: [
+          pw.Text(
+            'BIDAN UMIYATUN S.ST',
+            style: pw.TextStyle(fontSize: 20, fontWeight: pw.FontWeight.bold),
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.SizedBox(height: 8),
+          pw.Text(
+            'Jl. Penatusan Gang Mutiara II RT 04 RW 03',
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.Text(
+            'Desa Jatisari - Kec. Kedungreja - Kab. Cilacap',
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.Text(
+            'No.Telp. 082323216060',
+            style: pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold),
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.SizedBox(height: 15),
+          pw.Divider(thickness: 2),
+          pw.SizedBox(height: 15),
+          pw.Text(
+            'SURAT KETERANGAN KELAHIRAN',
+            style: pw.TextStyle(fontSize: 16, fontWeight: pw.FontWeight.bold),
+            textAlign: pw.TextAlign.center,
+          ),
+          pw.SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildKeteranganKelahiranContent(
+    KeteranganKelahiranModel keterangan,
+  ) {
+    return pw.Container(
+      child: pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            'Yang bertanda tangan di bawah ini, Bidan Umiyatun S.ST, menerangkan bahwa:',
+            style: pw.TextStyle(fontSize: 12),
+          ),
+          pw.SizedBox(height: 15),
+
+          // Data Anak
+          pw.Text(
+            'DATA ANAK:',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14),
+          ),
+          pw.SizedBox(height: 10),
+          _buildKeteranganRow('Nama', keterangan.namaAnak),
+          _buildKeteranganRow(
+            'Hari/Tanggal Lahir',
+            _formatDate(keterangan.hariTanggalLahir),
+          ),
+          _buildKeteranganRow('Jam Lahir', '${keterangan.jamLahir} WIB'),
+          _buildKeteranganRow('Tempat Lahir', keterangan.tempatLahir),
+          _buildKeteranganRow('Jenis Kelamin', keterangan.jenisKelamin),
+          _buildKeteranganRow('Panjang Badan', '${keterangan.panjangBadan} cm'),
+          _buildKeteranganRow('Berat Badan', '${keterangan.beratBadan} gram'),
+          _buildKeteranganRow(
+            'Kelahiran Anak Ke',
+            keterangan.kelahiranAnakKe.toString(),
+          ),
+
+          pw.SizedBox(height: 15),
+
+          // Data Ibu
+          pw.Text(
+            'DATA IBU:',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14),
+          ),
+          pw.SizedBox(height: 10),
+          _buildKeteranganRow('Nama', keterangan.pasienNama),
+          _buildKeteranganRow('Umur', '${keterangan.pasienUmur} tahun'),
+          _buildKeteranganRow('Agama', keterangan.agama),
+          _buildKeteranganRow('Pekerjaan', keterangan.pekerjaan),
+
+          pw.SizedBox(height: 15),
+
+          // Data Ayah
+          pw.Text(
+            'DATA AYAH:',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14),
+          ),
+          pw.SizedBox(height: 10),
+          _buildKeteranganRow('Nama', keterangan.namaSuami),
+          _buildKeteranganRow('Umur', '${keterangan.umurSuami} tahun'),
+          _buildKeteranganRow('Agama', keterangan.agamaSuami),
+          _buildKeteranganRow('Pekerjaan', keterangan.pekerjaanSuami),
+
+          pw.SizedBox(height: 15),
+
+          // Alamat
+          pw.Text(
+            'ALAMAT:',
+            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14),
+          ),
+          pw.SizedBox(height: 10),
+          _buildKeteranganRow('Alamat', keterangan.pasienAlamat),
+
+          pw.SizedBox(height: 20),
+
+          pw.Text(
+            'Demikian surat keterangan ini dibuat untuk dapat dipergunakan sebagaimana mestinya.',
+            style: pw.TextStyle(fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildKeteranganRow(String label, String value) {
+    return pw.Padding(
+      padding: const pw.EdgeInsets.only(bottom: 8),
+      child: pw.Row(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.SizedBox(
+            width: 120,
+            child: pw.Text(
+              '$label:',
+              style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 11),
+            ),
+          ),
+          pw.Expanded(child: pw.Text(value, style: pw.TextStyle(fontSize: 11))),
+        ],
+      ),
+    );
+  }
+
+  static pw.Widget _buildKeteranganKelahiranFooter() {
+    final now = DateTime.now();
+    final formattedDate = _formatDate(now);
+
+    return pw.Container(
+      child: pw.Row(
+        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+        children: [
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text('Tanggal: $formattedDate'),
+              pw.SizedBox(height: 40),
+              pw.Text('(............................)'),
+              pw.Text('Pasien/Keluarga'),
+            ],
+          ),
+          pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.center,
+            children: [
+              pw.Text('Cilacap, $formattedDate'),
+              pw.Text('Bidan'),
+              pw.SizedBox(height: 40),
+              pw.Text('Umiyatun S.ST'),
+              pw.Text('NIP: 197505251997032001'),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }

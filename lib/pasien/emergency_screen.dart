@@ -59,13 +59,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
     );
   }
 
-  Future<void> _makeEmergencyCall(String number, String service) async {
-    final success = await _emergencyService.makeEmergencyCall(number);
-    if (!success) {
-      _showSnackBar('Gagal melakukan panggilan ke $service', isError: true);
-    }
-  }
-
   Future<void> _openWhatsAppBidan() async {
     final success = await _emergencyService.whatsAppBidan(
       message:
@@ -350,19 +343,6 @@ class _EmergencyScreenState extends State<EmergencyScreen> {
           // Bidan Contact Buttons
           Row(
             children: [
-              Expanded(
-                child: _buildEmergencyButton(
-                  icon: Icons.phone,
-                  label: 'Telepon\nBidan',
-                  color: const Color(0xFFEC407A),
-                  onPressed:
-                      () => _makeEmergencyCall(
-                        EmergencyService.bidanNumber,
-                        'Bidan',
-                      ),
-                ),
-              ),
-              const SizedBox(width: 12),
               Expanded(
                 child: _buildEmergencyButton(
                   icon: Icons.chat,

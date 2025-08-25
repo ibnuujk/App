@@ -173,12 +173,9 @@ class NotificationService {
     try {
       return _firestore
           .collection('notifications')
-          .where(
-            'receiverId',
-            isEqualTo: currentUserId,
-          ) // Use receiverId instead of userId
+          .where('receiverId', isEqualTo: currentUserId)
           .orderBy('createdAt', descending: true)
-          .limit(20) // Limit untuk loading lebih cepat
+          .limit(15) // Reduce limit for faster loading
           .snapshots()
           .map((snapshot) {
             try {
@@ -196,14 +193,8 @@ class NotificationService {
                   // Return a default notification if parsing fails
                   return NotificationModel(
                     id: doc.id,
-                    userId:
-                        data['receiverId'] ??
-                        currentUserId ??
-                        '', // Use receiverId
-                    receiverId:
-                        data['receiverId'] ??
-                        currentUserId ??
-                        '', // Add receiverId
+                    userId: data['receiverId'] ?? currentUserId ?? '',
+                    receiverId: data['receiverId'] ?? currentUserId ?? '',
                     title: data['title'] ?? 'Notifikasi',
                     message: data['message'] ?? 'Pesan notifikasi',
                     type: data['type'] ?? 'general',
@@ -225,12 +216,12 @@ class NotificationService {
           });
     } catch (e) {
       print('Error setting up notifications stream: $e');
-      // Fallback: try without orderBy and with limit
+      // Fallback: try without orderBy for faster loading
       try {
         return _firestore
             .collection('notifications')
-            .where('receiverId', isEqualTo: currentUserId) // Use receiverId
-            .limit(20) // Limit untuk loading lebih cepat
+            .where('receiverId', isEqualTo: currentUserId)
+            .limit(15) // Reduce limit for faster loading
             .snapshots()
             .map((snapshot) {
               try {
@@ -252,14 +243,8 @@ class NotificationService {
                         final data = doc.data();
                         return NotificationModel(
                           id: doc.id,
-                          userId:
-                              data['receiverId'] ??
-                              currentUserId ??
-                              '', // Use receiverId
-                          receiverId:
-                              data['receiverId'] ??
-                              currentUserId ??
-                              '', // Add receiverId
+                          userId: data['receiverId'] ?? currentUserId ?? '',
+                          receiverId: data['receiverId'] ?? currentUserId ?? '',
                           title: data['title'] ?? 'Notifikasi',
                           message: data['message'] ?? 'Pesan notifikasi',
                           type: data['type'] ?? 'general',
@@ -270,22 +255,22 @@ class NotificationService {
                       }
                     }).toList();
 
-                // Sort by createdAt locally if orderBy failed
+                // Sort by createdAt locally if available
                 notifications.sort(
                   (a, b) => b.createdAt.compareTo(a.createdAt),
                 );
                 return notifications;
               } catch (e) {
-                print('Error processing notifications snapshot: $e');
+                print('Error processing fallback notifications: $e');
                 return <NotificationModel>[];
               }
             })
             .handleError((error) {
-              print('Error in notifications fallback stream: $error');
+              print('Error in fallback notifications stream: $error');
               return <NotificationModel>[];
             });
-      } catch (e) {
-        print('Error in notifications fallback: $e');
+      } catch (fallbackError) {
+        print('Fallback notifications stream also failed: $fallbackError');
         return Stream.value(<NotificationModel>[]);
       }
     }
@@ -363,9 +348,9 @@ class NotificationService {
     try {
       return _firestore
           .collection('notifications')
-          .where('receiverId', isEqualTo: currentUserId) // Use receiverId
+          .where('receiverId', isEqualTo: currentUserId)
           .where('isRead', isEqualTo: false)
-          .limit(100) // Limit untuk performance
+          .limit(50) // Reduce limit for faster loading
           .snapshots()
           .map((snapshot) => snapshot.docs.length)
           .handleError((error) {
@@ -751,5 +736,137 @@ class NotificationService {
   // Cancel specific notification
   static Future<void> cancelNotification(int id) async {
     await _notifications.cancel(id);
+  }
+
+  // Get notifications with better pagination and caching
+  static Stream<List<NotificationModel>> getNotificationsOptimized({
+    int limit = 10,
+    DocumentSnapshot? lastDocument,
+  }) {
+    final currentUserId = _auth.currentUser?.uid;
+    if (currentUserId == null) return Stream.value([]);
+
+    try {
+      Query query = _firestore
+          .collection('notifications')
+          .where('receiverId', isEqualTo: currentUserId)
+          .limit(limit);
+
+      // Add pagination if lastDocument is provided
+      if (lastDocument != null) {
+        query = query.startAfterDocument(lastDocument);
+      }
+
+      return query
+          .snapshots()
+          .map((snapshot) {
+            try {
+              return snapshot.docs.map((doc) {
+                try {
+                  final data = doc.data() as Map<String, dynamic>?;
+                  if (data != null && data['createdAt'] == null) {
+                    data['createdAt'] = FieldValue.serverTimestamp();
+                  }
+                  return NotificationModel.fromMap({'id': doc.id, ...?data});
+                } catch (e) {
+                  print('Error parsing notification document ${doc.id}: $e');
+                  final data = doc.data() as Map<String, dynamic>?;
+                  if (data != null) {
+                    return NotificationModel(
+                      id: doc.id,
+                      userId: data['receiverId'] ?? currentUserId ?? '',
+                      receiverId: data['receiverId'] ?? currentUserId ?? '',
+                      title: data['title'] ?? 'Notifikasi',
+                      message: data['message'] ?? 'Pesan notifikasi',
+                      type: data['type'] ?? 'general',
+                      referenceId: data['referenceId'] ?? '',
+                      isRead: data['isRead'] ?? false,
+                      createdAt: DateTime.now(),
+                    );
+                  } else {
+                    return NotificationModel(
+                      id: doc.id,
+                      userId: currentUserId,
+                      receiverId: currentUserId,
+                      title: 'Notifikasi',
+                      message: 'Pesan notifikasi',
+                      type: 'general',
+                      referenceId: '',
+                      isRead: false,
+                      createdAt: DateTime.now(),
+                    );
+                  }
+                }
+              }).toList();
+            } catch (e) {
+              print('Error processing optimized notifications: $e');
+              return <NotificationModel>[];
+            }
+          })
+          .handleError((error) {
+            print('Error in optimized notifications stream: $error');
+            return <NotificationModel>[];
+          });
+    } catch (e) {
+      print('Error setting up optimized notifications stream: $e');
+      return Stream.value(<NotificationModel>[]);
+    }
+  }
+
+  // Get recent notifications (last 7 days) for faster loading
+  static Stream<List<NotificationModel>> getRecentNotifications() {
+    final currentUserId = _auth.currentUser?.uid;
+    if (currentUserId == null) return Stream.value([]);
+
+    final sevenDaysAgo = DateTime.now().subtract(const Duration(days: 7));
+
+    try {
+      return _firestore
+          .collection('notifications')
+          .where('receiverId', isEqualTo: currentUserId)
+          .where('createdAt', isGreaterThan: sevenDaysAgo)
+          .orderBy('createdAt', descending: true)
+          .limit(20)
+          .snapshots()
+          .map((snapshot) {
+            try {
+              return snapshot.docs.map((doc) {
+                try {
+                  final data = doc.data();
+                  if (data['createdAt'] == null) {
+                    data['createdAt'] = FieldValue.serverTimestamp();
+                  }
+                  return NotificationModel.fromMap({'id': doc.id, ...data});
+                } catch (e) {
+                  print(
+                    'Error parsing recent notification document ${doc.id}: $e',
+                  );
+                  final data = doc.data();
+                  return NotificationModel(
+                    id: doc.id,
+                    userId: data['receiverId'] ?? currentUserId,
+                    receiverId: data['receiverId'] ?? currentUserId,
+                    title: data['title'] ?? 'Notifikasi',
+                    message: data['message'] ?? 'Pesan notifikasi',
+                    type: data['type'] ?? 'general',
+                    referenceId: data['referenceId'] ?? '',
+                    isRead: data['isRead'] ?? false,
+                    createdAt: DateTime.now(),
+                  );
+                }
+              }).toList();
+            } catch (e) {
+              print('Error processing recent notifications: $e');
+              return <NotificationModel>[];
+            }
+          })
+          .handleError((error) {
+            print('Error in recent notifications stream: $error');
+            return <NotificationModel>[];
+          });
+    } catch (e) {
+      print('Error setting up recent notifications stream: $e');
+      return Stream.value(<NotificationModel>[]);
+    }
   }
 }

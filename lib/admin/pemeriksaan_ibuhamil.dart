@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
+import '../models/persalinan_model.dart';
 import '../services/firebase_service.dart';
 import 'registrasi_persalinan_form.dart';
 
@@ -26,14 +27,17 @@ class PemeriksaanIbuHamilScreen extends StatefulWidget {
 class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
   final FirebaseService _firebaseService = FirebaseService();
   List<Map<String, dynamic>> _pregnancyExaminations = [];
+  List<PersalinanModel> _persalinanData = [];
   bool _isLoading = true;
 
   StreamSubscription<List<Map<String, dynamic>>>? _examinationsSubscription;
+  StreamSubscription<List<PersalinanModel>>? _persalinanSubscription;
 
   @override
   void initState() {
     super.initState();
     _loadPregnancyExaminations();
+    _loadPersalinanData();
 
     // Auto show form if there's consultation schedule data
     if (widget.consultationSchedule != null) {
@@ -102,9 +106,45 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
     }
   }
 
+  Future<void> _loadPersalinanData() async {
+    try {
+      // Cancel existing subscription
+      _persalinanSubscription?.cancel();
+
+      // Create new subscription
+      _persalinanSubscription = _firebaseService.getPersalinanStream().listen(
+        (persalinan) {
+          if (mounted) {
+            setState(() {
+              _persalinanData = persalinan;
+            });
+            print('Loaded ${persalinan.length} persalinan data'); // Debug log
+          }
+        },
+        onError: (e) {
+          if (mounted) {
+            print('Error loading persalinan data: $e'); // Debug log
+          }
+        },
+      );
+    } catch (e) {
+      if (mounted) {
+        print('Exception loading persalinan data: $e'); // Debug log
+      }
+    }
+  }
+
+  // Check if patient has completed delivery registration
+  bool _hasCompletedDelivery(String patientId) {
+    return _persalinanData.any(
+      (persalinan) => persalinan.pasienId == patientId,
+    );
+  }
+
   @override
   void dispose() {
     _examinationsSubscription?.cancel();
+    _persalinanSubscription?.cancel();
     super.dispose();
   }
 
@@ -401,6 +441,63 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                                                 ),
                                                           ),
                                                     ),
+                                                    const SizedBox(height: 4),
+                                                    // Show examination status
+                                                    if (_hasCompletedDelivery(
+                                                      examination['pasienId'],
+                                                    ))
+                                                      Container(
+                                                        padding:
+                                                            const EdgeInsets.symmetric(
+                                                              horizontal: 8,
+                                                              vertical: 4,
+                                                            ),
+                                                        decoration: BoxDecoration(
+                                                          color: Colors.green
+                                                              .withValues(
+                                                                alpha: 0.2,
+                                                              ),
+                                                          borderRadius:
+                                                              BorderRadius.circular(
+                                                                8,
+                                                              ),
+                                                          border: Border.all(
+                                                            color: Colors.green
+                                                                .withValues(
+                                                                  alpha: 0.4,
+                                                                ),
+                                                            width: 1,
+                                                          ),
+                                                        ),
+                                                        child: Row(
+                                                          mainAxisSize:
+                                                              MainAxisSize.min,
+                                                          children: [
+                                                            Icon(
+                                                              Icons
+                                                                  .check_circle,
+                                                              color:
+                                                                  Colors.green,
+                                                              size: 12,
+                                                            ),
+                                                            const SizedBox(
+                                                              width: 4,
+                                                            ),
+                                                            Text(
+                                                              'Pemeriksaan Selesai',
+                                                              style: GoogleFonts.poppins(
+                                                                fontSize: 10,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color:
+                                                                    Colors
+                                                                        .green,
+                                                              ),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
                                                   ],
                                                 ),
                                               ),
@@ -535,46 +632,96 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                     // Action Buttons
                                     Row(
                                       children: [
-                                        // Only show "Lakukan Registrasi Persalinan" button if pregnancy status is not miscarriage
+                                        // Check if delivery registration is already completed
                                         if (examination['pregnancyStatus'] !=
                                             'miscarriage') ...[
-                                          Expanded(
-                                            child: ElevatedButton.icon(
-                                              onPressed:
-                                                  () =>
-                                                      _navigateToRegistrasiPersalinan(
-                                                        examination,
-                                                      ),
-                                              icon: Icon(
-                                                Icons.assignment_add,
-                                                size: 18,
-                                                color: Colors.white,
-                                              ),
-                                              label: Text(
-                                                'Lakukan Registrasi Persalinan',
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.white,
-                                                ),
-                                              ),
-                                              style: ElevatedButton.styleFrom(
-                                                backgroundColor: const Color(
-                                                  0xFF4CAF50,
-                                                ),
-                                                foregroundColor: Colors.white,
-                                                shape: RoundedRectangleBorder(
-                                                  borderRadius:
-                                                      BorderRadius.circular(12),
-                                                ),
+                                          if (_hasCompletedDelivery(
+                                            examination['pasienId'],
+                                          ))
+                                            // Show "Registrasi Berhasil" status if delivery is completed
+                                            Expanded(
+                                              child: Container(
                                                 padding:
                                                     const EdgeInsets.symmetric(
                                                       vertical: 12,
                                                       horizontal: 16,
                                                     ),
+                                                decoration: BoxDecoration(
+                                                  color: Colors.green
+                                                      .withValues(alpha: 0.1),
+                                                  borderRadius:
+                                                      BorderRadius.circular(12),
+                                                  border: Border.all(
+                                                    color: Colors.green
+                                                        .withValues(alpha: 0.3),
+                                                    width: 1,
+                                                  ),
+                                                ),
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment.center,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.check_circle,
+                                                      color: Colors.green,
+                                                      size: 18,
+                                                    ),
+                                                    const SizedBox(width: 8),
+                                                    Text(
+                                                      'Registrasi Berhasil',
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: Colors.green,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                            )
+                                          else
+                                            // Show "Lakukan Registrasi Persalinan" button if not completed
+                                            Expanded(
+                                              child: ElevatedButton.icon(
+                                                onPressed:
+                                                    () =>
+                                                        _navigateToRegistrasiPersalinan(
+                                                          examination,
+                                                        ),
+                                                icon: Icon(
+                                                  Icons.assignment_add,
+                                                  size: 18,
+                                                  color: Colors.white,
+                                                ),
+                                                label: Text(
+                                                  'Lakukan Registrasi Persalinan',
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
+                                                    color: Colors.white,
+                                                  ),
+                                                ),
+                                                style: ElevatedButton.styleFrom(
+                                                  backgroundColor: const Color(
+                                                    0xFFEC407A,
+                                                  ),
+                                                  foregroundColor: Colors.white,
+                                                  shape: RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          12,
+                                                        ),
+                                                  ),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        vertical: 12,
+                                                        horizontal: 16,
+                                                      ),
+                                                ),
                                               ),
                                             ),
-                                          ),
                                           const SizedBox(width: 12),
                                         ],
                                         PopupMenuButton<String>(
@@ -602,11 +749,53 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                             if (value == 'detail') {
                                               _showDetailDialog(examination);
                                             } else if (value == 'edit') {
-                                              _showEditDialog(examination);
+                                              if (_hasCompletedDelivery(
+                                                examination['pasienId'],
+                                              )) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'Pemeriksaan sudah selesai, tidak dapat diedit',
+                                                      style:
+                                                          GoogleFonts.poppins(),
+                                                    ),
+                                                    backgroundColor:
+                                                        Colors.orange,
+                                                    duration: const Duration(
+                                                      seconds: 2,
+                                                    ),
+                                                  ),
+                                                );
+                                              } else {
+                                                _showEditDialog(examination);
+                                              }
                                             } else if (value == 'delete') {
-                                              _deleteExamination(
-                                                examination['id'],
-                                              );
+                                              if (_hasCompletedDelivery(
+                                                examination['pasienId'],
+                                              )) {
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'Pemeriksaan sudah selesai, tidak dapat dihapus',
+                                                      style:
+                                                          GoogleFonts.poppins(),
+                                                    ),
+                                                    backgroundColor:
+                                                        Colors.orange,
+                                                    duration: const Duration(
+                                                      seconds: 2,
+                                                    ),
+                                                  ),
+                                                );
+                                              } else {
+                                                _deleteExamination(
+                                                  examination['id'],
+                                                );
+                                              }
                                             }
                                           },
                                           itemBuilder:
@@ -637,47 +826,109 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                                     ],
                                                   ),
                                                 ),
-                                                PopupMenuItem(
-                                                  value: 'edit',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.edit_rounded,
-                                                        color: Colors.orange,
-                                                        size: 20,
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Text(
-                                                        'Edit',
-                                                        style:
-                                                            GoogleFonts.poppins(
-                                                              color:
-                                                                  Colors.orange,
-                                                            ),
-                                                      ),
-                                                    ],
+                                                if (_hasCompletedDelivery(
+                                                  examination['pasienId'],
+                                                ))
+                                                  PopupMenuItem(
+                                                    value: 'edit',
+                                                    enabled: false,
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.check_circle,
+                                                          color: Colors.grey,
+                                                          size: 20,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 12,
+                                                        ),
+                                                        Text(
+                                                          'Pemeriksaan Selesai',
+                                                          style:
+                                                              GoogleFonts.poppins(
+                                                                color:
+                                                                    Colors.grey,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  )
+                                                else
+                                                  PopupMenuItem(
+                                                    value: 'edit',
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.edit_rounded,
+                                                          color: Colors.orange,
+                                                          size: 20,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 12,
+                                                        ),
+                                                        Text(
+                                                          'Edit',
+                                                          style:
+                                                              GoogleFonts.poppins(
+                                                                color:
+                                                                    Colors
+                                                                        .orange,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
-                                                PopupMenuItem(
-                                                  value: 'delete',
-                                                  child: Row(
-                                                    children: [
-                                                      Icon(
-                                                        Icons.delete_rounded,
-                                                        color: Colors.red,
-                                                        size: 20,
-                                                      ),
-                                                      const SizedBox(width: 12),
-                                                      Text(
-                                                        'Hapus',
-                                                        style:
-                                                            GoogleFonts.poppins(
-                                                              color: Colors.red,
-                                                            ),
-                                                      ),
-                                                    ],
+                                                if (_hasCompletedDelivery(
+                                                  examination['pasienId'],
+                                                ))
+                                                  PopupMenuItem(
+                                                    value: 'delete',
+                                                    enabled: false,
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.block,
+                                                          color: Colors.grey,
+                                                          size: 20,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 12,
+                                                        ),
+                                                        Text(
+                                                          'Tidak Dapat Dihapus',
+                                                          style:
+                                                              GoogleFonts.poppins(
+                                                                color:
+                                                                    Colors.grey,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  )
+                                                else
+                                                  PopupMenuItem(
+                                                    value: 'delete',
+                                                    child: Row(
+                                                      children: [
+                                                        Icon(
+                                                          Icons.delete_rounded,
+                                                          color: Colors.red,
+                                                          size: 20,
+                                                        ),
+                                                        const SizedBox(
+                                                          width: 12,
+                                                        ),
+                                                        Text(
+                                                          'Hapus',
+                                                          style:
+                                                              GoogleFonts.poppins(
+                                                                color:
+                                                                    Colors.red,
+                                                              ),
+                                                        ),
+                                                      ],
+                                                    ),
                                                   ),
-                                                ),
                                               ],
                                         ),
                                       ],
@@ -1013,32 +1264,6 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
       ),
     );
   }
-
-  Widget _buildSectionHeader(String title, IconData icon) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFEC407A), Color(0xFFE91E63)],
-        ),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: Colors.white, size: 20),
-          const SizedBox(width: 12),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 class AddPregnancyExaminationDialog extends StatefulWidget {
@@ -1077,7 +1302,7 @@ class _AddPregnancyExaminationDialogState
 
   // Anamnesis
   final _tanggalMasukController = TextEditingController();
-  final _tanggalKeluarController = TextEditingController();
+  // final _tanggalKeluarController = TextEditingController(); // Removed as per requirements
   final _agamaController = TextEditingController();
   final _pekerjaanController = TextEditingController();
   String _jenisKunjungan = 'UMUM';
@@ -1218,6 +1443,16 @@ class _AddPregnancyExaminationDialogState
               _hphtController.text = DateFormat('dd/MM/yyyy').format(_hpht!);
               _usiaKehamilanController.text = _usiaKehamilan.toString();
             }
+
+            // Populate agama and pekerjaan from patient data
+            if (userDoc.agamaPasien != null &&
+                userDoc.agamaPasien!.isNotEmpty) {
+              _agamaController.text = userDoc.agamaPasien!;
+            }
+            if (userDoc.pekerjaanPasien != null &&
+                userDoc.pekerjaanPasien!.isNotEmpty) {
+              _pekerjaanController.text = userDoc.pekerjaanPasien!;
+            }
           });
         }
       }
@@ -1287,7 +1522,7 @@ class _AddPregnancyExaminationDialogState
     _usiaKehamilanController.dispose();
     _hphtController.dispose();
     _tanggalMasukController.dispose();
-    _tanggalKeluarController.dispose();
+    // _tanggalKeluarController.dispose(); // Controller removed
     _agamaController.dispose();
     _pekerjaanController.dispose();
     _tekananDarahController.dispose();
@@ -1394,7 +1629,7 @@ class _AddPregnancyExaminationDialogState
 
         // Anamnesis
         'tanggalMasuk': _tanggalMasukController.text,
-        'tanggalKeluar': _tanggalKeluarController.text,
+        // 'tanggalKeluar' field removed as per requirements
         'agama': _agamaController.text,
         'pekerjaan': _pekerjaanController.text,
         'jenisKunjungan': _jenisKunjungan,
@@ -1463,45 +1698,53 @@ class _AddPregnancyExaminationDialogState
         'createdAt': DateTime.now(),
       };
 
+      // Save examination data
       await _firebaseService.createPemeriksaanIbuHamil(examinationData);
 
-      // Update user pregnancy status if not active
-      if (_pregnancyStatus != 'active' && _pasienId != null) {
-        final endDate =
-            _pregnancyEndDateController.text.isNotEmpty
-                ? DateFormat(
-                  'dd/MM/yyyy',
-                ).parse(_pregnancyEndDateController.text)
-                : DateTime.now();
+      // Mark consultation schedule as completed if it exists
+      if (widget.consultationSchedule != null) {
+        try {
+          await _firebaseService.markConsultationScheduleAsCompleted(
+            widget.consultationSchedule!['id'],
+          );
+        } catch (e) {
+          print(
+            'Warning: Could not mark consultation schedule as completed: $e',
+          );
+          // Don't fail the examination save if this fails
+        }
+      }
 
-        await _firebaseService.updatePregnancyStatus(
-          _pasienId!,
-          _pregnancyStatus,
-          _pregnancyEndReason ?? '',
-          _pregnancyNotesController.text,
-          endDate,
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Data pemeriksaan berhasil disimpan'),
+            backgroundColor: Colors.green,
+            duration: Duration(seconds: 3),
+          ),
         );
       }
 
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Pemeriksaan berhasil disimpan'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      // Close dialog and return to previous screen
+      Navigator.of(context).pop();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Gagal menyimpan pemeriksaan: ${e.toString()}'),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 3),
-        ),
-      );
+      print('Error saving examination: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal menyimpan data: ${e.toString()}'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
     } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
 
@@ -1769,25 +2012,13 @@ class _AddPregnancyExaminationDialogState
                       ),
                       const SizedBox(height: 16),
 
-                      TextFormField(
-                        controller: _tanggalKeluarController,
-                        decoration: InputDecoration(
-                          labelText: 'Tanggal Keluar/Jam',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.exit_to_app_rounded,
-                            color: const Color(0xFFEC407A),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
+                      // Agama field - auto-filled from patient data
                       TextFormField(
                         controller: _agamaController,
+                        enabled:
+                            false, // Disable editing since it's from patient data
                         decoration: InputDecoration(
-                          labelText: 'Agama *',
+                          labelText: 'Agama (dari data pasien)',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -1795,20 +2026,19 @@ class _AddPregnancyExaminationDialogState
                             Icons.church_rounded,
                             color: const Color(0xFFEC407A),
                           ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Masukkan agama';
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 16),
 
+                      // Pekerjaan field - auto-filled from patient data
                       TextFormField(
                         controller: _pekerjaanController,
+                        enabled:
+                            false, // Disable editing since it's from patient data
                         decoration: InputDecoration(
-                          labelText: 'Pekerjaan *',
+                          labelText: 'Pekerjaan (dari data pasien)',
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(12),
                           ),
@@ -1816,13 +2046,9 @@ class _AddPregnancyExaminationDialogState
                             Icons.work_rounded,
                             color: const Color(0xFFEC407A),
                           ),
+                          filled: true,
+                          fillColor: Colors.grey[100],
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Masukkan pekerjaan';
-                          }
-                          return null;
-                        },
                       ),
                       const SizedBox(height: 16),
 

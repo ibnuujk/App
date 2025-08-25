@@ -1,0 +1,241 @@
+USECASE DIAGRAM APLIKASI PERSALINANKU
+Sistem Manajemen Kehamilan dan Persalinan Berbasis Mobile
+
+==========================================
+USECASE DIAGRAM PERSALINANKU
+==========================================
+
+AKTOR (ACTORS):
+1. Bidan (Admin)
+2. Pasien
+
+==========================================
+USE CASE BIDAN (ADMIN):
+==========================================
+
+A. MANAJEMEN AUTENTIKASI
+- Login ke sistem
+- Logout dari sistem
+- Reset password
+- Manajemen profil
+
+B. MANAJEMEN DATA PASIEN
+- Tambah data pasien baru
+- Edit data pasien
+- Hapus data pasien
+- Lihat daftar pasien
+- Lihat detail pasien
+- Cari data pasien
+- Filter data pasien
+
+C. MANAJEMEN DATA PERSALINAN
+- Tambah data persalinan
+- Edit data persalinan
+- Hapus data persalinan
+- Lihat riwayat persalinan
+- Buat laporan persalinan
+- Update status persalinan
+- Tambah data bayi baru lahir
+
+D. MANAJEMEN JADWAL KONSULTASI
+- Buat jadwal konsultasi
+- Edit jadwal konsultasi
+- Hapus jadwal konsultasi
+- Lihat kalender jadwal
+- Reschedule jadwal
+- Konfirmasi jadwal
+- Batalkan jadwal
+
+E. MANAJEMEN KONTEN EDUKASI
+- Buat artikel baru
+- Edit artikel
+- Hapus artikel
+- Upload gambar artikel
+- Kategorisasi artikel
+- Set prioritas artikel
+- Publish/unpublish artikel
+
+F. SISTEM CHAT DAN KOMUNIKASI
+- Kirim pesan chat
+- Lihat riwayat chat
+- Hapus pesan
+- Set status online/offline
+- Blokir pengguna
+- Kirim notifikasi
+
+G. ANALITIK DAN PELAPORAN
+- Lihat dashboard statistik
+- Generate laporan
+- Export data
+- Filter data analitik
+- Lihat trend data
+- Monitoring performa sistem
+
+H. MANAJEMEN PEMERIKSAAN
+- Tambah hasil pemeriksaan
+- Edit hasil pemeriksaan
+- Lihat riwayat pemeriksaan
+- Set jadwal pemeriksaan
+- Beri rekomendasi
+- Update status kehamilan
+
+I. MANAJEMEN SISTEM
+- Backup data otomatis
+- Sync data real-time
+- Enkripsi data
+- Validasi input
+- Log aktivitas
+- Clean up data lama
+- Push notification
+- Email notification
+- SMS notification
+- Schedule reminder
+- Authentication
+- Authorization
+- Session management
+- Rate limiting
+- Audit logging
+- Data encryption
+- Caching
+- Load balancing
+- Database optimization
+- Image compression
+- API rate limiting
+- Background processing
+
+==========================================
+USE CASE PASIEN:
+==========================================
+
+A. MANAJEMEN AKUN
+- Registrasi akun baru
+- Login ke sistem
+- Logout dari sistem
+- Edit profil pribadi
+- Reset password
+- Verifikasi email
+
+B. INFORMASI KEHAMILAN
+- Lihat detail kehamilan
+- Hitung usia kehamilan
+- Lihat perkembangan janin
+- Track berat badan
+- Lihat milestone kehamilan
+- Kalkulator HPHT
+
+C. JADWAL DAN PEMERIKSAAN
+- Lihat jadwal pemeriksaan
+- Lihat riwayat pemeriksaan
+- Terima pengingat jadwal
+- Lihat hasil pemeriksaan
+- Lihat rekomendasi bidan
+- Set reminder pribadi
+
+D. KONSULTASI DAN TEMU JANJI
+- Buat permintaan temu janji
+- Lihat jadwal konsultasi
+- Chat dengan bidan
+- Lihat riwayat konsultasi
+- Cancel jadwal
+- Reschedule jadwal
+
+E. AKSES KONTEN EDUKASI
+- Lihat daftar artikel
+- Baca artikel detail
+- Cari artikel
+- Filter artikel kategori
+- Simpan artikel favorit
+- Share artikel
+- Download artikel
+
+F. FITUR DARURAT
+- Akses halaman darurat
+- Panic button
+- Lihat kontak darurat
+- Panduan pertolongan
+- Kirim notifikasi darurat
+- Log aktivitas darurat
+
+G. NOTIFIKASI DAN PENGINGAT
+- Terima notifikasi jadwal
+- Terima pengingat vitamin
+- Terima notifikasi chat
+- Set preferensi notifikasi
+- Lihat riwayat notifikasi
+- Mute notifikasi
+
+H. RIWAYAT DAN DOKUMENTASI
+- Lihat riwayat medis
+- Lihat laporan persalinan
+- Lihat dokumentasi janin
+- Download dokumen
+- Share dokumen
+- Backup data pribadi
+
+==========================================
+RELASI ANTAR USE CASE:
+==========================================
+
+INCLUDE RELATIONSHIP:
+- Login → Validasi kredensial
+- Tambah data → Validasi input
+- Upload file → Kompresi gambar
+- Generate laporan → Export data
+- Chat → Enkripsi pesan
+
+EXTEND RELATIONSHIP:
+- Login → Dashboard (jika berhasil)
+- Tambah data → Notifikasi (jika berhasil)
+- Upload file → Backup (jika berhasil)
+- Chat → Log aktivitas
+- Darurat → Notifikasi bidan
+
+GENERALIZATION:
+- Admin → Bidan (spesialisasi)
+- Pasien → User (generalization)
+- Notifikasi → Push, Email, SMS
+- Data → Pasien, Persalinan, Pemeriksaan
+
+==========================================
+BOUNDARY DAN INTERFACE:
+==========================================
+
+SYSTEM BOUNDARY:
+- Aplikasi Mobile (Android/iOS)
+- Backend Server (Firebase)
+- Database (Firestore)
+- Storage (Firebase Storage)
+- Authentication (Firebase Auth)
+
+EXTERNAL ACTORS:
+- Email Service
+- SMS Gateway
+- Push Notification Service
+- Camera/Gallery (Device)
+- GPS/Location Service
+- Calendar App
+
+==========================================
+KETERANGAN DIAGRAM:
+==========================================
+
+NOTASI:
+- Actor: Manusia (stick figure)
+- Use Case: Oval
+- System Boundary: Rectangle
+- Association: Garis lurus
+- Include: Garis putus-putus dengan <<include>>
+- Extend: Garis putus-putus dengan <<extend>>
+- Generalization: Garis dengan panah kosong
+
+WARNA:
+- Bidan (Admin): Biru
+- Pasien: Hijau
+- Use Case: Putih dengan border hitam
+- Boundary: Hitam
+
+==========================================
+KESIMPULAN:
+==========================================
+
+Use Case Diagram ini menunjukkan bahwa aplikasi PersalinanKu memiliki dua aktor utama dengan kebutuhan yang berbeda. Bidan (Admin) memiliki akses ke fitur administratif yang komprehensif termasuk manajemen sistem, sementara Pasien memiliki akses ke fitur layanan yang user-friendly. Semua fitur sistem diintegrasikan ke dalam aktor Bidan untuk memudahkan pengelolaan dan maintenance aplikasi.

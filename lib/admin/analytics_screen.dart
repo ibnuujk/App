@@ -521,7 +521,10 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           drawVerticalLine: false,
           horizontalInterval: 1,
           getDrawingHorizontalLine: (value) {
-            return FlLine(color: Colors.grey.withValues(alpha: 0.2), strokeWidth: 1);
+            return FlLine(
+              color: Colors.grey.withValues(alpha: 0.2),
+              strokeWidth: 1,
+            );
           },
         ),
         titlesData: FlTitlesData(

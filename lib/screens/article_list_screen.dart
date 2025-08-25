@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../providers/article_provider.dart';
 import '../widgets/search_bar.dart';
 import '../widgets/category_chips.dart';
@@ -78,7 +79,7 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
                     article.title.toLowerCase().contains(
                       _searchQuery.toLowerCase(),
                     ) ||
-                    article.content.toLowerCase().contains(
+                    article.description.toLowerCase().contains(
                       _searchQuery.toLowerCase(),
                     ) ||
                     article.keywords.any(
@@ -260,16 +261,53 @@ class _ArticleListScreenState extends State<ArticleListScreen> {
                             final article = filteredArticles[index];
                             return ArticleCard(
                               article: article,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => ArticleDetailScreen(
-                                          article: article,
+                              onTap: () async {
+                                // Check if article has website URL
+                                if (article.websiteUrl.isNotEmpty) {
+                                  // Open website URL directly
+                                  try {
+                                    final url = Uri.parse(article.websiteUrl);
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(
+                                        url,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Tidak dapat membuka website: ${article.websiteUrl}',
+                                          ),
+                                          backgroundColor: Colors.red,
                                         ),
-                                  ),
-                                );
+                                      );
+                                    }
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'URL tidak valid: ${article.websiteUrl}',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } else {
+                                  // Navigate to article detail if no website URL
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder:
+                                          (context) => ArticleDetailScreen(
+                                            article: article,
+                                            user:
+                                                null, // Pass null for user since we don't have user context here
+                                          ),
+                                    ),
+                                  );
+                                }
                               },
                             );
                           },

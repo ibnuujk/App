@@ -73,6 +73,21 @@ class FirebaseService {
   // Check if user is authenticated
   bool get isAuthenticated => _auth.currentUser != null;
 
+  // Check Firebase connection status
+  Future<bool> checkFirebaseConnection() async {
+    try {
+      await _firestore
+          .collection('users')
+          .limit(1)
+          .get()
+          .timeout(const Duration(seconds: 5));
+      return true;
+    } catch (e) {
+      print('Firebase connection check failed: $e');
+      return false;
+    }
+  }
+
   // Get current user ID
   String? get currentUserId => _auth.currentUser?.uid;
 
@@ -196,7 +211,9 @@ class FirebaseService {
             .orderBy('createdAt', descending: true)
             .limit(limit)
             .snapshots()
-            .timeout(const Duration(seconds: 15))
+            .timeout(
+              const Duration(seconds: 20),
+            ) // Increased timeout for better reliability
             .map(
               (snapshot) =>
                   snapshot.docs
@@ -215,6 +232,9 @@ class FirebaseService {
                   .where('role', isEqualTo: role ?? 'pasien')
                   .limit(limit)
                   .snapshots()
+                  .timeout(
+                    const Duration(seconds: 15),
+                  ) // Increased fallback timeout
                   .map(
                     (snapshot) =>
                         snapshot.docs
@@ -230,15 +250,11 @@ class FirebaseService {
             .where('role', isEqualTo: role ?? 'pasien')
             .limit(limit)
             .snapshots()
-            .timeout(const Duration(seconds: 15))
+            .timeout(const Duration(seconds: 15)) // Increased fallback timeout
             .map(
               (snapshot) =>
                   snapshot.docs
-                      .map(
-                        (doc) => UserModel.fromMap(
-                          doc.data() as Map<String, dynamic>,
-                        ),
-                      )
+                      .map((doc) => UserModel.fromMap(doc.data()))
                       .toList(),
             )
             .handleError((error) {
@@ -460,7 +476,11 @@ class FirebaseService {
       return _firestore
           .collection('persalinan')
           .orderBy('createdAt', descending: true)
+          .limit(100) // Add limit for better performance
           .snapshots()
+          .timeout(
+            const Duration(seconds: 20),
+          ) // Increased timeout for better reliability
           .map(
             (snapshot) =>
                 snapshot.docs
@@ -469,7 +489,24 @@ class FirebaseService {
           )
           .handleError((error) {
             print('Error in getPersalinanStream: $error');
-            return <PersalinanModel>[];
+            // Fallback to simple query without ordering
+            return _firestore
+                .collection('persalinan')
+                .limit(100)
+                .snapshots()
+                .timeout(const Duration(seconds: 15))
+                .map(
+                  (snapshot) =>
+                      snapshot.docs
+                          .map((doc) => PersalinanModel.fromMap(doc.data()))
+                          .toList(),
+                )
+                .handleError((fallbackError) {
+                  print(
+                    'Error in fallback getPersalinanStream: $fallbackError',
+                  );
+                  return <PersalinanModel>[];
+                });
           });
     } catch (e) {
       print('Error getting persalinan stream: $e');
@@ -700,7 +737,9 @@ class FirebaseService {
           .where('senderRole', isEqualTo: 'pasien')
           .where('isRead', isEqualTo: false)
           .snapshots()
-          .timeout(const Duration(seconds: 10))
+          .timeout(
+            const Duration(seconds: 20),
+          ) // Increased timeout for better reliability
           .map((snapshot) {
             final counts = <String, int>{};
             for (var doc in snapshot.docs) {
@@ -1002,34 +1041,37 @@ class FirebaseService {
 
       if (existingAppointments.docs.isNotEmpty) {
         throw Exception(
-          'Anda sudah memiliki jadwal temu janji pada tanggal yang sama',
+          'Sudah ada janji temu pada tanggal yang sama. Silakan pilih tanggal lain.',
         );
       }
 
-      // Create the appointment
-      await _firestore
-          .collection('jadwal_konsultasi')
-          .doc(data['id'])
-          .set(data);
+      // Add creation timestamp
+      data['createdAt'] = DateTime.now().toIso8601String();
+      data['status'] = 'pending'; // Default status
 
-      print('Jadwal konsultasi created successfully: ${data['id']}');
+      // Create the document with auto-generated ID
+      await _firestore.collection('jadwal_konsultasi').add(data);
 
-      // Send notification to admin about new appointment
-      try {
-        await NotificationIntegrationService.notifyAdminNewAppointment(
-          appointmentId: data['id'],
-          patientName: data['namaPasien'] ?? 'Pasien',
-          appointmentType: 'Temu Janji',
-          appointmentTime: selectedDateTime,
-          patientId: data['pasienId'],
-        );
-        print('Appointment notification sent to admin');
-      } catch (e) {
-        print('Error sending appointment notification: $e');
-        // Don't fail the appointment creation if notification fails
-      }
+      print('Jadwal konsultasi created successfully');
     } catch (e) {
       print('Error creating jadwal konsultasi: $e');
+      rethrow;
+    }
+  }
+
+  // Mark consultation schedule as completed
+  Future<void> markConsultationScheduleAsCompleted(String scheduleId) async {
+    try {
+      await ensureAuthenticated();
+
+      await _firestore.collection('jadwal_konsultasi').doc(scheduleId).update({
+        'examinationCompleted': true,
+        'completedAt': DateTime.now().toIso8601String(),
+      });
+
+      print('Consultation schedule marked as completed: $scheduleId');
+    } catch (e) {
+      print('Error marking consultation schedule as completed: $e');
       rethrow;
     }
   }
@@ -1414,6 +1456,14 @@ class FirebaseService {
         umur: 33,
         role: 'pasien',
         createdAt: DateTime.now(),
+
+        // New fields
+        namaSuami: 'Test Husband',
+        pekerjaanSuami: 'Test Job',
+        umurSuami: 35,
+        agamaSuami: 'Test Religion',
+        agamaPasien: 'Test Religion',
+        pekerjaanPasien: 'Test Job',
       );
 
       await createUser(testUser);
@@ -1596,32 +1646,6 @@ class FirebaseService {
     } catch (e) {
       print('Error getting persalinan by ID: $e');
       return null;
-    }
-  }
-
-  // Health check method
-  Future<bool> checkFirebaseConnection() async {
-    try {
-      if (!isFirebaseInitialized()) {
-        print('Firebase not initialized');
-        return false;
-      }
-
-      // For web, we'll do a simpler connection check
-      if (kIsWeb) {
-        print('Web platform detected, using simplified connection check');
-        // Just check if we can access Firestore
-        await _firestore.collection('health_check').limit(1).get();
-        print('Firebase connection is healthy (web)');
-        return true;
-      } else {
-        await _firestore.collection('health_check').doc('test').get();
-        print('Firebase connection is healthy');
-        return true;
-      }
-    } catch (e) {
-      print('Firebase connection error: $e');
-      return false;
     }
   }
 

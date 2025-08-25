@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../services/firebase_service.dart';
-import '../../routes/route_helper.dart';
 
 class TemuJanjiScreen extends StatefulWidget {
   final UserModel user;
@@ -27,8 +26,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
 
-  // No predefined time slots - using TimePicker for flexibility
-
   @override
   void initState() {
     super.initState();
@@ -47,22 +44,17 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
     );
 
     _animationController.forward();
-
-    // Set initial date to next available weekday
     _selectedDate = _getNextWeekday(DateTime.now());
   }
 
-  // Helper method to get next available weekday
   DateTime _getNextWeekday(DateTime from) {
     DateTime next = from.add(const Duration(days: 1));
     while (next.weekday > 5) {
-      // Saturday = 6, Sunday = 7
       next = next.add(const Duration(days: 1));
     }
     return next;
   }
 
-  // Helper method to build info row for dialog
   Widget _buildInfoRow(String label, String value) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -94,150 +86,57 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
     );
   }
 
-  // Show time slot selection dialog
   void _showTimeSlotDialog(List<String> availableSlots) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+          title: Text(
+            'Pilih Waktu',
+            style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
           ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.access_time_rounded,
-                color: const Color(0xFFEC407A),
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'Pilih Waktu',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2D3748),
-                ),
-              ),
-            ],
-          ),
-          content: SizedBox(
-            width: double.maxFinite,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Waktu yang tersedia:',
-                  style: GoogleFonts.poppins(
-                    fontSize: 14,
-                    color: const Color(0xFF2D3748),
-                  ),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  constraints: const BoxConstraints(maxHeight: 200),
-                  child: GridView.builder(
-                    shrinkWrap: true,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 3,
-                          childAspectRatio: 2.5,
-                          crossAxisSpacing: 8,
-                          mainAxisSpacing: 8,
-                        ),
-                    itemCount: availableSlots.length,
-                    itemBuilder: (context, index) {
-                      final timeSlot = availableSlots[index];
-                      return InkWell(
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children:
+                availableSlots
+                    .map(
+                      (slot) => ListTile(
+                        title: Text(slot),
                         onTap: () {
-                          // Parse time slot and set selected time
-                          final parts = timeSlot.split(':');
-                          final hour = int.parse(parts[0]);
-                          final minute = int.parse(parts[1]);
-                          setState(() {
-                            _selectedTime = TimeOfDay(
-                              hour: hour,
-                              minute: minute,
-                            );
-                          });
-                          Navigator.of(context).pop();
+                          Navigator.pop(context);
+                          _selectTimeFromSlot(slot);
                         },
-                        child: Container(
-                          decoration: BoxDecoration(
-                            color: const Color(
-                              0xFFEC407A,
-                            ).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: const Color(
-                                0xFFEC407A,
-                              ).withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              timeSlot,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: const Color(0xFFEC407A),
-                              ),
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ],
-            ),
+                      ),
+                    )
+                    .toList(),
           ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                _selectTime(); // Fallback to time picker
-              },
-              child: Text(
-                'Pilih Manual',
-                style: GoogleFonts.poppins(
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFFEC407A),
-                ),
-              ),
-            ),
-          ],
         );
       },
     );
   }
 
-  @override
-  void dispose() {
-    _animationController.dispose();
-    _alergiController.dispose();
-    _keluhanController.dispose();
-    super.dispose();
+  void _selectTimeFromSlot(String timeSlot) {
+    // Parse time slot and set selected time
+    final parts = timeSlot.split(':');
+    if (parts.length == 2) {
+      final hour = int.parse(parts[0]);
+      final minute = int.parse(parts[1]);
+      setState(() {
+        _selectedTime = TimeOfDay(hour: hour, minute: minute);
+      });
+    }
   }
 
   Future<void> _selectDate() async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: _selectedDate ?? DateTime.now().add(const Duration(days: 1)),
+      initialDate: _selectedDate ?? DateTime.now(),
       firstDate: DateTime.now(),
-      lastDate: DateTime.now().add(const Duration(days: 90)),
-      selectableDayPredicate: (DateTime date) {
-        // Only allow weekdays (Monday = 1, Friday = 5)
-        return date.weekday >= 1 && date.weekday <= 5;
-      },
+      lastDate: DateTime.now().add(const Duration(days: 30)),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFEC407A),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Color(0xFF2D3748),
-            ),
+            colorScheme: const ColorScheme.light(primary: Color(0xFFEC407A)),
           ),
           child: child!,
         );
@@ -258,33 +157,13 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: Color(0xFFEC407A),
-              onPrimary: Colors.white,
-              surface: Colors.white,
-              onSurface: Color(0xFF2D3748),
-            ),
+            colorScheme: const ColorScheme.light(primary: Color(0xFFEC407A)),
           ),
           child: child!,
         );
       },
     );
     if (picked != null && picked != _selectedTime) {
-      // Validate business hours (8:00-19:00)
-      if (picked.hour < 8 || picked.hour >= 19) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('Jam konsultasi: 08:00 - 19:00'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
-          ),
-        );
-        return;
-      }
-
       setState(() {
         _selectedTime = picked;
       });
@@ -293,74 +172,11 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
 
   Future<void> _submitAppointment() async {
     if (!_formKey.currentState!.validate()) return;
-
     if (_selectedDate == null || _selectedTime == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Pilih tanggal dan waktu temu janji'),
+        const SnackBar(
+          content: Text('Pilih tanggal dan waktu terlebih dahulu'),
           backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-      return;
-    }
-
-    // Check authentication status first
-    final currentUser = _firebaseService.currentUser;
-    if (currentUser == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Sesi login habis. Silakan login ulang.'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-      return;
-    }
-
-    print('Current user UID: ${currentUser.uid}');
-    print('Widget user ID: ${widget.user.id}');
-
-    // Validate business hours (Monday-Friday, 8:00-19:00)
-    final selectedDateTime = DateTime(
-      _selectedDate!.year,
-      _selectedDate!.month,
-      _selectedDate!.day,
-      _selectedTime!.hour,
-      _selectedTime!.minute,
-    );
-
-    // Check if it's a weekday (Monday = 1, Friday = 5)
-    if (selectedDateTime.weekday > 5) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Jadwal konsultasi hanya tersedia Senin-Jumat'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
-      return;
-    }
-
-    // Check if time is within business hours (8:00-19:00)
-    if (_selectedTime!.hour < 8 || _selectedTime!.hour >= 19) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('Jam konsultasi: 08:00 - 19:00'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
         ),
       );
       return;
@@ -371,146 +187,51 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
     });
 
     try {
-      // Check if user is still authenticated
-      final currentUser = _firebaseService.currentUser;
-      if (currentUser == null) {
-        throw Exception('User not authenticated. Please login again.');
-      }
-
-      // Create the appointment data with correct field names
+      // Create appointment data
       final appointmentData = {
-        'id': _firebaseService.generateId(),
-        'pasienId':
-            currentUser.uid, // Use Firebase Auth UID instead of widget.user.id
-        'namaPasien': widget.user.nama,
-        'tanggalKonsultasi':
-            selectedDateTime.toIso8601String(), // Use correct field name
-        'waktuKonsultasi': _selectedTime!.format(context), // Add time field
+        'pasienId': widget.user.id,
+        'pasienNama': widget.user.nama,
+        'tanggal': _selectedDate!.toIso8601String(),
+        'waktu': _selectedTime!.format(context),
+        'alergi': _alergiController.text.trim(),
         'keluhan': _keluhanController.text.trim(),
-        'riwayatAlergi': _alergiController.text.trim(),
         'status': 'pending',
         'createdAt': DateTime.now().toIso8601String(),
-        'userId': currentUser.uid,
-        'jenisKonsultasi': 'jadwal_konsultasi', // Add type identifier
       };
 
+      // Submit to Firebase
       await _firebaseService.createJadwalKonsultasi(appointmentData);
 
       if (mounted) {
-        // Show success dialog with appointment details
-        showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: const Color(0xFFEC407A),
-                    size: 28,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'Berhasil!',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFF2D3748),
-                    ),
-                  ),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Temu janji Anda telah berhasil dijadwalkan:',
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      color: const Color(0xFF2D3748),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildInfoRow(
-                    'Tanggal',
-                    '${_selectedDate!.day}/${_selectedDate!.month}/${_selectedDate!.year}',
-                  ),
-                  _buildInfoRow('Waktu', _selectedTime!.format(context)),
-                  _buildInfoRow('Keluhan', _keluhanController.text.trim()),
-                  if (_alergiController.text.trim().isNotEmpty)
-                    _buildInfoRow(
-                      'Riwayat Alergi',
-                      _alergiController.text.trim(),
-                    ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                    // Clear form
-                    _alergiController.clear();
-                    _keluhanController.clear();
-                    setState(() {
-                      _selectedTime = null;
-                      // Keep the selected date for convenience
-                    });
-                  },
-                  child: Text(
-                    'OK',
-                    style: GoogleFonts.poppins(
-                      fontWeight: FontWeight.w600,
-                      color: const Color(0xFFEC407A),
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('Temu janji berhasil dijadwalkan!'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
         );
+
+        // Reset form
+        _alergiController.clear();
+        _keluhanController.clear();
+        setState(() {
+          _selectedDate = _getNextWeekday(DateTime.now());
+          _selectedTime = null;
+        });
       }
     } catch (e) {
       if (mounted) {
-        // Log the error for debugging
-        print('Error in _submitAppointment: $e');
-        print('Error type: ${e.runtimeType}');
-        print('Error message: ${e.toString()}');
-
-        String errorMessage = 'Terjadi kesalahan saat membuat temu janji';
-
-        if (e.toString().contains('permission-denied')) {
-          errorMessage =
-              'Akses ditolak. Silakan login ulang atau hubungi admin.';
-        } else if (e.toString().contains('not authenticated')) {
-          errorMessage = 'Sesi login habis. Silakan login ulang.';
-        } else if (e.toString().contains('network')) {
-          errorMessage = 'Koneksi internet bermasalah. Silakan coba lagi.';
-        } else if (e.toString().contains('timeout')) {
-          errorMessage = 'Waktu tunggu habis. Silakan coba lagi.';
-        } else if (e.toString().contains('already exists')) {
-          errorMessage = 'Jadwal konsultasi sudah ada untuk waktu tersebut.';
-        } else if (e.toString().contains('invalid')) {
-          errorMessage = 'Data tidak valid. Silakan periksa kembali.';
-        } else if (e.toString().contains('Patient ID is required')) {
-          errorMessage = 'ID pasien tidak valid. Silakan login ulang.';
-        } else if (e.toString().contains('Consultation date is required')) {
-          errorMessage = 'Tanggal konsultasi harus diisi.';
-        } else if (e.toString().contains('Complaint is required')) {
-          errorMessage = 'Keluhan harus diisi.';
-        }
-
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(errorMessage),
+            content: Text('Error: $e'),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
-            duration: const Duration(seconds: 4),
           ),
         );
       }
@@ -524,10 +245,25 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
   }
 
   @override
+  void dispose() {
+    _animationController.dispose();
+    _alergiController.dispose();
+    _keluhanController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
+        title: Text(
+          'Temu Janji',
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: const Color(0xFFEC407A),
         elevation: 0,
         leading: IconButton(
@@ -547,7 +283,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Header Section
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(24),
@@ -657,8 +392,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Date and Time Selection
                     Text(
                       'Pilih Tanggal & Waktu',
                       style: GoogleFonts.poppins(
@@ -668,8 +401,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Date Selection
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -753,8 +484,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                       ),
                     ),
                     const SizedBox(height: 16),
-
-                    // Time Selection
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
@@ -794,7 +523,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                           GestureDetector(
                             onTap: () async {
                               if (_selectedDate != null) {
-                                // Show available time slots first
                                 final availableSlots = await _firebaseService
                                     .getAvailableTimeSlots(_selectedDate!);
                                 if (availableSlots.isNotEmpty) {
@@ -894,8 +622,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Allergy History Section
                     Text(
                       'Riwayat Alergi (Opsional)',
                       style: GoogleFonts.poppins(
@@ -966,8 +692,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Complaint Section
                     Text(
                       'Sertakan Keluhanmu',
                       style: GoogleFonts.poppins(
@@ -1064,8 +788,6 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                       ),
                     ),
                     const SizedBox(height: 32),
-
-                    // Submit Button
                     SizedBox(
                       width: double.infinity,
                       height: 56,

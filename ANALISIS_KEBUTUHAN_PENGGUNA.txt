@@ -1,0 +1,159 @@
+ANALISIS KEBUTUHAN PENGGUNA (USER REQUIREMENTS ANALYSIS)
+Aplikasi PersalinanKu - Sistem Manajemen Kehamilan dan Persalinan Berbasis Mobile
+
+BAB 4: ANALISIS KEBUTUHAN PENGGUNA
+
+4.1 Kebutuhan Pengguna Admin (Bidan)
+
+Bidan yang berperan sebagai admin memiliki peran utama dalam mengelola seluruh data dan konten yang terdapat dalam aplikasi PersalinanKu berbasis mobile.
+
+a. Autentikasi dan Keamanan
+   - Admin dapat melakukan masuk ke dalam sistem melalui halaman login dengan menggunakan alamat email dan kata sandi yang telah terdaftar sebelumnya. Setelah berhasil login, bidan akan diarahkan ke home yang berfungsi sebagai pusat kendali untuk mengelola seluruh aktivitas operasional.
+   - Admin memiliki akses eksklusif ke fitur-fitur administratif yang tidak dapat diakses oleh pengguna pasien
+   - Sistem menyediakan mekanisme logout untuk mengamankan data dan sesi pengguna
+
+b. Manajemen Data Pasien
+   - Admin dapat melihat dan mengelola seluruh data pasien yang terdaftar dalam sistem
+   - Admin dapat menambah, mengedit, dan menghapus data pasien sesuai kebutuhan
+   - Admin dapat melihat riwayat lengkap pemeriksaan dan konsultasi setiap pasien
+   - Admin dapat mengelola status kehamilan dan informasi medis pasien
+
+c. Manajemen Data Persalinan
+   - Admin dapat mencatat dan mengelola data persalinan pasien
+   - Admin dapat membuat laporan persalinan yang detail dan komprehensif
+   - Admin dapat mengelola data pasca persalinan dan follow-up care
+   - Admin dapat mencatat keterangan kelahiran dan informasi bayi
+
+d. Manajemen Jadwal Konsultasi
+   - Admin dapat mengatur dan mengelola jadwal konsultasi dengan pasien
+   - Admin dapat melihat dan mengatur ulang jadwal yang sudah ditentukan
+   - Admin dapat mengirim notifikasi pengingat kepada pasien terkait jadwal konsultasi
+   - Admin dapat mengelola konflik jadwal dan melakukan rescheduling
+
+e. Manajemen Konten Edukasi
+   - Admin dapat membuat, mengedit, dan menghapus artikel edukasi untuk pasien
+   - Admin dapat mengelola kategori dan topik artikel sesuai kebutuhan pasien
+   - Admin dapat mengunggah gambar dan konten multimedia untuk artikel
+   - Admin dapat mengatur prioritas dan urutan tampilan artikel
+
+f. Sistem Chat dan Komunikasi
+   - Admin dapat berkomunikasi langsung dengan pasien melalui fitur chat
+   - Admin dapat memberikan konsultasi dan saran medis secara real-time
+   - Admin dapat mengelola riwayat percakapan dengan setiap pasien
+   - Admin dapat mengirim notifikasi dan pengingan kepada pasien
+
+g. Analitik dan Pelaporan
+   - Admin dapat melihat dashboard analitik yang menampilkan statistik pasien
+   - Admin dapat melihat laporan performa dan aktivitas sistem
+   - Admin dapat mengakses data untuk evaluasi layanan dan perbaikan sistem
+   - Admin dapat menghasilkan laporan dalam format yang dapat didownload
+
+h. Manajemen Pemeriksaan Ibu Hamil
+   - Admin dapat mencatat dan mengelola hasil pemeriksaan kehamilan
+   - Admin dapat melacak perkembangan kehamilan setiap pasien
+   - Admin dapat mengatur jadwal pemeriksaan rutin dan khusus
+   - Admin dapat memberikan rekomendasi berdasarkan hasil pemeriksaan
+
+4.2 Kebutuhan Pengguna Pasien
+
+Pasien yang menggunakan aplikasi PersalinanKu memiliki kebutuhan untuk mengakses layanan kesehatan kehamilan dan persalinan secara mudah dan terjangkau.
+
+a. Autentikasi dan Registrasi
+   - Pasien dapat melakukan registrasi dengan mengisi data pribadi dan informasi kehamilan
+   - Pasien dapat login menggunakan email dan password yang telah didaftarkan
+   - Pasien dapat mengakses halaman home yang menampilkan informasi kehamilan pribadi
+   - Pasien dapat mengelola profil dan informasi pribadi mereka
+
+b. Informasi Kehamilan Pribadi
+   - Pasien dapat melihat detail kehamilan mereka termasuk usia kehamilan
+   - Pasien dapat mengakses kalkulator kehamilan untuk menghitung HPHT dan perkiraan lahir
+   - Pasien dapat melihat perkembangan janin sesuai dengan usia kehamilan
+   - Pasien dapat melacak berat badan dan ukuran perut selama kehamilan
+
+c. Jadwal dan Pemeriksaan
+   - Pasien dapat melihat jadwal pemeriksaan yang telah diatur oleh bidan
+   - Pasien dapat melihat riwayat pemeriksaan yang telah dilakukan
+   - Pasien dapat menerima pengingat untuk jadwal pemeriksaan mendatang
+   - Pasien dapat melihat hasil pemeriksaan dan rekomendasi dari bidan
+
+d. Konsultasi dan Temu Janji
+   - Pasien dapat membuat permintaan temu janji dengan bidan
+   - Pasien dapat melihat dan mengelola jadwal konsultasi mereka
+   - Pasien dapat berkomunikasi langsung dengan bidan melalui fitur chat
+   - Pasien dapat menerima saran dan konsultasi medis secara real-time
+
+e. Akses Konten Edukasi
+   - Pasien dapat mengakses artikel edukasi tentang kehamilan dan persalinan
+   - Pasien dapat mencari artikel berdasarkan kategori dan topik yang diinginkan
+   - Pasien dapat membaca artikel yang direkomendasikan oleh bidan
+   - Pasien dapat menyimpan artikel favorit untuk dibaca ulang
+
+f. Fitur Darurat dan Keamanan
+   - Pasien dapat mengakses fitur darurat untuk situasi kegawatdaruratan
+   - Pasien dapat melihat kontak darurat dan cara menghubungi bidan
+   - Pasien dapat mengirim notifikasi darurat kepada bidan
+   - Pasien dapat mengakses panduan pertolongan pertama kehamilan
+
+g. Notifikasi dan Pengingat
+   - Pasien dapat menerima notifikasi untuk jadwal pemeriksaan
+   - Pasien dapat menerima pengingat untuk konsumsi vitamin dan obat
+   - Pasien dapat menerima notifikasi chat dan pesan dari bidan
+   - Pasien dapat mengatur preferensi notifikasi sesuai kebutuhan
+
+h. Riwayat dan Dokumentasi
+   - Pasien dapat melihat riwayat lengkap pemeriksaan kehamilan
+   - Pasien dapat mengakses laporan persalinan dan pasca persalinan
+   - Pasien dapat melihat dokumentasi perkembangan janin
+   - Pasien dapat menyimpan dan mengunduh dokumen medis penting
+
+4.3 Kebutuhan Umum Sistem
+
+a. Performa dan Kecepatan
+   - Sistem harus responsif dan cepat dalam memuat data
+   - Aplikasi harus dapat berfungsi dengan baik pada berbagai perangkat mobile
+   - Sistem harus dapat menangani multiple user secara bersamaan
+
+b. Keamanan Data
+   - Semua data pasien harus dienkripsi dan aman
+   - Akses ke sistem harus dibatasi berdasarkan role pengguna
+   - Backup data harus dilakukan secara berkala dan aman
+
+c. User Experience
+   - Interface aplikasi harus user-friendly dan mudah dinavigasi
+   - Desain harus responsif dan dapat beradaptasi dengan berbagai ukuran layar
+   - Aplikasi harus dapat digunakan oleh pengguna dengan berbagai tingkat kemampuan teknis
+
+d. Integrasi dan Kompatibilitas
+   - Sistem harus dapat terintegrasi dengan layanan Firebase
+   - Aplikasi harus kompatibel dengan platform Android dan iOS
+   - Sistem harus dapat berfungsi dengan baik dalam kondisi jaringan yang bervariasi
+
+4.4 Prioritas Kebutuhan
+
+a. Kebutuhan Wajib (Must Have)
+   - Sistem login dan autentikasi
+   - Manajemen data pasien dan persalinan
+   - Fitur chat dan komunikasi
+   - Sistem notifikasi dan pengingat
+
+b. Kebutuhan Penting (Should Have)
+   - Dashboard analitik untuk admin
+   - Fitur edukasi dan artikel
+   - Kalkulator kehamilan
+   - Fitur darurat
+
+c. Kebutuhan Tambahan (Could Have)
+   - Integrasi dengan sistem eksternal
+   - Fitur backup dan restore
+   - Multi-language support
+   - Advanced analytics
+
+d. Kebutuhan Masa Depan (Won't Have)
+   - Integrasi dengan sistem rumah sakit
+   - Fitur telemedicine video call
+   - AI-powered diagnosis
+   - Blockchain untuk data medis
+
+4.5 Kesimpulan
+
+Analisis kebutuhan pengguna menunjukkan bahwa aplikasi PersalinanKu harus memenuhi kebutuhan yang berbeda untuk admin (bidan) dan pasien. Admin membutuhkan tools yang komprehensif untuk mengelola data, sementara pasien membutuhkan akses mudah ke informasi kehamilan dan layanan konsultasi. Sistem harus dirancang dengan mempertimbangkan keamanan data, user experience yang baik, dan performa yang optimal untuk mendukung layanan kesehatan maternal yang berkualitas.

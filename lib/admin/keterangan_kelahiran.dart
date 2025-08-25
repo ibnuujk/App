@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import '../models/laporan_pasca_persalinan_model.dart';
 import '../models/keterangan_kelahiran_model.dart';
 import '../services/firebase_service.dart';
+import '../services/pdf_service.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class KeteranganKelahiranScreen extends StatefulWidget {
   final LaporanPascaPersalinanModel laporanPascaPersalinanData;
@@ -25,25 +27,33 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
   // Controllers for form fields
   final _namaAnakController = TextEditingController();
   final _jamLahirController = TextEditingController();
-  final _tempatLahirController = TextEditingController();
   final _panjangBadanController = TextEditingController();
   final _beratBadanController = TextEditingController();
   final _kelahiranAnakKeController = TextEditingController(text: '1');
+
+  // Father's data controllers
+  final _umurSuamiController = TextEditingController();
+  final _agamaSuamiController = TextEditingController();
+  final _pekerjaanSuamiController = TextEditingController();
 
   // Data from previous forms
   DateTime _hariTanggalLahir = DateTime.now();
   String _jenisKelamin = 'laki-laki';
 
   // Data that will be auto-filled from database
-  String _namaIbu = '';
-  int _umurIbu = 0;
-  String _agamaIbu = '';
-  String _pekerjaanIbu = '';
-  String _namaAyah = '';
-  int _umurAyah = 0;
-  String _agamaAyah = '';
-  String _pekerjaanAyah = '';
-  String _alamat = '';
+  String _pasienNama = '';
+  int _pasienUmur = 0;
+  String _pasienAgama =
+      'Islam'; // Default value since UserModel doesn't have agama
+  String _pasienPekerjaan =
+      'Ibu Rumah Tangga'; // Default value since UserModel doesn't have pekerjaan
+  String _namaSuami = '';
+  int _umurSuami = 0;
+  String _agamaSuami =
+      'Islam'; // Default value, will be updated from registrasi persalinan
+  String _pekerjaanSuami =
+      'Karyawan'; // Default value, will be updated from registrasi persalinan
+  String _pasienAlamat = '';
 
   List<KeteranganKelahiranModel> _keteranganList = [];
   bool _isLoading = true;
@@ -52,46 +62,96 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
   @override
   void initState() {
     super.initState();
-    _loadDataFromDatabase();
-    _loadKeteranganKelahiran();
+    _initializeData();
+  }
+
+  Future<void> _initializeData() async {
+    try {
+      // Load data with retry mechanism
+      await _loadDataFromDatabase();
+      await _loadKeteranganKelahiran();
+    } catch (e) {
+      print('Error during initialization: $e');
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+
+        // Show error with retry option
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memuat data awal: $e'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 5),
+            action: SnackBarAction(
+              label: 'Coba Lagi',
+              textColor: Colors.white,
+              onPressed: _initializeData,
+            ),
+          ),
+        );
+      }
+    }
   }
 
   @override
   void dispose() {
     _namaAnakController.dispose();
     _jamLahirController.dispose();
-    _tempatLahirController.dispose();
     _panjangBadanController.dispose();
     _beratBadanController.dispose();
     _kelahiranAnakKeController.dispose();
+    _umurSuamiController.dispose();
+    _agamaSuamiController.dispose();
+    _pekerjaanSuamiController.dispose();
     super.dispose();
   }
 
   Future<void> _loadDataFromDatabase() async {
     try {
       // Load patient data for parent information
-      final registrasiData = await _firebaseService.getPersalinanById(
-        widget.laporanPascaPersalinanData.laporanPersalinanId,
-      );
+      final registrasiData = await _firebaseService
+          .getPersalinanById(
+            widget.laporanPascaPersalinanData.laporanPersalinanId,
+          )
+          .timeout(const Duration(seconds: 30));
+
       if (registrasiData != null) {
-        final userData = await _firebaseService.getUserById(
-          registrasiData.pasienId,
-        );
+        // Load mother's data from users collection
+        final userData = await _firebaseService
+            .getUserById(registrasiData.pasienId)
+            .timeout(const Duration(seconds: 30));
+
         if (userData != null) {
           setState(() {
-            _namaIbu = userData.nama;
-            _umurIbu = userData.umur;
-            _agamaIbu = 'Islam'; // Default value
-            _pekerjaanIbu = 'Ibu Rumah Tangga'; // Default value
-            _alamat = userData.alamat;
+            // Mother's data from users collection
+            _pasienNama = userData.nama;
+            _pasienUmur = userData.umur;
+            _pasienAlamat = userData.alamat;
 
-            // For demo purposes, set husband data (in real app, this should come from registration form)
-            _namaAyah = registrasiData.namaSuami;
-            _umurAyah = 30; // This should come from registration form
-            _agamaAyah = 'Islam'; // Default value
-            _pekerjaanAyah = registrasiData.pekerjaan;
+            // Father's data from persalinan collection
+            _namaSuami = registrasiData.namaSuami;
+            _pekerjaanSuami = registrasiData.pekerjaan;
+
+            // Set father's data controllers with loaded values
+            _umurSuamiController.text = _umurSuami.toString();
+            _agamaSuamiController.text = _agamaSuami;
+            _pekerjaanSuamiController.text = _pekerjaanSuami;
+          });
+        } else {
+          // Fallback if user data not found
+          setState(() {
+            _pasienNama = 'Data tidak ditemukan';
+            _pasienUmur = 0;
+            _pasienAlamat = 'Data tidak ditemukan';
           });
         }
+      } else {
+        // Fallback if registrasi data not found
+        setState(() {
+          _namaSuami = 'Data tidak ditemukan';
+          _pekerjaanSuami = 'Data tidak ditemukan';
+        });
       }
 
       // Pre-fill some data from previous form
@@ -101,17 +161,81 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
             widget.laporanPascaPersalinanData.panjangBadan;
         _beratBadanController.text =
             widget.laporanPascaPersalinanData.beratBadan;
-        _tempatLahirController.text = 'Rumah Sakit Bunda'; // Default value
       });
+
+      // Try to get father's detailed information from pregnancy examination
+      await _loadFatherDataFromPregnancyExamination();
     } catch (e) {
+      print('Error in _loadDataFromDatabase: $e');
       if (mounted) {
+        // Show error but don't block the UI
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Error loading data: $e'),
-            backgroundColor: Colors.red,
+            content: Text('Warning: Beberapa data tidak dapat dimuat: $e'),
+            backgroundColor: Colors.orange,
+            duration: const Duration(seconds: 3),
+            action: SnackBarAction(
+              label: 'Coba Lagi',
+              textColor: Colors.white,
+              onPressed: _loadDataFromDatabase,
+            ),
           ),
         );
       }
+    }
+  }
+
+  // Load father's detailed data from pregnancy examination
+  Future<void> _loadFatherDataFromPregnancyExamination() async {
+    try {
+      // Get registrasi persalinan data to find the patient ID
+      final registrasiData = await _firebaseService
+          .getPersalinanById(
+            widget.laporanPascaPersalinanData.laporanPersalinanId,
+          )
+          .timeout(const Duration(seconds: 20));
+
+      if (registrasiData != null) {
+        // Look for pregnancy examination data for this patient
+        final pregnancyExaminationSnapshot = await FirebaseFirestore.instance
+            .collection('pemeriksaan_ibu_hamil')
+            .where('pasienId', isEqualTo: registrasiData.pasienId)
+            .orderBy('createdAt', descending: true)
+            .limit(1)
+            .get()
+            .timeout(const Duration(seconds: 15));
+
+        if (pregnancyExaminationSnapshot.docs.isNotEmpty) {
+          final examinationData =
+              pregnancyExaminationSnapshot.docs.first.data();
+
+          // Update father's data if available in examination
+          setState(() {
+            if (examinationData['namaSuami'] != null &&
+                examinationData['namaSuami'].toString().isNotEmpty) {
+              _namaSuami = examinationData['namaSuami'];
+            }
+            if (examinationData['umurSuami'] != null) {
+              _umurSuami = examinationData['umurSuami'];
+              _umurSuamiController.text = _umurSuami.toString();
+            }
+            if (examinationData['pekerjaanSuami'] != null &&
+                examinationData['pekerjaanSuami'].toString().isNotEmpty) {
+              _pekerjaanSuami = examinationData['pekerjaanSuami'];
+              _pekerjaanSuamiController.text = _pekerjaanSuami;
+            }
+            if (examinationData['agamaSuami'] != null &&
+                examinationData['agamaSuami'].toString().isNotEmpty) {
+              _agamaSuami = examinationData['agamaSuami'];
+              _agamaSuamiController.text = _agamaSuami;
+            }
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading father data from pregnancy examination: $e');
+      // Don't show error to user, just use default values
+      // This is not critical data, so we can continue with defaults
     }
   }
 
@@ -121,58 +245,89 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
     });
 
     try {
-      _firebaseService
+      // Try to load data with timeout and fallback
+      final stream = _firebaseService
           .getKeteranganKelahiranByLaporanPascaId(
             widget.laporanPascaPersalinanData.id,
           )
-          .timeout(const Duration(seconds: 15)) // Increase timeout
-          .listen(
-            (keteranganList) {
-              if (mounted) {
-                setState(() {
-                  _keteranganList = keteranganList;
-                  _isLoading = false;
-                });
-              }
-            },
-            onError: (error) {
-              print('Error loading keterangan kelahiran: $error');
-              if (mounted) {
-                setState(() {
-                  _isLoading = false;
-                });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error loading data: $error'),
-                    backgroundColor: Colors.red,
-                    action: SnackBarAction(
-                      label: 'Retry',
-                      textColor: Colors.white,
-                      onPressed: _loadKeteranganKelahiran,
-                    ),
-                  ),
-                );
-              }
-            },
-          );
+          .timeout(const Duration(seconds: 20));
+
+      await for (final keteranganList in stream) {
+        if (mounted) {
+          setState(() {
+            _keteranganList = keteranganList;
+            _isLoading = false;
+          });
+        }
+        break; // Exit after first successful load
+      }
     } catch (e) {
-      print('Exception in _loadKeteranganKelahiran: $e');
+      print('Error loading keterangan kelahiran: $e');
+
+      // Try fallback method - direct query instead of stream
+      try {
+        await _loadKeteranganKelahiranFallback();
+      } catch (fallbackError) {
+        print('Fallback method also failed: $fallbackError');
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _keteranganList = []; // Empty list if all methods fail
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Tidak dapat memuat data: $e'),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 5),
+              action: SnackBarAction(
+                label: 'Coba Lagi',
+                textColor: Colors.white,
+                onPressed: _loadKeteranganKelahiran,
+              ),
+            ),
+          );
+        }
+      }
+    }
+  }
+
+  // Fallback method using direct Firestore query
+  Future<void> _loadKeteranganKelahiranFallback() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('keterangan_kelahiran')
+          .where(
+            'laporanPascaPersalinanId',
+            isEqualTo: widget.laporanPascaPersalinanData.id,
+          )
+          .orderBy('createdAt', descending: true)
+          .get()
+          .timeout(const Duration(seconds: 15));
+
+      final List<KeteranganKelahiranModel> keteranganList = [];
+
+      for (final doc in snapshot.docs) {
+        try {
+          final keterangan = KeteranganKelahiranModel.fromMap({
+            'id': doc.id,
+            ...doc.data(),
+          });
+          keteranganList.add(keterangan);
+        } catch (e) {
+          print('Error parsing document ${doc.id}: $e');
+        }
+      }
+
       if (mounted) {
         setState(() {
+          _keteranganList = keteranganList;
           _isLoading = false;
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: _loadKeteranganKelahiran,
-            ),
-          ),
-        );
       }
+    } catch (e) {
+      print('Fallback method failed: $e');
+      throw e; // Re-throw to be handled by caller
     }
   }
 
@@ -191,20 +346,26 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
         namaAnak: _namaAnakController.text.trim(),
         hariTanggalLahir: _hariTanggalLahir,
         jamLahir: _jamLahirController.text.trim(),
-        tempatLahir: _tempatLahirController.text.trim(),
+        tempatLahir: 'PMB Umiyatun S.ST', // Fixed value as requested
         jenisKelamin: _jenisKelamin,
         panjangBadan: _panjangBadanController.text.trim(),
         beratBadan: _beratBadanController.text.trim(),
         kelahiranAnakKe: int.tryParse(_kelahiranAnakKeController.text) ?? 1,
-        namaIbu: _namaIbu,
-        umurIbu: _umurIbu,
-        agamaIbu: _agamaIbu,
-        pekerjaanIbu: _pekerjaanIbu,
-        namaAyah: _namaAyah,
-        umurAyah: _umurAyah,
-        agamaAyah: _agamaAyah,
-        pekerjaanAyah: _pekerjaanAyah,
-        alamat: _alamat,
+        pasienNama: _pasienNama,
+        pasienUmur: _pasienUmur,
+        agama: _pasienAgama,
+        pekerjaan: _pasienPekerjaan,
+        namaSuami: _namaSuami,
+        umurSuami: int.tryParse(_umurSuamiController.text) ?? _umurSuami,
+        agamaSuami:
+            _agamaSuamiController.text.isNotEmpty
+                ? _agamaSuamiController.text
+                : _agamaSuami,
+        pekerjaanSuami:
+            _pekerjaanSuamiController.text.isNotEmpty
+                ? _pekerjaanSuamiController.text
+                : _pekerjaanSuami,
+        pasienAlamat: _pasienAlamat,
         createdAt: DateTime.now(),
       );
 
@@ -214,12 +375,29 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
       _clearForm();
 
       if (mounted) {
+        // Show success alert
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Keterangan kelahiran berhasil disimpan'),
             backgroundColor: Colors.green,
+            duration: Duration(seconds: 2),
           ),
         );
+
+        // Wait for 2 seconds then navigate back to home
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            try {
+              // Try to navigate using named route first
+              Navigator.of(
+                context,
+              ).pushNamedAndRemoveUntil('/home-admin', (route) => false);
+            } catch (e) {
+              // Fallback: pop all routes to go back to home
+              Navigator.of(context).popUntil((route) => route.isFirst);
+            }
+          }
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -241,11 +419,73 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
     _namaAnakController.clear();
     _jamLahirController.clear();
     _kelahiranAnakKeController.text = '1';
+    _umurSuamiController.clear();
+    _agamaSuamiController.clear();
+    _pekerjaanSuamiController.clear();
 
     setState(() {
       _hariTanggalLahir = DateTime.now();
       _jenisKelamin = 'laki-laki';
     });
+  }
+
+  Future<void> _downloadKeteranganKelahiran() async {
+    if (_keteranganList.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tidak ada data keterangan kelahiran untuk diunduh'),
+          backgroundColor: Colors.orange,
+        ),
+      );
+      return;
+    }
+
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return const AlertDialog(
+            content: Row(
+              children: [
+                CircularProgressIndicator(color: Color(0xFFEC407A)),
+                SizedBox(width: 20),
+                Text('Membuat PDF...'),
+              ],
+            ),
+          );
+        },
+      );
+
+      // Generate PDF for the first keterangan (most recent)
+      final keterangan = _keteranganList.first;
+      await PdfService.generateKeteranganKelahiranPDF(keterangan);
+
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('PDF berhasil dibuat dan dapat diunduh'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      // Close loading dialog
+      if (mounted) {
+        Navigator.of(context).pop();
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error membuat PDF: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Widget _buildTextField({
@@ -483,6 +723,41 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
                           ],
                         ),
                       ),
+                      // Download button in header
+                      if (_keteranganList.isNotEmpty)
+                        Container(
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: IconButton(
+                            onPressed: _downloadKeteranganKelahiran,
+                            icon: const Icon(
+                              Icons.download,
+                              color: Colors.white,
+                              size: 24,
+                            ),
+                            tooltip: 'Download PDF',
+                          ),
+                        ),
+
+                      // Refresh button
+                      Container(
+                        margin: const EdgeInsets.only(left: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: IconButton(
+                          onPressed: _initializeData,
+                          icon: const Icon(
+                            Icons.refresh,
+                            color: Colors.white,
+                            size: 24,
+                          ),
+                          tooltip: 'Refresh Data',
+                        ),
+                      ),
                     ],
                   ),
                 ],
@@ -570,14 +845,9 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
                                                   ? 'Wajib diisi'
                                                   : null,
                                     ),
-                                    _buildTextField(
-                                      controller: _tempatLahirController,
-                                      label: 'Tempat Lahir',
-                                      validator:
-                                          (value) =>
-                                              value?.isEmpty == true
-                                                  ? 'Wajib diisi'
-                                                  : null,
+                                    _buildReadOnlyField(
+                                      'Tempat Lahir',
+                                      'PMB Umiyatun S.ST',
                                     ),
                                     _buildDropdown(
                                       value: _jenisKelamin,
@@ -635,58 +905,73 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
                                     _buildSectionTitle(
                                       'IBU (Data otomatis terisi sesuai database)',
                                     ),
-                                    _buildReadOnlyField('Nama', _namaIbu),
+                                    _buildReadOnlyField(
+                                      'Nama Ibu',
+                                      _pasienNama,
+                                    ),
                                     Row(
                                       children: [
                                         Expanded(
                                           child: _buildReadOnlyField(
-                                            'Umur',
-                                            '$_umurIbu tahun',
+                                            'Umur Ibu',
+                                            '$_pasienUmur tahun',
                                           ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
                                           child: _buildReadOnlyField(
-                                            'Agama',
-                                            _agamaIbu,
+                                            'Agama Ibu',
+                                            _pasienAgama,
                                           ),
                                         ),
                                       ],
                                     ),
                                     _buildReadOnlyField(
-                                      'Pekerjaan',
-                                      _pekerjaanIbu,
+                                      'Pekerjaan Ibu',
+                                      _pasienPekerjaan,
+                                    ),
+                                    _buildReadOnlyField(
+                                      'Alamat Ibu',
+                                      _pasienAlamat,
                                     ),
 
                                     // Data Ayah Section
                                     _buildSectionTitle(
-                                      'AYAH (Data otomatis terisi sesuai database)',
-                                    ),
-                                    _buildReadOnlyField('Nama', _namaAyah),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: _buildReadOnlyField(
-                                            'Umur',
-                                            '$_umurAyah tahun',
-                                          ),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Expanded(
-                                          child: _buildReadOnlyField(
-                                            'Agama',
-                                            _agamaAyah,
-                                          ),
-                                        ),
-                                      ],
+                                      'AYAH (Data dapat diubah)',
                                     ),
                                     _buildReadOnlyField(
-                                      'Pekerjaan',
-                                      _pekerjaanAyah,
+                                      'Nama Ayah',
+                                      _namaSuami,
                                     ),
-                                    _buildReadOnlyField(
-                                      'Alamat (sesuai database pasien)',
-                                      _alamat,
+                                    _buildTextField(
+                                      controller: _umurSuamiController,
+                                      label: 'Umur Ayah',
+                                      keyboardType: TextInputType.number,
+                                      validator:
+                                          (value) =>
+                                              value?.isEmpty == true
+                                                  ? 'Wajib diisi'
+                                                  : null,
+                                    ),
+                                    _buildTextField(
+                                      controller: _agamaSuamiController,
+                                      label: 'Agama Ayah',
+                                      keyboardType: TextInputType.text,
+                                      validator:
+                                          (value) =>
+                                              value?.isEmpty == true
+                                                  ? 'Wajib diisi'
+                                                  : null,
+                                    ),
+                                    _buildTextField(
+                                      controller: _pekerjaanSuamiController,
+                                      label: 'Pekerjaan Ayah',
+                                      keyboardType: TextInputType.text,
+                                      validator:
+                                          (value) =>
+                                              value?.isEmpty == true
+                                                  ? 'Wajib diisi'
+                                                  : null,
                                     ),
 
                                     const SizedBox(height: 20),
@@ -734,6 +1019,43 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
                                                 ),
                                       ),
                                     ),
+
+                                    // Download Button
+                                    if (_keteranganList.isNotEmpty) ...[
+                                      const SizedBox(height: 12),
+                                      SizedBox(
+                                        width: double.infinity,
+                                        child: ElevatedButton.icon(
+                                          onPressed:
+                                              _downloadKeteranganKelahiran,
+                                          icon: const Icon(
+                                            Icons.download,
+                                            color: Colors.white,
+                                          ),
+                                          label: Text(
+                                            'Download PDF',
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.w600,
+                                            ),
+                                          ),
+                                          style: ElevatedButton.styleFrom(
+                                            backgroundColor: const Color(
+                                              0xFF10B981,
+                                            ),
+                                            foregroundColor: Colors.white,
+                                            padding: const EdgeInsets.symmetric(
+                                              vertical: 16,
+                                            ),
+                                            shape: RoundedRectangleBorder(
+                                              borderRadius:
+                                                  BorderRadius.circular(12),
+                                            ),
+                                            elevation: 2,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ],
                                 ),
                               ),
@@ -766,7 +1088,9 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
                                       borderRadius: BorderRadius.circular(16),
                                       boxShadow: [
                                         BoxShadow(
-                                          color: Colors.black.withValues(alpha: 0.1),
+                                          color: Colors.black.withValues(
+                                            alpha: 0.1,
+                                          ),
                                           blurRadius: 10,
                                           offset: const Offset(0, 5),
                                         ),
@@ -846,6 +1170,106 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
                                           style: GoogleFonts.poppins(
                                             fontSize: 14,
                                             color: const Color(0xFF2D3748),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 12),
+                                        SizedBox(
+                                          width: double.infinity,
+                                          child: ElevatedButton.icon(
+                                            onPressed: () async {
+                                              try {
+                                                // Show loading indicator
+                                                showDialog(
+                                                  context: context,
+                                                  barrierDismissible: false,
+                                                  builder: (
+                                                    BuildContext context,
+                                                  ) {
+                                                    return const AlertDialog(
+                                                      content: Row(
+                                                        children: [
+                                                          CircularProgressIndicator(
+                                                            color: Color(
+                                                              0xFFEC407A,
+                                                            ),
+                                                          ),
+                                                          SizedBox(width: 20),
+                                                          Text(
+                                                            'Membuat PDF...',
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    );
+                                                  },
+                                                );
+
+                                                await PdfService.generateKeteranganKelahiranPDF(
+                                                  keterangan,
+                                                );
+
+                                                // Close loading dialog
+                                                if (mounted) {
+                                                  Navigator.of(context).pop();
+
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    const SnackBar(
+                                                      content: Text(
+                                                        'PDF berhasil dibuat dan dapat diunduh',
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.green,
+                                                    ),
+                                                  );
+                                                }
+                                              } catch (e) {
+                                                // Close loading dialog
+                                                if (mounted) {
+                                                  Navigator.of(context).pop();
+
+                                                  ScaffoldMessenger.of(
+                                                    context,
+                                                  ).showSnackBar(
+                                                    SnackBar(
+                                                      content: Text(
+                                                        'Error membuat PDF: $e',
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.red,
+                                                    ),
+                                                  );
+                                                }
+                                              }
+                                            },
+                                            icon: const Icon(
+                                              Icons.download,
+                                              color: Colors.white,
+                                              size: 18,
+                                            ),
+                                            label: Text(
+                                              'Download PDF',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                              ),
+                                            ),
+                                            style: ElevatedButton.styleFrom(
+                                              backgroundColor: const Color(
+                                                0xFF10B981,
+                                              ),
+                                              foregroundColor: Colors.white,
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                    vertical: 8,
+                                                    horizontal: 12,
+                                                  ),
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(8),
+                                              ),
+                                              elevation: 1,
+                                            ),
                                           ),
                                         ),
                                       ],

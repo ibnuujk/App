@@ -50,7 +50,9 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
             (laporanList) {
               if (mounted) {
                 setState(() {
-                  _laporanList = laporanList;
+                  // Sort data by createdAt in descending order (newest first)
+                  _laporanList = List.from(laporanList)
+                    ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
                   _isLoading = false;
                 });
               }
@@ -369,7 +371,9 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: Colors.green.withValues(alpha: 0.1),
+                                        color: Colors.green.withValues(
+                                          alpha: 0.1,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/article_model.dart';
 import '../models/user_model.dart';
 import '../providers/article_provider.dart';
@@ -286,7 +287,7 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                 children: [
                   // Content
                   Text(
-                    widget.article.content,
+                    widget.article.description,
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       color: Colors.grey[800],
@@ -295,6 +296,61 @@ class _ArticleDetailScreenState extends State<ArticleDetailScreen> {
                   ),
 
                   const SizedBox(height: 32),
+
+                  // Website Button (if article has website URL)
+                  if (widget.article.websiteUrl.isNotEmpty) ...[
+                    Container(
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        onPressed: () async {
+                          try {
+                            final url = Uri.parse(widget.article.websiteUrl);
+                            if (await canLaunchUrl(url)) {
+                              await launchUrl(
+                                url,
+                                mode: LaunchMode.externalApplication,
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    'Tidak dapat membuka website: ${widget.article.websiteUrl}',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  'URL tidak valid: ${widget.article.websiteUrl}',
+                                ),
+                                backgroundColor: Colors.red,
+                              ),
+                            );
+                          }
+                        },
+                        icon: const Icon(Icons.open_in_new),
+                        label: Text(
+                          'Buka Website',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.blue[600],
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
 
                   // Footer Info
                   Container(

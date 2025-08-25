@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 import '../../models/user_model.dart';
 
 class DataPersalinanScreen extends StatefulWidget {
@@ -14,6 +15,13 @@ class DataPersalinanScreen extends StatefulWidget {
 class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
+
+  @override
+  void initState() {
+    super.initState();
+    // Initialize Indonesian locale for date formatting
+    initializeDateFormatting('id_ID', null);
+  }
 
   @override
   void dispose() {
@@ -99,7 +107,13 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
           Expanded(
             child: StreamBuilder<QuerySnapshot>(
               stream:
-                  FirebaseFirestore.instance.collection('users').snapshots(),
+                  FirebaseFirestore.instance
+                      .collection('users')
+                      .orderBy(
+                        'createdAt',
+                        descending: true,
+                      ) // Sort by newest first
+                      .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return const Center(
@@ -192,12 +206,71 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
                   );
                 }
 
-                return ListView.builder(
-                  padding: const EdgeInsets.all(20),
-                  itemCount: filteredUsers.length,
-                  itemBuilder: (context, index) {
-                    final user = filteredUsers[index];
-                    return _buildPatientCard(user);
+                // Return FutureBuilder to check complete data for each user
+                return FutureBuilder<List<Map<String, dynamic>>>(
+                  future: _getCompletePatients(filteredUsers),
+                  builder: (context, completeSnapshot) {
+                    if (completeSnapshot.connectionState ==
+                        ConnectionState.waiting) {
+                      return const Center(
+                        child: CircularProgressIndicator(
+                          color: Color(0xFFEC407A),
+                        ),
+                      );
+                    }
+
+                    if (completeSnapshot.hasError) {
+                      return Center(
+                        child: Text(
+                          'Error: ${completeSnapshot.error}',
+                          style: GoogleFonts.poppins(color: Colors.red),
+                        ),
+                      );
+                    }
+
+                    final completePatientsData = completeSnapshot.data ?? [];
+
+                    if (completePatientsData.isEmpty) {
+                      return Center(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.incomplete_circle_rounded,
+                              size: 80,
+                              color: Colors.grey[400],
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              'Belum ada pasien dengan data lengkap',
+                              style: GoogleFonts.poppins(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Hanya menampilkan pasien yang sudah mengisi\nLaporan Persalinan, Laporan Pasca Persalinan,\ndan Keterangan Kelahiran',
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
+                                color: Colors.grey[500],
+                              ),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ListView.builder(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: completePatientsData.length,
+                      itemBuilder: (context, index) {
+                        final patientData = completePatientsData[index];
+                        return _buildPatientCard(patientData);
+                      },
+                    );
                   },
                 );
               },
@@ -208,9 +281,11 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
     );
   }
 
-  Widget _buildPatientCard(UserModel user) {
+  Widget _buildPatientCard(Map<String, dynamic> patientData) {
+    final user = patientData['user'] as UserModel;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
@@ -318,43 +393,94 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
               ],
             ),
           ),
+
           const SizedBox(height: 20),
-          // Action Buttons
-          Padding(
+
+          // Action Buttons - PDF Style Layout
+          Container(
             padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: Row(
+            child: Column(
               children: [
-                Expanded(
-                  child: _buildActionButton(
-                    'Laporan\nPersalinan',
-                    Icons.local_hospital_rounded,
-                    const Color(0xFFEC407A),
-                    () => _viewChildbirthReport(user),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionButton(
-                    'Laporan\nPasca Persalinan',
-                    Icons.medical_services_rounded,
-                    const Color(0xFFF48FB1),
-                    () => _viewPostpartumReport(user),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: _buildActionButton(
-                    'Keterangan\nKelahiran',
-                    Icons.description_rounded,
-                    const Color(0xFFAB47BC),
-                    () => _viewBirthCertificate(user),
-                  ),
+                // Main Action Row
+                Row(
+                  children: [
+                    Expanded(
+                      child: _buildPDFStyleButton(
+                        'Lihat Detail',
+                        Icons.visibility_rounded,
+                        const Color(0xFFEC407A),
+                        () => _viewCompleteDetails(patientData),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _buildPDFStyleButton(
+                        'Edit Data',
+                        Icons.edit_rounded,
+                        const Color(0xFF4CAF50),
+                        () => _editPatientData(patientData),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
           ),
           const SizedBox(height: 20),
         ],
+      ),
+    );
+  }
+
+  // Build PDF style button
+  Widget _buildPDFStyleButton(
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onPressed,
+  ) {
+    return Container(
+      height: 50,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [color, color.withValues(alpha: 0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ElevatedButton(
+        onPressed: onPressed,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: Colors.transparent,
+          foregroundColor: Colors.white,
+          shadowColor: Colors.transparent,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 20),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -371,67 +497,336 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
     return age;
   }
 
-  // Build action button widget
-  Widget _buildActionButton(
-    String label,
-    IconData icon,
-    Color color,
-    VoidCallback onPressed,
-  ) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: color,
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 16),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        elevation: 0,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 24),
-          const SizedBox(height: 8),
-          Text(
-            label,
-            style: GoogleFonts.poppins(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              height: 1.2,
-            ),
-            textAlign: TextAlign.center,
+  // Helper method to check if a patient has all required data and fetch detailed information
+  Future<List<Map<String, dynamic>>> _getCompletePatients(
+    List<UserModel> users,
+  ) async {
+    final List<Map<String, dynamic>> completePatientsData = [];
+
+    for (final user in users) {
+      try {
+        // Check if user has completed the entire flow
+        // 1. Check if user has registrasi persalinan
+        final registrasiSnapshot =
+            await FirebaseFirestore.instance
+                .collection('persalinan')
+                .where('pasienId', isEqualTo: user.id)
+                .orderBy('createdAt', descending: true)
+                .limit(1)
+                .get();
+
+        if (registrasiSnapshot.docs.isNotEmpty) {
+          final registrasiData = registrasiSnapshot.docs.first.data();
+          final registrasiId = registrasiSnapshot.docs.first.id;
+
+          // 2. Check if user has laporan persalinan
+          final laporanSnapshot =
+              await FirebaseFirestore.instance
+                  .collection('laporan_persalinan')
+                  .where('registrasiPersalinanId', isEqualTo: registrasiId)
+                  .orderBy('createdAt', descending: true)
+                  .limit(1)
+                  .get();
+
+          if (laporanSnapshot.docs.isNotEmpty) {
+            final laporanData = laporanSnapshot.docs.first.data();
+            final laporanId = laporanSnapshot.docs.first.id;
+
+            // 3. Check if user has laporan pasca persalinan
+            final pascaSnapshot =
+                await FirebaseFirestore.instance
+                    .collection('laporan_pasca_persalinan')
+                    .where('laporanPersalinanId', isEqualTo: laporanId)
+                    .orderBy('createdAt', descending: true)
+                    .limit(1)
+                    .get();
+
+            if (pascaSnapshot.docs.isNotEmpty) {
+              final pascaData = pascaSnapshot.docs.first.data();
+              final pascaId = pascaSnapshot.docs.first.id;
+
+              // 4. Check if user has keterangan kelahiran
+              final keteranganSnapshot =
+                  await FirebaseFirestore.instance
+                      .collection('keterangan_kelahiran')
+                      .where('laporanPascaPersalinanId', isEqualTo: pascaId)
+                      .orderBy('createdAt', descending: true)
+                      .limit(1)
+                      .get();
+
+              // Only add user if all four documents exist (complete flow)
+              if (keteranganSnapshot.docs.isNotEmpty) {
+                final keteranganData = keteranganSnapshot.docs.first.data();
+
+                // Create comprehensive data object
+                final patientData = {
+                  'user': user,
+                  'registrasiPersalinan': {
+                    'id': registrasiId,
+                    'data': registrasiData,
+                  },
+                  'laporanPersalinan': {'id': laporanId, 'data': laporanData},
+                  'laporanPascaPersalinan': {'id': pascaId, 'data': pascaData},
+                  'keteranganKelahiran': {
+                    'id': keteranganSnapshot.docs.first.id,
+                    'data': keteranganData,
+                  },
+                };
+
+                completePatientsData.add(patientData);
+              }
+            }
+          }
+        }
+      } catch (e) {
+        print('Error checking complete data for user ${user.id}: $e');
+      }
+    }
+
+    return completePatientsData;
+  }
+
+  // View complete details for a patient
+  void _viewCompleteDetails(Map<String, dynamic> patientData) {
+    final user = patientData['user'] as UserModel;
+    final registrasiData =
+        patientData['registrasiPersalinan']['data'] as Map<String, dynamic>;
+    final laporanData =
+        patientData['laporanPersalinan']['data'] as Map<String, dynamic>;
+    final pascaData =
+        patientData['laporanPascaPersalinan']['data'] as Map<String, dynamic>;
+    final keteranganData =
+        patientData['keteranganKelahiran']['data'] as Map<String, dynamic>;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
           ),
-        ],
-      ),
+          child: Container(
+            constraints: const BoxConstraints(maxHeight: 600),
+            child: Column(
+              children: [
+                // Header
+                Container(
+                  padding: const EdgeInsets.all(20),
+                  decoration: const BoxDecoration(
+                    color: Color(0xFFEC407A),
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(20),
+                      topRight: Radius.circular(20),
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.medical_services_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          'Detail Lengkap ${user.nama}',
+                          style: GoogleFonts.poppins(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.close, color: Colors.white),
+                        onPressed: () => Navigator.of(context).pop(),
+                      ),
+                    ],
+                  ),
+                ),
+                // Content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Registrasi Persalinan
+                        _buildDetailSection(
+                          'Registrasi Persalinan',
+                          Icons.app_registration_rounded,
+                          const Color(0xFF9C27B0),
+                          [
+                            'Tanggal Masuk: ${_formatDate(registrasiData['tanggalMasuk'])}',
+                            'Tanggal Partes: ${_formatDate(registrasiData['tanggalPartes'])}',
+                            'Tanggal Keluar: ${_formatDate(registrasiData['tanggalKeluar'])}',
+                            'Fasilitas: ${registrasiData['fasilitas'] ?? 'Tidak ada data'}',
+                            'Diagnosa: ${registrasiData['diagnosaKebidanan'] ?? 'Tidak ada data'}',
+                            'Tindakan: ${registrasiData['tindakan'] ?? 'Tidak ada data'}',
+                            'Penolong: ${registrasiData['penolongPersalinan'] ?? 'Tidak ada data'}',
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Laporan Persalinan
+                        _buildDetailSection(
+                          'Laporan Persalinan',
+                          Icons.local_hospital_rounded,
+                          const Color(0xFFEC407A),
+                          [
+                            'Tanggal Masuk: ${_formatDate(laporanData['tanggalMasuk'])}',
+                            'Catatan: ${laporanData['catatan'] ?? 'Tidak ada data'}',
+                            'Tanggal Dibuat: ${_formatDate(laporanData['createdAt'])}',
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Laporan Pasca Persalinan
+                        _buildDetailSection(
+                          'Laporan Pasca Persalinan',
+                          Icons.healing_rounded,
+                          const Color(0xFF4CAF50),
+                          [
+                            'Tanggal Fundus Uterus: ${_formatDate(pascaData['tanggalFundusUterus'])}',
+                            'Tanggal Keluar: ${_formatDate(pascaData['tanggalKeluar'])}',
+                            'Jam Keluar: ${_formatTime(pascaData['jamKeluar'])}',
+                            'Tekanan Darah: ${pascaData['tekananDarah'] ?? 'Tidak ada data'}',
+                            'Suhu Badan: ${pascaData['suhuBadan'] ?? 'Tidak ada data'}',
+                            'Nadi: ${pascaData['nadi'] ?? 'Tidak ada data'}',
+                            'Pernafasan: ${pascaData['pernafasan'] ?? 'Tidak ada data'}',
+                            'Kelahiran Anak: ${pascaData['kelahiranAnak'] ?? 'Tidak ada data'}',
+                            'Jenis Kelamin: ${pascaData['jenisKelamin'] ?? 'Tidak ada data'}',
+                            'Berat Badan: ${_formatDataWithUnit(pascaData['beratBadan'], 'gram')}',
+                            'Panjang Badan: ${_formatDataWithUnit(pascaData['panjangBadan'], 'cm')}',
+                            'Lingkar Kepala: ${_formatDataWithUnit(pascaData['lingkarKepala'], 'cm')}',
+                            'Lingkar Dada: ${_formatDataWithUnit(pascaData['lingkarDada'], 'cm')}',
+                            'APGAR Score: ${pascaData['apgarSkor'] ?? 'Tidak ada data'}',
+                            'Kondisi Keluar: ${pascaData['kondisiKeluar'] ?? 'Tidak ada data'}',
+                          ],
+                        ),
+
+                        const SizedBox(height: 16),
+
+                        // Keterangan Kelahiran
+                        _buildDetailSection(
+                          'Keterangan Kelahiran',
+                          Icons.child_care_rounded,
+                          const Color(0xFF2196F3),
+                          [
+                            'Nama Anak: ${keteranganData['namaAnak'] ?? 'Tidak ada data'}',
+                            'Tanggal Lahir: ${_formatDate(keteranganData['hariTanggalLahir'])}',
+                            'Jam Lahir: ${_formatTime(keteranganData['jamLahir'])}',
+                            'Tempat Lahir: ${keteranganData['tempatLahir'] ?? 'Tidak ada data'}',
+                            'Jenis Kelamin: ${keteranganData['jenisKelamin'] ?? 'Tidak ada data'}',
+                            'Berat Badan: ${_formatDataWithUnit(keteranganData['beratBadan'], 'gram')}',
+                            'Panjang Badan: ${_formatDataWithUnit(keteranganData['panjangBadan'], 'cm')}',
+                            'Kelahiran Anak Ke: ${keteranganData['kelahiranAnakKe'] ?? 'Tidak ada data'}',
+                            'Nama Ibu: ${keteranganData['namaIbu'] ?? 'Tidak ada data'}',
+                            'Umur Ibu: ${_formatDataWithUnit(keteranganData['umurIbu'], 'tahun')}',
+                            'Agama Ibu: ${keteranganData['agamaIbu'] ?? 'Tidak ada data'}',
+                            'Pekerjaan Ibu: ${keteranganData['pekerjaanIbu'] ?? 'Tidak ada data'}',
+                            'Nama Ayah: ${keteranganData['namaAyah'] ?? 'Tidak ada data'}',
+                            'Umur Ayah: ${_formatDataWithUnit(keteranganData['umurAyah'], 'tahun')}',
+                            'Agama Ayah: ${keteranganData['agamaAyah'] ?? 'Tidak ada data'}',
+                            'Pekerjaan Ayah: ${keteranganData['pekerjaanAyah'] ?? 'Tidak ada data'}',
+                            'Alamat: ${keteranganData['alamat'] ?? 'Tidak ada data'}',
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 
-  // Navigate to childbirth report screen
-  void _viewChildbirthReport(UserModel user) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ChildbirthReportScreen(user: user),
-      ),
+  // Edit patient data
+  void _editPatientData(Map<String, dynamic> patientData) {
+    final user = patientData['user'] as UserModel;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Row(
+            children: [
+              Icon(Icons.edit, color: const Color(0xFF4CAF50)),
+              const SizedBox(width: 8),
+              Text(
+                'Edit Data Pasien',
+                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+          content: Text(
+            'Pilih data yang ingin diedit untuk ${user.nama}:',
+            style: GoogleFonts.poppins(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _navigateToEditForm('registrasi', patientData);
+              },
+              child: Text(
+                'Registrasi Persalinan',
+                style: GoogleFonts.poppins(color: const Color(0xFF9C27B0)),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _navigateToEditForm('laporan', patientData);
+              },
+              child: Text(
+                'Laporan Persalinan',
+                style: GoogleFonts.poppins(color: const Color(0xFFEC407A)),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _navigateToEditForm('pasca', patientData);
+              },
+              child: Text(
+                'Laporan Pasca Persalinan',
+                style: GoogleFonts.poppins(color: const Color(0xFF4CAF50)),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                _navigateToEditForm('keterangan', patientData);
+              },
+              child: Text(
+                'Keterangan Kelahiran',
+                style: GoogleFonts.poppins(color: const Color(0xFF2196F3)),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 
-  // Navigate to postpartum report screen
-  void _viewPostpartumReport(UserModel user) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => PostpartumReportScreen(user: user),
-      ),
-    );
-  }
-
-  // Navigate to birth certificate screen
-  void _viewBirthCertificate(UserModel user) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => BirthCertificateScreen(user: user),
+  // Navigate to edit form
+  void _navigateToEditForm(String formType, Map<String, dynamic> patientData) {
+    // TODO: Implement navigation to actual edit forms
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          'Membuka form edit $formType untuk ${patientData['user'].nama}',
+        ),
+        backgroundColor: const Color(0xFF4CAF50),
       ),
     );
   }
@@ -474,6 +869,151 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
               ],
             ),
           ),
+    );
+  }
+
+  // Format date helper - Enhanced version
+  String _formatDate(dynamic date) {
+    try {
+      if (date == null) return 'Tidak ada data';
+
+      DateTime dateTime;
+
+      if (date is Timestamp) {
+        dateTime = date.toDate();
+      } else if (date is DateTime) {
+        dateTime = date;
+      } else if (date is String) {
+        if (date.isEmpty) return 'Tidak ada data';
+        // Try to parse different string formats
+        try {
+          dateTime = DateTime.parse(date);
+        } catch (e) {
+          // Try other formats if parse fails
+          try {
+            dateTime = DateFormat('dd/MM/yyyy').parse(date);
+          } catch (e2) {
+            try {
+              dateTime = DateFormat('yyyy-MM-dd').parse(date);
+            } catch (e3) {
+              try {
+                dateTime = DateFormat('dd-MM-yyyy').parse(date);
+              } catch (e4) {
+                return 'Format tanggal tidak valid';
+              }
+            }
+          }
+        }
+      } else if (date is int) {
+        // Handle timestamp in milliseconds
+        dateTime = DateTime.fromMillisecondsSinceEpoch(date);
+      } else {
+        return 'Format tanggal tidak valid';
+      }
+
+      return DateFormat('dd MMMM yyyy', 'id_ID').format(dateTime);
+    } catch (e) {
+      print('Error formatting date: $e');
+      return 'Format tanggal tidak valid';
+    }
+  }
+
+  // Format time only helper
+  String _formatTime(dynamic time) {
+    try {
+      if (time == null) return 'Tidak ada data';
+
+      if (time is String) {
+        if (time.isEmpty) return 'Tidak ada data';
+
+        // Check if it's already in HH:mm format
+        if (RegExp(r'^\d{2}:\d{2}$').hasMatch(time)) {
+          return time;
+        }
+
+        // Check if it's in HH:mm:ss format
+        if (RegExp(r'^\d{2}:\d{2}:\d{2}$').hasMatch(time)) {
+          return time.substring(0, 5); // Take only HH:mm
+        }
+
+        // Try to parse as DateTime and extract time
+        try {
+          final dateTime = DateTime.parse(time);
+          return DateFormat('HH:mm').format(dateTime);
+        } catch (e) {
+          return time.toString();
+        }
+      } else if (time is DateTime) {
+        return DateFormat('HH:mm').format(time);
+      } else if (time is Timestamp) {
+        return DateFormat('HH:mm').format(time.toDate());
+      }
+
+      return time.toString();
+    } catch (e) {
+      print('Error formatting time: $e');
+      return 'Format waktu tidak valid';
+    }
+  }
+
+  // Validate and format data helper
+  String _formatDataWithUnit(
+    dynamic value,
+    String unit, {
+    String defaultText = 'Tidak ada data',
+  }) {
+    if (value == null || value.toString().isEmpty) return defaultText;
+    return '${value.toString()} $unit';
+  }
+
+  // Build detail section for dialog
+  Widget _buildDetailSection(
+    String title,
+    IconData icon,
+    Color color,
+    List<String> details,
+  ) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                title,
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: color,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          ...details
+              .map(
+                (detail) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(
+                    detail,
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      color: Colors.grey[700],
+                    ),
+                  ),
+                ),
+              )
+              .toList(),
+        ],
+      ),
     );
   }
 }
@@ -1174,20 +1714,31 @@ class BirthCertificateScreen extends StatelessWidget {
                 ),
                 _buildInfoRow(
                   'Nama Ayah',
-                  data['namaAyah'] ?? 'Tidak ada data',
+                  data['namaSuami'] ?? 'Tidak ada data',
                 ),
-                _buildInfoRow('Nama Ibu', data['namaIbu'] ?? 'Tidak ada data'),
-                _buildInfoRow('Umur Ayah', '${data['umurAyah'] ?? 0} tahun'),
-                _buildInfoRow('Umur Ibu', '${data['umurIbu'] ?? 0} tahun'),
+                _buildInfoRow('Umur Ayah', '${data['umurSuami'] ?? 0} tahun'),
+                _buildInfoRow(
+                  'Agama Ayah',
+                  data['agamaSuami'] ?? 'Tidak ada data',
+                ),
                 _buildInfoRow(
                   'Pekerjaan Ayah',
-                  data['pekerjaanAyah'] ?? 'Tidak ada data',
+                  data['pekerjaanSuami'] ?? 'Tidak ada data',
                 ),
                 _buildInfoRow(
-                  'Pekerjaan Ibu',
-                  data['pekerjaanIbu'] ?? 'Tidak ada data',
+                  'Nama Ibu',
+                  data['pasienNama'] ?? 'Tidak ada data',
                 ),
-                _buildInfoRow('Alamat', data['alamat'] ?? 'Tidak ada data'),
+                _buildInfoRow('Umur Ibu', '${data['pasienUmur'] ?? 0} tahun'),
+                _buildInfoRow('Agama Ibu', data['agama'] ?? 'Tidak ada data'),
+                _buildInfoRow(
+                  'Pekerjaan Ibu',
+                  data['pekerjaan'] ?? 'Tidak ada data',
+                ),
+                _buildInfoRow(
+                  'Alamat',
+                  data['pasienAlamat'] ?? 'Tidak ada data',
+                ),
               ],
             ),
           ),

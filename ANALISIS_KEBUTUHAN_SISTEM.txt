@@ -1,0 +1,229 @@
+ANALISIS KEBUTUHAN SISTEM (SYSTEM REQUIREMENTS ANALYSIS)
+Aplikasi PersalinanKu - Sistem Manajemen Kehamilan dan Persalinan Berbasis Mobile
+
+BAB 4: ANALISIS KEBUTUHAN SISTEM
+
+4.2 Analisis Kebutuhan Sistem
+
+Analisis dilakukan untuk menentukan proses apa yang diperlukan dalam pengembangan sistem yang akan dibangun, yang terdiri dari hal-hal berikut:
+
+1. Analisis Kebutuhan Input
+Menggambarkan data yang harus dimasukkan oleh pengguna ke dalam sistem, meliputi:
+
+a. Form Login dan Autentikasi
+   - Form login untuk autentifikasi pengguna (bidan dan pasien) dengan input email/username dan password
+   - Form registrasi untuk pasien baru dengan input data pribadi lengkap
+   - Form verifikasi email untuk konfirmasi akun pasien
+   - Form lupa password dengan input email untuk reset password
+
+b. Input Data Pasien
+   - Form pendaftaran pasien dengan input nama lengkap, tanggal lahir, alamat, nomor telepon
+   - Input informasi kehamilan meliputi HPHT (Hari Pertama Haid Terakhir), riwayat kehamilan sebelumnya
+   - Input data medis pasien seperti golongan darah, alergi, riwayat penyakit
+   - Input data kontak darurat dan informasi keluarga
+
+c. Input Data Pemeriksaan Kehamilan
+   - Form pemeriksaan rutin dengan input berat badan, tekanan darah, tinggi fundus uteri
+   - Input hasil laboratorium seperti kadar hemoglobin, gula darah, urin
+   - Input keluhan dan gejala yang dialami pasien
+   - Input rekomendasi dan saran medis dari bidan
+
+d. Input Data Persalinan
+   - Form registrasi persalinan dengan input tanggal dan waktu persalinan
+   - Input data proses persalinan meliputi jenis persalinan, komplikasi, intervensi medis
+   - Input data bayi baru lahir seperti berat badan, panjang badan, APGAR score
+   - Input data pasca persalinan dan follow-up care
+
+e. Input Jadwal dan Konsultasi
+   - Form pembuatan jadwal konsultasi dengan input tanggal, waktu, dan jenis konsultasi
+   - Input permintaan temu janji dari pasien dengan input preferensi waktu
+   - Input reschedule jadwal dengan input alasan dan waktu baru
+   - Input notifikasi dan pengingat untuk jadwal mendatang
+
+f. Input Konten Edukasi
+   - Form pembuatan artikel dengan input judul, konten, kategori, dan tag
+   - Input gambar dan multimedia untuk artikel edukasi
+   - Input pengaturan prioritas dan urutan tampilan artikel
+   - Input kategori dan sub-kategori untuk organisasi konten
+
+g. Input Chat dan Komunikasi
+   - Input pesan teks dalam fitur chat antara bidan dan pasien
+   - Input attachment file untuk berbagi dokumen medis
+   - Input status online/offline untuk indikator ketersediaan
+   - Input notifikasi push untuk pesan masuk
+
+h. Input Data Analitik
+   - Input parameter filter untuk laporan dan dashboard
+   - Input periode waktu untuk analisis data
+   - Input kriteria pencarian dan pengelompokan data
+   - Input pengaturan ekspor data dan format laporan
+
+2. Analisis Kebutuhan Output
+Menggambarkan informasi yang harus ditampilkan oleh sistem kepada pengguna, meliputi:
+
+a. Output Dashboard dan Home
+   - Dashboard admin yang menampilkan statistik total pasien, jadwal hari ini, dan notifikasi
+   - Home pasien yang menampilkan informasi kehamilan pribadi, jadwal pemeriksaan, dan artikel terbaru
+   - Widget informasi penting seperti usia kehamilan, perkiraan tanggal lahir, dan milestone perkembangan
+   - Menu navigasi utama dengan akses cepat ke fitur-fitur penting
+
+b. Output Data Pasien dan Persalinan
+   - Tabel daftar pasien dengan informasi lengkap dan fitur pencarian
+   - Detail profil pasien dengan riwayat lengkap pemeriksaan dan konsultasi
+   - Laporan persalinan dalam format yang dapat dibaca dan didownload
+   - Grafik perkembangan kehamilan dan pertumbuhan janin
+   - Riwayat medis lengkap dengan timeline dan catatan bidan
+
+c. Output Jadwal dan Kalender
+   - Kalender jadwal konsultasi dengan tampilan bulanan, mingguan, dan harian
+   - List jadwal hari ini dengan detail waktu dan pasien
+   - Notifikasi pengingat untuk jadwal mendatang
+   - Konfirmasi booking dan status jadwal konsultasi
+   - Riwayat jadwal yang telah selesai dengan catatan hasil
+
+d. Output Konten Edukasi
+   - List artikel edukasi dengan thumbnail, judul, dan preview konten
+   - Halaman detail artikel dengan konten lengkap dan gambar
+   - Kategori artikel dengan jumlah artikel per kategori
+   - Artikel rekomendasi berdasarkan riwayat membaca pasien
+   - Fitur pencarian artikel dengan filter kategori dan tag
+
+e. Output Chat dan Notifikasi
+   - Interface chat dengan riwayat percakapan lengkap
+   - List chat aktif dengan preview pesan terakhir
+   - Notifikasi push untuk pesan masuk, jadwal, dan pengingat
+   - Status online/offline pengguna lain
+   - Indikator pesan yang belum dibaca
+
+f. Output Laporan dan Analitik
+   - Dashboard analitik dengan grafik dan statistik pasien
+   - Laporan performa sistem dan aktivitas pengguna
+   - Export data dalam format PDF, Excel, atau CSV
+   - Grafik trend pertumbuhan pasien dan konsultasi
+   - Analisis pola penggunaan fitur dan feedback pengguna
+
+g. Output Fitur Darurat
+   - Halaman darurat dengan kontak bidan dan instruksi pertolongan
+   - Tombol panic button untuk situasi kegawatdaruratan
+   - Panduan pertolongan pertama kehamilan
+   - Kontak darurat dan cara menghubungi layanan medis
+   - Log aktivitas darurat untuk tracking dan follow-up
+
+h. Output Kalkulator dan Tools
+   - Kalkulator kehamilan dengan hasil HPHT dan perkiraan lahir
+   - Kalkulator berat badan ideal selama kehamilan
+   - Timeline perkembangan janin sesuai usia kehamilan
+   - Checklist persiapan persalinan dan pasca persalinan
+   - Reminder untuk konsumsi vitamin dan jadwal pemeriksaan
+
+3. Analisis Kebutuhan Proses
+Menggambarkan proses bisnis yang harus dijalankan oleh sistem, meliputi:
+
+a. Proses Autentikasi dan Otorisasi
+   - Validasi kredensial login dan pembuatan session
+   - Pengecekan role pengguna dan pemberian akses sesuai hak
+   - Manajemen token dan refresh token untuk keamanan
+   - Log aktivitas login dan logout untuk audit trail
+
+b. Proses Manajemen Data
+   - CRUD (Create, Read, Update, Delete) untuk semua entitas data
+   - Validasi input data sesuai business rules dan constraint
+   - Backup dan recovery data secara otomatis
+   - Sinkronisasi data antara device dan server
+
+c. Proses Notifikasi dan Komunikasi
+   - Pengiriman notifikasi push untuk berbagai event
+   - Manajemen antrian notifikasi dan retry mechanism
+   - Personalisasi notifikasi berdasarkan preferensi pengguna
+   - Tracking delivery dan read status notifikasi
+
+d. Proses Chat dan Messaging
+   - Real-time messaging dengan WebSocket atau Firebase
+   - Enkripsi pesan untuk keamanan data
+   - Storage dan retrieval riwayat chat
+   - Auto-reply dan bot response untuk situasi tertentu
+
+e. Proses Scheduling dan Reminder
+   - Algoritma penjadwalan otomatis dengan conflict detection
+   - Sistem reminder dengan multiple channel (push, email, SMS)
+   - Reschedule otomatis dengan notifikasi ke semua pihak
+   - Integration dengan calendar aplikasi
+
+4. Analisis Kebutuhan Non-Fungsional
+Menggambarkan karakteristik sistem yang tidak terkait langsung dengan fungsionalitas, meliputi:
+
+a. Kebutuhan Performa
+   - Response time maksimal 3 detik untuk operasi CRUD
+   - Support untuk minimum 1000 user concurrent
+   - Optimasi penggunaan memory dan battery device
+   - Caching strategy untuk data yang sering diakses
+
+b. Kebutuhan Keamanan
+   - Enkripsi end-to-end untuk data sensitif
+   - Implementasi JWT token dengan expiry time
+   - Rate limiting untuk mencegah brute force attack
+   - Audit logging untuk semua aktivitas kritis
+
+c. Kebutuhan Availability
+   - Uptime minimum 99.5% per bulan
+   - Backup otomatis setiap 24 jam
+   - Disaster recovery plan dengan RTO < 4 jam
+   - Monitoring dan alerting untuk sistem health
+
+d. Kebutuhan Scalability
+   - Arsitektur yang dapat di-scale horizontal
+   - Database optimization untuk query performance
+   - CDN untuk distribusi konten statis
+   - Load balancing untuk distribusi traffic
+
+e. Kebutuhan Usability
+   - Interface yang responsive untuk berbagai ukuran layar
+   - Accessibility compliance untuk pengguna disabilitas
+   - Multi-language support (Indonesia dan Inggris)
+   - Offline mode untuk fitur tertentu
+
+5. Analisis Kebutuhan Integrasi
+Menggambarkan kebutuhan integrasi dengan sistem eksternal, meliputi:
+
+a. Integrasi Firebase
+   - Authentication dengan Firebase Auth
+   - Database dengan Firestore untuk data real-time
+   - Storage untuk file dan gambar
+   - Cloud Functions untuk backend logic
+
+b. Integrasi Platform Mobile
+   - Native integration dengan Android dan iOS
+   - Push notification service
+   - Camera dan gallery access
+   - GPS dan location services
+
+c. Integrasi Third Party
+   - Payment gateway untuk premium features
+   - SMS gateway untuk notifikasi
+   - Email service untuk komunikasi
+   - Analytics tools untuk tracking user behavior
+
+6. Analisis Kebutuhan Deployment
+Menggambarkan kebutuhan untuk deployment dan maintenance sistem, meliputi:
+
+a. Environment Management
+   - Development, staging, dan production environment
+   - Configuration management untuk berbagai environment
+   - Secret management untuk API keys dan credentials
+   - Environment-specific feature flags
+
+b. CI/CD Pipeline
+   - Automated testing untuk setiap build
+   - Automated deployment ke staging dan production
+   - Rollback mechanism untuk deployment yang bermasalah
+   - Monitoring deployment metrics dan health checks
+
+c. Monitoring dan Logging
+   - Application performance monitoring (APM)
+   - Error tracking dan alerting
+   - User behavior analytics
+   - System health dashboard
+
+7. Kesimpulan
+
+Analisis kebutuhan sistem menunjukkan bahwa aplikasi PersalinanKu memerlukan sistem yang robust, scalable, dan user-friendly. Sistem harus dapat menangani input data yang kompleks dari berbagai jenis pengguna, menghasilkan output yang informatif dan mudah dipahami, serta menjalankan proses bisnis yang efisien. Kebutuhan non-fungsional seperti keamanan, performa, dan availability menjadi prioritas tinggi mengingat sensitivitas data medis yang dikelola. Integrasi dengan Firebase dan platform mobile memastikan sistem dapat berjalan dengan optimal di berbagai perangkat dan kondisi jaringan.

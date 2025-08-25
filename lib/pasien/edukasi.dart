@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../models/user_model.dart';
 import '../../routes/route_helper.dart';
 import '../../providers/article_provider.dart';
@@ -224,7 +225,7 @@ class _EdukasiScreenState extends State<EdukasiScreen>
         articles =
             articles.where((article) {
               final title = article.title?.toLowerCase() ?? '';
-              final content = article.content?.toLowerCase() ?? '';
+              final content = article.description?.toLowerCase() ?? '';
 
               switch (_selectedContentType) {
                 case 'Nutrisi & Gizi':
@@ -367,20 +368,58 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                             child: ArticleCard(
                               article: currentArticle,
                               onTap: () async {
-                                final result = await Navigator.pushNamed(
-                                  context,
-                                  RouteHelper.articleDetail,
-                                  arguments: {
-                                    'article': currentArticle,
-                                    'user': widget.user,
-                                  },
-                                );
+                                // Check if article has website URL
+                                if (currentArticle.websiteUrl.isNotEmpty) {
+                                  // Open website URL directly
+                                  try {
+                                    final url = Uri.parse(
+                                      currentArticle.websiteUrl,
+                                    );
+                                    // Use url_launcher to open website
+                                    if (await canLaunchUrl(url)) {
+                                      await launchUrl(
+                                        url,
+                                        mode: LaunchMode.externalApplication,
+                                      );
+                                    } else {
+                                      ScaffoldMessenger.of(
+                                        context,
+                                      ).showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Tidak dapat membuka website: ${currentArticle.websiteUrl}',
+                                          ),
+                                          backgroundColor: Colors.red,
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          'URL tidak valid: ${currentArticle.websiteUrl}',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                  }
+                                } else {
+                                  // Navigate to article detail if no website URL
+                                  final result = await Navigator.pushNamed(
+                                    context,
+                                    RouteHelper.articleDetail,
+                                    arguments: {
+                                      'article': currentArticle,
+                                      'user': widget.user,
+                                    },
+                                  );
 
-                                // Refresh article status when returning from detail
-                                if (result == true) {
-                                  setState(() {
-                                    // This will trigger a rebuild and refresh the streams
-                                  });
+                                  // Refresh article status when returning from detail
+                                  if (result == true) {
+                                    setState(() {
+                                      // This will trigger a rebuild and refresh the streams
+                                    });
+                                  }
                                 }
                               },
                               onLike: () => _handleArticleLike(currentArticle),

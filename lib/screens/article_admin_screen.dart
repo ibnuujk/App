@@ -15,6 +15,7 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _contentController = TextEditingController();
+  final _websiteUrlController = TextEditingController();
   String _selectedCategory = 'Trimester 1';
   int _readTime = 5;
   bool _isActive = true;
@@ -23,12 +24,14 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
+    _websiteUrlController.dispose();
     super.dispose();
   }
 
   void _showAddArticleDialog() {
     _titleController.clear();
     _contentController.clear();
+    _websiteUrlController.clear();
     _selectedCategory = 'Trimester 1';
     _readTime = 5;
     _isActive = true;
@@ -118,16 +121,27 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
                     ),
                     const SizedBox(height: 16),
                     TextFormField(
+                      controller: _websiteUrlController,
+                      decoration: const InputDecoration(
+                        labelText: 'Link Website (Opsional)',
+                        border: OutlineInputBorder(),
+                        hintText: 'https://example.com',
+                      ),
+                      keyboardType: TextInputType.url,
+                    ),
+                    const SizedBox(height: 16),
+                    TextFormField(
                       controller: _contentController,
                       decoration: const InputDecoration(
-                        labelText: 'Konten Artikel',
+                        labelText: 'Informasi Singkat',
                         border: OutlineInputBorder(),
                         alignLabelWithHint: true,
+                        hintText: 'Masukkan informasi singkat tentang artikel',
                       ),
-                      maxLines: 5,
+                      maxLines: 3,
                       validator: (value) {
                         if (value == null || value.isEmpty) {
-                          return 'Konten tidak boleh kosong';
+                          return 'Informasi singkat tidak boleh kosong';
                         }
                         return null;
                       },
@@ -152,7 +166,8 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
       final article = Article(
         id: DateTime.now().millisecondsSinceEpoch.toString(),
         title: _titleController.text,
-        content: _contentController.text,
+        description: _contentController.text,
+        websiteUrl: _websiteUrlController.text.trim(),
         category: _selectedCategory,
         readTime: _readTime,
         views: 0,
@@ -167,18 +182,6 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
         const SnackBar(content: Text('Artikel berhasil ditambahkan!')),
       );
     }
-  }
-
-  void _loadSampleData() {
-    context.read<ArticleProvider>().loadFreshSampleData(
-      count: 15,
-      clearExisting: false,
-      highQualityOnly: true,
-    );
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('15 artikel sample berhasil ditambahkan!')),
-    );
   }
 
   @override
@@ -230,27 +233,6 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: _loadSampleData,
-                        icon: const Icon(Icons.data_usage),
-                        label: Text(
-                          'Load Sample',
-                          style: GoogleFonts.poppins(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF9C27B0),
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 16),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                      ),
-                    ),
                   ],
                 ),
               ),
@@ -279,7 +261,7 @@ class _ArticleAdminScreenState extends State<ArticleAdminScreen> {
                               ),
                               const SizedBox(height: 8),
                               Text(
-                                'Tambahkan artikel baru atau load sample data',
+                                'Tambahkan artikel baru dengan judul, informasi singkat, dan link website',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   color: Colors.grey[500],

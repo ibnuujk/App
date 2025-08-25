@@ -7,7 +7,7 @@ import '../models/emergency_contact_model.dart';
 
 class EmergencyService {
   static const String _emergencyContactsKey = 'emergency_contacts';
-  static const String bidanNumber = '+6289666712042'; // Bidan phone number
+  static const String bidanNumber = '+6282323216060'; // Bidan phone number
   static const String bidanWhatsApp = '+6282323216060'; // Bidan WhatsApp number
 
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

@@ -68,7 +68,6 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                   _isLoading = false;
                 });
                 print('Error loading patients: $e');
-                // Show user-friendly error message
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(

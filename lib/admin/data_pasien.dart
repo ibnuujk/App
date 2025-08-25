@@ -156,6 +156,27 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
     final _alamatController = TextEditingController(
       text: patient?.alamat ?? '',
     );
+
+    // New controllers for additional fields
+    final _namaSuamiController = TextEditingController(
+      text: patient?.namaSuami ?? '',
+    );
+    final _pekerjaanSuamiController = TextEditingController(
+      text: patient?.pekerjaanSuami ?? '',
+    );
+    final _umurSuamiController = TextEditingController(
+      text: patient?.umurSuami?.toString() ?? '',
+    );
+    final _agamaSuamiController = TextEditingController(
+      text: patient?.agamaSuami ?? '',
+    );
+    final _agamaPasienController = TextEditingController(
+      text: patient?.agamaPasien ?? '',
+    );
+    final _pekerjaanPasienController = TextEditingController(
+      text: patient?.pekerjaanPasien ?? '',
+    );
+
     DateTime _selectedDate = patient?.tanggalLahir ?? DateTime.now();
     bool _isLoading = false;
 
@@ -286,6 +307,113 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 16),
+
+                          // Divider for husband information
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.grey[300],
+                                  thickness: 1,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  'Informasi Suami',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.grey[300],
+                                  thickness: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildFormField(
+                            controller: _namaSuamiController,
+                            label: 'Nama Suami',
+                            icon: Icons.person_rounded,
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildFormField(
+                            controller: _pekerjaanSuamiController,
+                            label: 'Pekerjaan Suami',
+                            icon: Icons.work_rounded,
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildFormField(
+                            controller: _umurSuamiController,
+                            label: 'Umur Suami',
+                            icon: Icons.calendar_today_rounded,
+                            keyboardType: TextInputType.number,
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildFormField(
+                            controller: _agamaSuamiController,
+                            label: 'Agama Suami',
+                            icon: Icons.church_rounded,
+                          ),
+                          const SizedBox(height: 16),
+
+                          // Divider for patient additional information
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.grey[300],
+                                  thickness: 1,
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                ),
+                                child: Text(
+                                  'Informasi Tambahan Pasien',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[700],
+                                  ),
+                                ),
+                              ),
+                              Expanded(
+                                child: Divider(
+                                  color: Colors.grey[300],
+                                  thickness: 1,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildFormField(
+                            controller: _agamaPasienController,
+                            label: 'Agama',
+                            icon: Icons.church_rounded,
+                          ),
+                          const SizedBox(height: 16),
+
+                          _buildFormField(
+                            controller: _pekerjaanPasienController,
+                            label: 'Pekerjaan',
+                            icon: Icons.work_rounded,
+                          ),
                         ],
                       ),
                     ),
@@ -328,6 +456,52 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                                       role: 'pasien',
                                       createdAt:
                                           patient?.createdAt ?? DateTime.now(),
+
+                                      // New fields
+                                      namaSuami:
+                                          _namaSuamiController.text
+                                                  .trim()
+                                                  .isEmpty
+                                              ? null
+                                              : _namaSuamiController.text
+                                                  .trim(),
+                                      pekerjaanSuami:
+                                          _pekerjaanSuamiController.text
+                                                  .trim()
+                                                  .isEmpty
+                                              ? null
+                                              : _pekerjaanSuamiController.text
+                                                  .trim(),
+                                      umurSuami:
+                                          _umurSuamiController.text
+                                                  .trim()
+                                                  .isEmpty
+                                              ? null
+                                              : int.tryParse(
+                                                _umurSuamiController.text
+                                                    .trim(),
+                                              ),
+                                      agamaSuami:
+                                          _agamaSuamiController.text
+                                                  .trim()
+                                                  .isEmpty
+                                              ? null
+                                              : _agamaSuamiController.text
+                                                  .trim(),
+                                      agamaPasien:
+                                          _agamaPasienController.text
+                                                  .trim()
+                                                  .isEmpty
+                                              ? null
+                                              : _agamaPasienController.text
+                                                  .trim(),
+                                      pekerjaanPasien:
+                                          _pekerjaanPasienController.text
+                                                  .trim()
+                                                  .isEmpty
+                                              ? null
+                                              : _pekerjaanPasienController.text
+                                                  .trim(),
                                     );
 
                                     if (patient == null) {
@@ -405,11 +579,13 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
     int maxLines = 1,
     bool obscureText = false,
     String? Function(String?)? validator,
+    TextInputType? keyboardType,
   }) {
     return TextFormField(
       controller: controller,
       maxLines: maxLines,
       obscureText: obscureText,
+      keyboardType: keyboardType,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon, color: const Color(0xFFEC407A)),
@@ -488,7 +664,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(16),
                   boxShadow: [
                     BoxShadow(
                       color: const Color(0xFFEC407A).withValues(alpha: 0.3),
@@ -694,6 +870,49 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                                               color: Colors.grey[600],
                                             ),
                                           ),
+
+                                          // New fields
+                                          if (patient.agamaPasien != null &&
+                                              patient
+                                                  .agamaPasien!
+                                                  .isNotEmpty) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Agama: ${patient.agamaPasien}',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                          ],
+
+                                          if (patient.pekerjaanPasien != null &&
+                                              patient
+                                                  .pekerjaanPasien!
+                                                  .isNotEmpty) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Pekerjaan: ${patient.pekerjaanPasien}',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                          ],
+
+                                          if (patient.namaSuami != null &&
+                                              patient
+                                                  .namaSuami!
+                                                  .isNotEmpty) ...[
+                                            const SizedBox(height: 4),
+                                            Text(
+                                              'Suami: ${patient.namaSuami}',
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: Colors.grey[500],
+                                              ),
+                                            ),
+                                          ],
                                         ],
                                       ),
                                     ),

@@ -8,22 +8,47 @@ class ArticleService {
   // Get all active articles (simplified to avoid composite index issues)
   Future<List<Article>> getActiveArticles() async {
     try {
+      print('Fetching active articles from Firestore...');
       final snapshot =
           await _firestore
               .collection(_collection)
               .where('isActive', isEqualTo: true)
               .get();
 
+      print('Found ${snapshot.docs.length} articles in Firestore');
+
       final articles =
           snapshot.docs
-              .map((doc) => Article.fromMap({...doc.data(), 'id': doc.id}))
+              .map((doc) {
+                try {
+                  final article = Article.fromMap({
+                    ...doc.data(),
+                    'id': doc.id,
+                  });
+                  print(
+                    'Successfully parsed article: ${article.title} (ID: ${article.id})',
+                  );
+                  return article;
+                } catch (parseError) {
+                  print(
+                    'Error parsing article document ${doc.id}: $parseError',
+                  );
+                  print('Document data: ${doc.data()}');
+                  return null;
+                }
+              })
+              .where((article) => article != null)
+              .cast<Article>()
               .toList();
+
+      print('Successfully parsed ${articles.length} articles');
 
       // Sort locally to avoid composite index requirement
       articles.sort((a, b) => b.createdAt.compareTo(a.createdAt));
       return articles;
     } catch (e) {
       print('Error getting active articles: $e');
+      print('Stack trace: ${StackTrace.current}');
       return [];
     }
   }
@@ -66,7 +91,7 @@ class ArticleService {
           .where(
             (article) =>
                 article.title.toLowerCase().contains(query.toLowerCase()) ||
-                article.content.toLowerCase().contains(query.toLowerCase()),
+                article.description.toLowerCase().contains(query.toLowerCase()),
           )
           .toList();
     } catch (e) {

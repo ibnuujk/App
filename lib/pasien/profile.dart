@@ -467,6 +467,44 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     _buildInfoRow('Umur', '${_currentUser.umur} tahun'),
                     _buildInfoRow('Alamat', _currentUser.alamat),
+
+                    // New fields
+                    if (_currentUser.agamaPasien != null &&
+                        _currentUser.agamaPasien!.isNotEmpty)
+                      _buildInfoRow('Agama', _currentUser.agamaPasien!),
+                    if (_currentUser.pekerjaanPasien != null &&
+                        _currentUser.pekerjaanPasien!.isNotEmpty)
+                      _buildInfoRow('Pekerjaan', _currentUser.pekerjaanPasien!),
+
+                    // Husband information
+                    if (_currentUser.namaSuami != null &&
+                        _currentUser.namaSuami!.isNotEmpty) ...[
+                      const SizedBox(height: 16),
+                      Text(
+                        'Informasi Suami',
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF2d3748),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      _buildInfoRow('Nama Suami', _currentUser.namaSuami!),
+                      if (_currentUser.pekerjaanSuami != null &&
+                          _currentUser.pekerjaanSuami!.isNotEmpty)
+                        _buildInfoRow(
+                          'Pekerjaan Suami',
+                          _currentUser.pekerjaanSuami!,
+                        ),
+                      if (_currentUser.umurSuami != null)
+                        _buildInfoRow(
+                          'Umur Suami',
+                          '${_currentUser.umurSuami} tahun',
+                        ),
+                      if (_currentUser.agamaSuami != null &&
+                          _currentUser.agamaSuami!.isNotEmpty)
+                        _buildInfoRow('Agama Suami', _currentUser.agamaSuami!),
+                    ],
                   ],
                 ],
               ),

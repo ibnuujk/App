@@ -26,6 +26,11 @@ class _RegistrasiPersalinanFormDialogState
 
   // Form controllers
   final _namaSuamiController = TextEditingController();
+  final _pekerjaanSuamiController = TextEditingController();
+  final _umurSuamiController = TextEditingController();
+  final _agamaSuamiController = TextEditingController();
+  final _agamaPasienController = TextEditingController();
+  final _pekerjaanPasienController = TextEditingController();
   final _pekerjaanController = TextEditingController();
   final _diagnosaController = TextEditingController();
   final _tindakanController = TextEditingController();
@@ -59,6 +64,14 @@ class _RegistrasiPersalinanFormDialogState
       _pasienNoHp = widget.examinationData!['noHp'];
       _pasienUmur = widget.examinationData!['umur'];
       _pasienAlamat = widget.examinationData!['alamat'];
+
+      // Pre-fill agama dan pekerjaan pasien dari data pemeriksaan jika tersedia
+      if (widget.examinationData!['agama'] != null) {
+        _agamaPasienController.text = widget.examinationData!['agama'];
+      }
+      if (widget.examinationData!['pekerjaan'] != null) {
+        _pekerjaanPasienController.text = widget.examinationData!['pekerjaan'];
+      }
     } else if (widget.persalinanData != null) {
       // Pre-fill with existing persalinan data
       final data = widget.persalinanData!;
@@ -69,6 +82,11 @@ class _RegistrasiPersalinanFormDialogState
       _pasienAlamat = data.pasienAlamat;
 
       _namaSuamiController.text = data.namaSuami;
+      _pekerjaanSuamiController.text = data.pekerjaanSuami;
+      _umurSuamiController.text = data.umurSuami.toString();
+      _agamaSuamiController.text = data.agamaSuami;
+      _agamaPasienController.text = data.agamaPasien;
+      _pekerjaanPasienController.text = data.pekerjaanPasien;
       _pekerjaanController.text = data.pekerjaan;
       _diagnosaController.text = data.diagnosaKebidanan;
       _tindakanController.text = data.tindakan;
@@ -85,6 +103,11 @@ class _RegistrasiPersalinanFormDialogState
   @override
   void dispose() {
     _namaSuamiController.dispose();
+    _pekerjaanSuamiController.dispose();
+    _umurSuamiController.dispose();
+    _agamaSuamiController.dispose();
+    _agamaPasienController.dispose();
+    _pekerjaanPasienController.dispose();
     _pekerjaanController.dispose();
     _diagnosaController.dispose();
     _tindakanController.dispose();
@@ -109,6 +132,11 @@ class _RegistrasiPersalinanFormDialogState
         pasienUmur: _pasienUmur!,
         pasienAlamat: _pasienAlamat!,
         namaSuami: _namaSuamiController.text.trim(),
+        pekerjaanSuami: _pekerjaanSuamiController.text.trim(),
+        umurSuami: int.parse(_umurSuamiController.text.trim()),
+        agamaSuami: _agamaSuamiController.text.trim(),
+        agamaPasien: _agamaPasienController.text.trim(),
+        pekerjaanPasien: _pekerjaanPasienController.text.trim(),
         pekerjaan: _pekerjaanController.text.trim(),
         tanggalMasuk: _tanggalMasuk,
         tanggalPartes: _tanggalPartes,
@@ -201,6 +229,42 @@ class _RegistrasiPersalinanFormDialogState
                             color: Colors.grey[600],
                           ),
                         ),
+                      // Show success status if data already exists
+                      if (widget.persalinanData != null)
+                        Container(
+                          margin: const EdgeInsets.only(top: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.green.withValues(alpha: 0.3),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.green,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                'Registrasi Berhasil',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.green,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
@@ -226,10 +290,14 @@ class _RegistrasiPersalinanFormDialogState
                           width: double.infinity,
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFEC407A).withValues(alpha: 0.1),
+                            color: const Color(
+                              0xFFEC407A,
+                            ).withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: const Color(0xFFEC407A).withValues(alpha: 0.3),
+                              color: const Color(
+                                0xFFEC407A,
+                              ).withValues(alpha: 0.3),
                             ),
                           ),
                           child: Column(
@@ -247,6 +315,12 @@ class _RegistrasiPersalinanFormDialogState
                               Text('No HP: $_pasienNoHp'),
                               Text('Umur: $_pasienUmur tahun'),
                               Text('Alamat: $_pasienAlamat'),
+                              Text(
+                                'Agama: ${_agamaPasienController.text.isNotEmpty ? _agamaPasienController.text : 'Belum diisi'}',
+                              ),
+                              Text(
+                                'Pekerjaan: ${_pekerjaanPasienController.text.isNotEmpty ? _pekerjaanPasienController.text : 'Belum diisi'}',
+                              ),
                             ],
                           ),
                         ),
@@ -282,7 +356,156 @@ class _RegistrasiPersalinanFormDialogState
                       ),
                       const SizedBox(height: 16),
 
-                      // Pekerjaan
+                      // Pekerjaan Suami
+                      TextFormField(
+                        controller: _pekerjaanSuamiController,
+                        decoration: InputDecoration(
+                          labelText: 'Pekerjaan Suami',
+                          prefixIcon: Icon(
+                            Icons.work_outline,
+                            color: const Color(0xFFEC407A),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFEC407A),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Pekerjaan suami tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Umur Suami
+                      TextFormField(
+                        controller: _umurSuamiController,
+                        decoration: InputDecoration(
+                          labelText: 'Umur Suami',
+                          prefixIcon: Icon(
+                            Icons.person_outline,
+                            color: const Color(0xFFEC407A),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFEC407A),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        keyboardType: TextInputType.number,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Umur suami tidak boleh kosong';
+                          }
+                          if (int.tryParse(value) == null) {
+                            return 'Umur harus berupa angka';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Agama Suami
+                      TextFormField(
+                        controller: _agamaSuamiController,
+                        decoration: InputDecoration(
+                          labelText: 'Agama Suami',
+                          prefixIcon: Icon(
+                            Icons.church,
+                            color: const Color(0xFFEC407A),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFEC407A),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Agama suami tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Agama Pasien
+                      TextFormField(
+                        controller: _agamaPasienController,
+                        decoration: InputDecoration(
+                          labelText: 'Agama Pasien',
+                          prefixIcon: Icon(
+                            Icons.church,
+                            color: const Color(0xFFEC407A),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFEC407A),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Agama pasien tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Pekerjaan Pasien
+                      TextFormField(
+                        controller: _pekerjaanPasienController,
+                        decoration: InputDecoration(
+                          labelText: 'Pekerjaan Pasien',
+                          prefixIcon: Icon(
+                            Icons.work_outline,
+                            color: const Color(0xFFEC407A),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFEC407A),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Pekerjaan pasien tidak boleh kosong';
+                          }
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Pekerjaan (Field lama - untuk keperluan lain)
                       TextFormField(
                         controller: _pekerjaanController,
                         decoration: InputDecoration(

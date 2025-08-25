@@ -19,6 +19,16 @@ class UserModel {
   final List<Map<String, dynamic>>
   pregnancyHistory; // Riwayat kehamilan sebelumnya
 
+  // New fields for husband information
+  final String? namaSuami;
+  final String? pekerjaanSuami;
+  final int? umurSuami;
+  final String? agamaSuami;
+
+  // New fields for patient information
+  final String? agamaPasien;
+  final String? pekerjaanPasien;
+
   UserModel({
     required this.id,
     required this.email,
@@ -37,6 +47,12 @@ class UserModel {
     this.pregnancyNotes,
     this.newHpht,
     this.pregnancyHistory = const [],
+    this.namaSuami,
+    this.pekerjaanSuami,
+    this.umurSuami,
+    this.agamaSuami,
+    this.agamaPasien,
+    this.pekerjaanPasien,
   });
 
   Map<String, dynamic> toMap() {
@@ -58,6 +74,12 @@ class UserModel {
       'pregnancyNotes': pregnancyNotes,
       'newHpht': newHpht?.toIso8601String(),
       'pregnancyHistory': pregnancyHistory,
+      'namaSuami': namaSuami,
+      'pekerjaanSuami': pekerjaanSuami,
+      'umurSuami': umurSuami,
+      'agamaSuami': agamaSuami,
+      'agamaPasien': agamaPasien,
+      'pekerjaanPasien': pekerjaanPasien,
     };
   }
 
@@ -99,6 +121,12 @@ class UserModel {
       pregnancyHistory: List<Map<String, dynamic>>.from(
         map['pregnancyHistory'] ?? [],
       ),
+      namaSuami: map['namaSuami'],
+      pekerjaanSuami: map['pekerjaanSuami'],
+      umurSuami: map['umurSuami']?.toInt(),
+      agamaSuami: map['agamaSuami'],
+      agamaPasien: map['agamaPasien'],
+      pekerjaanPasien: map['pekerjaanPasien'],
     );
   }
 
@@ -120,6 +148,12 @@ class UserModel {
     String? pregnancyNotes,
     DateTime? newHpht,
     List<Map<String, dynamic>>? pregnancyHistory,
+    String? namaSuami,
+    String? pekerjaanSuami,
+    int? umurSuami,
+    String? agamaSuami,
+    String? agamaPasien,
+    String? pekerjaanPasien,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -139,6 +173,12 @@ class UserModel {
       pregnancyNotes: pregnancyNotes ?? this.pregnancyNotes,
       newHpht: newHpht ?? this.newHpht,
       pregnancyHistory: pregnancyHistory ?? this.pregnancyHistory,
+      namaSuami: namaSuami ?? this.namaSuami,
+      pekerjaanSuami: pekerjaanSuami ?? this.pekerjaanSuami,
+      umurSuami: umurSuami ?? this.umurSuami,
+      agamaSuami: agamaSuami ?? this.agamaSuami,
+      agamaPasien: agamaPasien ?? this.agamaPasien,
+      pekerjaanPasien: pekerjaanPasien ?? this.pekerjaanPasien,
     );
   }
 }

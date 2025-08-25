@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
-import '../../services/firebase_service.dart';
+
 import '../../services/notification_listener_service.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/simple_notification_badge.dart';
@@ -21,7 +21,6 @@ class HomePasienScreen extends StatefulWidget {
 
 class _HomePasienScreenState extends State<HomePasienScreen>
     with TickerProviderStateMixin {
-  final FirebaseService _firebaseService = FirebaseService();
   int _selectedIndex = 0;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
@@ -318,7 +317,7 @@ class _HomePasienScreenState extends State<HomePasienScreen>
   // Initialize notification service and listeners
   Future<void> _initializeNotifications() async {
     await NotificationService.initialize();
-    NotificationListenerService.initializePasienListeners(widget.user.id ?? '');
+    NotificationListenerService.initializePasienListeners(widget.user.id);
   }
 
   @override
@@ -526,11 +525,11 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                       Row(
                         children: [
                           Container(
-                            width: 80,
-                            height: 80,
+                            width: 100,
+                            height: 100,
                             decoration: BoxDecoration(
                               color: const Color(0xFFFFCDD2),
-                              borderRadius: BorderRadius.circular(40),
+                              borderRadius: BorderRadius.circular(50),
                               border: Border.all(
                                 color: const Color(
                                   0xFFEC407A,
@@ -542,8 +541,8 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                               padding: const EdgeInsets.all(16),
                               child: Image.asset(
                                 'assets/icons/bayi.png',
-                                width: 60,
-                                height: 60,
+                                width: 90,
+                                height: 90,
                                 color: const Color(0xFFEC407A),
                               ),
                             ),
@@ -832,35 +831,6 @@ class _HomePasienScreenState extends State<HomePasienScreen>
     );
   }
 
-  Widget _buildFetalInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 100,
-            child: Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.white.withValues(alpha: 0.9),
-              ),
-            ),
-          ),
-          Text(
-            ': $value',
-            style: GoogleFonts.poppins(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildFetalInfoColumn(String label, String value) {
     return Column(
       children: [
@@ -889,7 +859,6 @@ class _HomePasienScreenState extends State<HomePasienScreen>
 
   Widget _buildCalendar() {
     final now = DateTime.now();
-    final today = now.weekday; // 1 = Monday, 7 = Sunday
 
     return Row(
       children: List.generate(7, (index) {

@@ -436,20 +436,6 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
-                      // DJJ (Detak Jantung Janin)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: _buildVitalInfo(
-                              'DJJ',
-                              '${pemeriksaan['djj']?.toString() ?? '-'}',
-                              Icons.favorite_rounded,
-                            ),
-                          ),
-                          const Expanded(child: SizedBox()),
-                        ],
-                      ),
                     ],
                   ),
                 ),
@@ -710,7 +696,9 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                           color: const Color(0xFFFFF8E1),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFFFFCC02).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFFFFCC02,
+                            ).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -737,7 +725,9 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                           color: const Color(0xFFE3F2FD),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF2196F3).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFF2196F3,
+                            ).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),
@@ -764,7 +754,9 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                           color: const Color(0xFFE8F5E8),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
+                            color: const Color(
+                              0xFF4CAF50,
+                            ).withValues(alpha: 0.3),
                             width: 1,
                           ),
                         ),

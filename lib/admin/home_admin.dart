@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
-import '../../widgets/notification_badge.dart';
+
 import '../../services/notification_listener_service.dart';
 import '../../services/notification_service.dart';
 
@@ -73,7 +73,20 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
       body: IndexedStack(
         index: _selectedIndex,
         children: [
-          _buildDashboard(),
+          SafeArea(
+            child: SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(
+                  minHeight:
+                      MediaQuery.of(context).size.height -
+                      MediaQuery.of(context).padding.top -
+                      MediaQuery.of(context).padding.bottom -
+                      100, // Account for bottom nav
+                ),
+                child: _buildDashboard(),
+              ),
+            ),
+          ),
           const DataPasienScreen(),
           const RegistrasiPersalinanScreen(),
           const DataPersalinanScreen(),
@@ -312,7 +325,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 16,
-                      childAspectRatio: 1.2,
+                      childAspectRatio: 1.3,
                       children: [
                         _buildActionButton(
                           Icons.people_rounded,
@@ -321,22 +334,22 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                         ),
                         _buildActionButton(
                           Icons.medical_services_rounded,
-                          'Registrasi\nPersalinan',
+                          'Registrasi',
                           () => setState(() => _selectedIndex = 2),
                         ),
                         _buildActionButton(
                           Icons.local_hospital_rounded,
-                          'Laporan\nPersalinan',
+                          'Laporan',
                           () => setState(() => _selectedIndex = 3),
                         ),
                         _buildActionButton(
                           Icons.chat_rounded,
-                          'Chat dengan\nPasien',
+                          'Chat',
                           () => setState(() => _selectedIndex = 4),
                         ),
                         _buildActionButton(
                           Icons.analytics_rounded,
-                          'Dashboard\nAnalytics',
+                          'Analitik',
                           () => RouteHelper.navigateToAnalytics(
                             context,
                             widget.user,
@@ -344,7 +357,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                         ),
                         _buildActionButton(
                           Icons.pregnant_woman_rounded,
-                          'Pemeriksaan\nIbu Hamil',
+                          'Pemeriksaan',
                           () => RouteHelper.navigateToPemeriksaanIbuHamil(
                             context,
                             widget.user,
@@ -352,7 +365,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                         ),
                         _buildActionButton(
                           Icons.schedule_rounded,
-                          'Jadwal\nTemu Janji',
+                          'Temu Janji',
                           () => RouteHelper.navigateToJadwalKonsultasi(
                             context,
                             widget.user,
@@ -360,7 +373,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                         ),
                         _buildActionButton(
                           Icons.school_rounded,
-                          'Edukasi\nManagement',
+                          'Edukasi',
                           () => RouteHelper.navigateToPanelEdukasi(
                             context,
                             widget.user,
@@ -447,58 +460,6 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                 color: const Color(0xFF2D3748),
               ),
               textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildQuickAccessButton(
-    IconData icon,
-    String title,
-    VoidCallback onTap,
-  ) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: const Color(0xFFEC407A).withValues(alpha: 0.2),
-            width: 1,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: const Color(0xFFEC407A).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(icon, color: const Color(0xFFEC407A), size: 20),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                title,
-                style: GoogleFonts.poppins(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w600,
-                  color: const Color(0xFF2D3748),
-                ),
-              ),
             ),
           ],
         ),

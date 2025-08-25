@@ -25,11 +25,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _noHpController = TextEditingController();
   final _alamatController = TextEditingController();
 
+  // New controllers for additional fields
+  final _namaSuamiController = TextEditingController();
+  final _pekerjaanSuamiController = TextEditingController();
+  final _umurSuamiController = TextEditingController();
+  final _agamaSuamiController = TextEditingController();
+  final _agamaPasienController = TextEditingController();
+  final _pekerjaanPasienController = TextEditingController();
+
   // State variables
   bool _isLoading = false;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
   DateTime? _selectedDate;
+  DateTime? _selectedSuamiDate; // For husband's birth date
 
   @override
   void dispose() {
@@ -39,6 +48,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _namaController.dispose();
     _noHpController.dispose();
     _alamatController.dispose();
+
+    // Dispose new controllers
+    _namaSuamiController.dispose();
+    _pekerjaanSuamiController.dispose();
+    _umurSuamiController.dispose();
+    _agamaSuamiController.dispose();
+    _agamaPasienController.dispose();
+    _pekerjaanPasienController.dispose();
+
     super.dispose();
   }
 
@@ -54,6 +72,22 @@ class _RegisterScreenState extends State<RegisterScreen> {
     if (picked != null && picked != _selectedDate) {
       setState(() {
         _selectedDate = picked;
+      });
+    }
+  }
+
+  Future<void> _selectSuamiDate() async {
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().subtract(
+        const Duration(days: 6570),
+      ), // 18 years ago
+      firstDate: DateTime(1900),
+      lastDate: DateTime.now(),
+    );
+    if (picked != null && picked != _selectedSuamiDate) {
+      setState(() {
+        _selectedSuamiDate = picked;
       });
     }
   }
@@ -163,6 +197,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
         umur: age,
         role: 'pasien', // Only patients can register
         createdAt: DateTime.now(),
+
+        // New fields
+        namaSuami:
+            _namaSuamiController.text.trim().isEmpty
+                ? null
+                : _namaSuamiController.text.trim(),
+        pekerjaanSuami:
+            _pekerjaanSuamiController.text.trim().isEmpty
+                ? null
+                : _pekerjaanSuamiController.text.trim(),
+        umurSuami:
+            _selectedSuamiDate != null
+                ? _firebaseService.calculateAge(_selectedSuamiDate!)
+                : null,
+        agamaSuami:
+            _agamaSuamiController.text.trim().isEmpty
+                ? null
+                : _agamaSuamiController.text.trim(),
+        agamaPasien:
+            _agamaPasienController.text.trim().isEmpty
+                ? null
+                : _agamaPasienController.text.trim(),
+        pekerjaanPasien:
+            _pekerjaanPasienController.text.trim().isEmpty
+                ? null
+                : _pekerjaanPasienController.text.trim(),
       );
 
       // Debug print untuk memeriksa data user
@@ -283,7 +343,29 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
               ),
               const SizedBox(height: 32),
-
+              // Divider for patient additional information
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(color: Colors.grey[300], thickness: 1),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Informasi Pasien',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(color: Colors.grey[300], thickness: 1),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
               // Username Field
               TextFormField(
                 controller: _emailController,
@@ -469,6 +551,48 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 },
               ),
               const SizedBox(height: 16),
+              TextFormField(
+                controller: _agamaPasienController,
+                decoration: InputDecoration(
+                  labelText: 'Agama',
+                  labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+                  prefixIcon: Icon(Icons.church, color: Colors.grey[600]),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Pekerjaan Pasien Field
+              TextFormField(
+                controller: _pekerjaanPasienController,
+                decoration: InputDecoration(
+                  labelText: 'Pekerjaan',
+                  labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+                  prefixIcon: Icon(Icons.work, color: Colors.grey[600]),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 32),
 
               // Tanggal Lahir Field
               GestureDetector(
@@ -532,7 +656,137 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   return null;
                 },
               ),
-              const SizedBox(height: 32),
+              const SizedBox(height: 16),
+
+              // Divider for husband information
+              Row(
+                children: [
+                  Expanded(
+                    child: Divider(color: Colors.grey[300], thickness: 1),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Text(
+                      'Informasi Suami',
+                      style: GoogleFonts.poppins(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey[700],
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(color: Colors.grey[300], thickness: 1),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+
+              // Nama Suami Field
+              TextFormField(
+                controller: _namaSuamiController,
+                decoration: InputDecoration(
+                  labelText: 'Nama Suami',
+                  labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+                  prefixIcon: Icon(
+                    Icons.person_outline,
+                    color: Colors.grey[600],
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Pekerjaan Suami Field
+              TextFormField(
+                controller: _pekerjaanSuamiController,
+                decoration: InputDecoration(
+                  labelText: 'Pekerjaan Suami',
+                  labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+                  prefixIcon: Icon(Icons.work, color: Colors.grey[600]),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Tanggal Lahir Suami Field
+              GestureDetector(
+                onTap: _selectSuamiDate,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.grey[300]!),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.calendar_today, color: Colors.grey[600]),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          _selectedSuamiDate == null
+                              ? 'Tanggal Lahir Suami'
+                              : DateFormat(
+                                'dd/MM/yyyy',
+                              ).format(_selectedSuamiDate!),
+                          style: GoogleFonts.poppins(
+                            color:
+                                _selectedSuamiDate == null
+                                    ? Colors.grey[600]
+                                    : Colors.black,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+
+              // Agama Suami Field
+              TextFormField(
+                controller: _agamaSuamiController,
+                decoration: InputDecoration(
+                  labelText: 'Agama Suami',
+                  labelStyle: GoogleFonts.poppins(color: Colors.grey[600]),
+                  prefixIcon: Icon(Icons.church, color: Colors.grey[600]),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: Colors.grey[300]!),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Colors.red, width: 2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
 
               // Register Button
               SizedBox(

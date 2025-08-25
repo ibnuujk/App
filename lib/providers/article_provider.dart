@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../models/article_model.dart';
 import '../services/article_service.dart';
-import '../services/enhanced_article_generator.dart';
 
 class ArticleProvider with ChangeNotifier {
   final ArticleService _articleService = ArticleService();
@@ -36,7 +35,7 @@ class ArticleProvider with ChangeNotifier {
     final lowercaseQuery = query.toLowerCase();
     return activeArticles.where((article) {
       return article.title.toLowerCase().contains(lowercaseQuery) ||
-          article.content.toLowerCase().contains(lowercaseQuery) ||
+          article.description.toLowerCase().contains(lowercaseQuery) ||
           article.category.toLowerCase().contains(lowercaseQuery);
     }).toList();
   }
@@ -44,6 +43,7 @@ class ArticleProvider with ChangeNotifier {
   // Initialize articles
   Future<void> initializeArticles() async {
     try {
+      print('ArticleProvider: Initializing articles...');
       _setLoading(true);
       _clearError();
 
@@ -51,90 +51,18 @@ class ArticleProvider with ChangeNotifier {
       await _articleService.initializeArticleReadsCollection();
 
       final articles = await _articleService.getActiveArticles();
-      _articles = articles;
-
-      _setLoading(false);
-    } catch (e) {
-      _setError(e.toString());
-      _setLoading(false);
-    }
-  }
-
-  // Load fresh sample data using enhanced generator
-  Future<void> loadFreshSampleData({
-    int count = 25,
-    String? category,
-    bool clearExisting = false,
-    bool highQualityOnly = true,
-  }) async {
-    try {
-      _setLoading(true);
-      _clearError();
-
-      // Clear existing articles if requested
-      if (clearExisting) {
-        await _clearAllArticles();
-      }
-
-      // Generate fresh articles using enhanced generator
-      final freshArticles =
-          await EnhancedArticleGenerator.generateFreshArticles(
-            count: count,
-            specificCategory: category,
-            highQualityOnly: highQualityOnly,
-          );
-
-      // Add each article to the service and local list
-      for (final article in freshArticles) {
-        await addArticle(article);
-      }
-
-      _setLoading(false);
-
-      // Show success message (this will be handled by the UI)
-      print('Successfully generated ${freshArticles.length} fresh articles');
-    } catch (e) {
-      _setError('Error generating fresh articles: ${e.toString()}');
-      _setLoading(false);
-    }
-  }
-
-  // Load focused articles by content type
-  Future<void> loadFocusedArticles({
-    required String focus,
-    int count = 10,
-    String category = 'Semua Jenis',
-    bool clearExisting = false,
-  }) async {
-    try {
-      _setLoading(true);
-      _clearError();
-
-      // Clear existing articles if requested
-      if (clearExisting) {
-        await _clearAllArticles();
-      }
-
-      // Generate focused articles
-      final focusedArticles =
-          await EnhancedArticleGenerator.generateFocusedArticles(
-            focus: focus,
-            count: count,
-            category: category,
-          );
-
-      // Add each article to the service and local list
-      for (final article in focusedArticles) {
-        await addArticle(article);
-      }
-
-      _setLoading(false);
-
       print(
-        'Successfully generated ${focusedArticles.length} focused articles on $focus',
+        'ArticleProvider: Received ${articles.length} articles from service',
       );
+
+      _articles = articles;
+      print('ArticleProvider: Articles initialized successfully');
+
+      _setLoading(false);
     } catch (e) {
-      _setError('Error generating focused articles: ${e.toString()}');
+      print('ArticleProvider: Error initializing articles: $e');
+      print('ArticleProvider: Stack trace: ${StackTrace.current}');
+      _setError(e.toString());
       _setLoading(false);
     }
   }
@@ -191,7 +119,8 @@ class ArticleProvider with ChangeNotifier {
       final updatedArticle = Article(
         id: article.id,
         title: article.title,
-        content: article.content,
+        description: article.description,
+        websiteUrl: article.websiteUrl,
         category: article.category,
         readTime: article.readTime,
         views: article.views,
@@ -223,7 +152,8 @@ class ArticleProvider with ChangeNotifier {
         final updatedArticle = Article(
           id: article.id,
           title: article.title,
-          content: article.content,
+          description: article.description,
+          websiteUrl: article.websiteUrl,
           category: article.category,
           readTime: article.readTime,
           views: newViewCount,
@@ -252,21 +182,6 @@ class ArticleProvider with ChangeNotifier {
         'averageReadersPerArticle': 0,
         'articlesWithReaders': 0,
       };
-    }
-  }
-
-  // Clear all articles
-  Future<void> _clearAllArticles() async {
-    try {
-      // Clear from service
-      await _articleService.clearAllArticles();
-
-      // Clear from local list
-      _articles.clear();
-
-      notifyListeners();
-    } catch (e) {
-      _setError('Error clearing articles: ${e.toString()}');
     }
   }
 
@@ -329,19 +244,7 @@ class ArticleProvider with ChangeNotifier {
     final sortedArticles = List<Article>.from(activeArticles);
 
     // Calculate trending score (views + recency bonus)
-    for (final article in sortedArticles) {
-      final daysSinceCreation =
-          DateTime.now().difference(article.createdAt).inDays;
-      final recencyBonus =
-          daysSinceCreation <= 7
-              ? 50
-              : daysSinceCreation <= 30
-              ? 25
-              : daysSinceCreation <= 90
-              ? 10
-              : 0;
-      // Note: We can't modify the article object directly, so this is conceptual
-    }
+    // Note: We can't modify the article object directly, so this is conceptual
 
     // Sort by views (simplified approach)
     sortedArticles.sort((a, b) => b.views.compareTo(a.views));

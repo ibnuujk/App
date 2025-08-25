@@ -8,6 +8,11 @@ class PersalinanModel {
 
   // Data tambahan persalinan
   final String namaSuami;
+  final String pekerjaanSuami;
+  final int umurSuami;
+  final String agamaSuami;
+  final String agamaPasien;
+  final String pekerjaanPasien;
   final String pekerjaan;
   final DateTime tanggalMasuk;
   final String fasilitas; // 'umum' atau 'bpjs'
@@ -27,6 +32,11 @@ class PersalinanModel {
     required this.pasienUmur,
     required this.pasienAlamat,
     required this.namaSuami,
+    required this.pekerjaanSuami,
+    required this.umurSuami,
+    required this.agamaSuami,
+    required this.agamaPasien,
+    required this.pekerjaanPasien,
     required this.pekerjaan,
     required this.tanggalMasuk,
     required this.fasilitas,
@@ -48,6 +58,11 @@ class PersalinanModel {
       'pasienUmur': pasienUmur,
       'pasienAlamat': pasienAlamat,
       'namaSuami': namaSuami,
+      'pekerjaanSuami': pekerjaanSuami,
+      'umurSuami': umurSuami,
+      'agamaSuami': agamaSuami,
+      'agamaPasien': agamaPasien,
+      'pekerjaanPasien': pekerjaanPasien,
       'pekerjaan': pekerjaan,
       'tanggalMasuk': tanggalMasuk.toIso8601String(),
       'fasilitas': fasilitas,
@@ -70,6 +85,11 @@ class PersalinanModel {
       pasienUmur: map['pasienUmur']?.toInt() ?? 0,
       pasienAlamat: map['pasienAlamat'] ?? '',
       namaSuami: map['namaSuami'] ?? '',
+      pekerjaanSuami: map['pekerjaanSuami'] ?? '',
+      umurSuami: map['umurSuami']?.toInt() ?? 0,
+      agamaSuami: map['agamaSuami'] ?? '',
+      agamaPasien: map['agamaPasien'] ?? '',
+      pekerjaanPasien: map['pekerjaanPasien'] ?? '',
       pekerjaan: map['pekerjaan'] ?? '',
       tanggalMasuk: DateTime.parse(map['tanggalMasuk']),
       fasilitas: map['fasilitas'] ?? '',
@@ -91,6 +111,11 @@ class PersalinanModel {
     int? pasienUmur,
     String? pasienAlamat,
     String? namaSuami,
+    String? pekerjaanSuami,
+    int? umurSuami,
+    String? agamaSuami,
+    String? agamaPasien,
+    String? pekerjaanPasien,
     String? pekerjaan,
     DateTime? tanggalMasuk,
     String? fasilitas,
@@ -110,6 +135,11 @@ class PersalinanModel {
       pasienUmur: pasienUmur ?? this.pasienUmur,
       pasienAlamat: pasienAlamat ?? this.pasienAlamat,
       namaSuami: namaSuami ?? this.namaSuami,
+      pekerjaanSuami: pekerjaanSuami ?? this.pekerjaanSuami,
+      umurSuami: umurSuami ?? this.umurSuami,
+      agamaSuami: agamaSuami ?? this.agamaSuami,
+      agamaPasien: agamaPasien ?? this.agamaPasien,
+      pekerjaanPasien: pekerjaanPasien ?? this.pekerjaanPasien,
       pekerjaan: pekerjaan ?? this.pekerjaan,
       tanggalMasuk: tanggalMasuk ?? this.tanggalMasuk,
       fasilitas: fasilitas ?? this.fasilitas,
