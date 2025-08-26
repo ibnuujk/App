@@ -525,25 +525,12 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                       Row(
                         children: [
                           Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFCDD2),
-                              borderRadius: BorderRadius.circular(50),
-                              border: Border.all(
-                                color: const Color(
-                                  0xFFEC407A,
-                                ).withValues(alpha: 0.2),
-                                width: 2,
-                              ),
-                            ),
                             child: Padding(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(8),
                               child: Image.asset(
-                                'assets/icons/bayi.png',
-                                width: 90,
-                                height: 90,
-                                color: const Color(0xFFEC407A),
+                                'assets/icons/newborn.png',
+                                width: 65,
+                                height: 65,
                               ),
                             ),
                           ),
