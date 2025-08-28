@@ -127,6 +127,7 @@ class _TemuJanjiScreenState extends State<TemuJanjiScreen>
                 ? null
                 : _alergiController.text.trim(),
         'status': 'pending',
+        'hasExamination': false, // Default: belum ada pemeriksaan
         'createdAt': DateTime.now().toIso8601String(),
       };
 

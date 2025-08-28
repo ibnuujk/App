@@ -39,7 +39,6 @@ class _RegistrasiPersalinanFormDialogState
 
   DateTime _tanggalMasuk = DateTime.now();
   DateTime _tanggalPartes = DateTime.now();
-  DateTime _tanggalKeluar = DateTime.now();
   String _fasilitas = 'umum';
   bool _isLoading = false;
 
@@ -54,6 +53,22 @@ class _RegistrasiPersalinanFormDialogState
   void initState() {
     super.initState();
     _initializeData();
+  }
+
+  Widget _buildSectionHeader(String title, IconData icon) {
+    return Row(
+      children: [
+        Icon(icon, color: const Color(0xFFEC407A), size: 20),
+        const SizedBox(width: 8),
+        Text(
+          title,
+          style: GoogleFonts.poppins(
+            fontWeight: FontWeight.w600,
+            color: const Color(0xFF2D3748),
+          ),
+        ),
+      ],
+    );
   }
 
   void _initializeData() {
@@ -95,8 +110,63 @@ class _RegistrasiPersalinanFormDialogState
 
       _tanggalMasuk = data.tanggalMasuk;
       _tanggalPartes = data.tanggalPartes;
-      _tanggalKeluar = data.tanggalKeluar;
       _fasilitas = data.fasilitas;
+    }
+
+    // Load complete patient data including suami data from Firebase
+    if (_pasienId != null) {
+      _loadPatientData();
+    }
+  }
+
+  Future<void> _loadPatientData() async {
+    try {
+      if (_pasienId != null) {
+        final userDoc = await _firebaseService.getUserById(_pasienId!);
+        if (userDoc != null) {
+          setState(() {
+            // Update patient data with complete user data
+            _pasienNama = userDoc.nama;
+            _pasienNoHp = userDoc.noHp;
+            _pasienUmur = userDoc.umur;
+            _pasienAlamat = userDoc.alamat;
+
+            // Update form controllers with complete patient data
+            if (userDoc.agamaPasien != null &&
+                userDoc.agamaPasien!.isNotEmpty) {
+              _agamaPasienController.text = userDoc.agamaPasien!;
+            }
+            if (userDoc.pekerjaanPasien != null &&
+                userDoc.pekerjaanPasien!.isNotEmpty) {
+              _pekerjaanPasienController.text = userDoc.pekerjaanPasien!;
+            }
+
+            // Load suami data from Firebase
+            if (userDoc.namaSuami != null && userDoc.namaSuami!.isNotEmpty) {
+              _namaSuamiController.text = userDoc.namaSuami!;
+            }
+            if (userDoc.pekerjaanSuami != null &&
+                userDoc.pekerjaanSuami!.isNotEmpty) {
+              _pekerjaanSuamiController.text = userDoc.pekerjaanSuami!;
+            }
+            if (userDoc.umurSuami != null && userDoc.umurSuami! > 0) {
+              _umurSuamiController.text = userDoc.umurSuami!.toString();
+            }
+            if (userDoc.agamaSuami != null && userDoc.agamaSuami!.isNotEmpty) {
+              _agamaSuamiController.text = userDoc.agamaSuami!;
+            }
+          });
+        }
+      }
+    } catch (e) {
+      print('Error loading patient data: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Gagal memuat data pasien: ${e.toString()}'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
     }
   }
 
@@ -140,7 +210,6 @@ class _RegistrasiPersalinanFormDialogState
         pekerjaan: _pekerjaanController.text.trim(),
         tanggalMasuk: _tanggalMasuk,
         tanggalPartes: _tanggalPartes,
-        tanggalKeluar: _tanggalKeluar,
         diagnosaKebidanan: _diagnosaController.text.trim(),
         tindakan: _tindakanController.text.trim(),
         rujukan: _rujukanController.text.trim(),
@@ -284,255 +353,383 @@ class _RegistrasiPersalinanFormDialogState
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Patient Information (Read-only)
-                      if (_pasienNama != null) ...[
-                        Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
+                      // ANAMNESIS Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFFEC407A,
+                          ).withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
                             color: const Color(
                               0xFFEC407A,
-                            ).withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: const Color(
-                                0xFFEC407A,
-                              ).withValues(alpha: 0.3),
-                            ),
+                            ).withValues(alpha: 0.2),
                           ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Data Pasien',
-                                style: GoogleFonts.poppins(
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFFEC407A),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader(
+                              'ANAMNESIS',
+                              Icons.medical_services_rounded,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Tanggal Masuk
+                            InkWell(
+                              onTap: () async {
+                                final date = await showDatePicker(
+                                  context: context,
+                                  initialDate: _tanggalMasuk,
+                                  firstDate: DateTime(2020),
+                                  lastDate: DateTime.now().add(
+                                    const Duration(days: 365),
+                                  ),
+                                );
+                                if (date != null) {
+                                  setState(() {
+                                    _tanggalMasuk = date;
+                                  });
+                                }
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  border: Border.all(color: Colors.grey[400]!),
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.calendar_today,
+                                      color: const Color(0xFFEC407A),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          'Tanggal Masuk',
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 12,
+                                            color: Colors.grey[600],
+                                          ),
+                                        ),
+                                        Text(
+                                          DateFormat(
+                                            'dd/MM/yyyy',
+                                          ).format(_tanggalMasuk),
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 8),
-                              Text('Nama: $_pasienNama'),
-                              Text('No HP: $_pasienNoHp'),
-                              Text('Umur: $_pasienUmur tahun'),
-                              Text('Alamat: $_pasienAlamat'),
-                              Text(
-                                'Agama: ${_agamaPasienController.text.isNotEmpty ? _agamaPasienController.text : 'Belum diisi'}',
+                            ),
+                            const SizedBox(height: 24),
+
+                            // DATA PASIEN Section
+                            _buildSectionHeader(
+                              'DATA PASIEN',
+                              Icons.person_rounded,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Nama Pasien (Auto-filled)
+                            TextFormField(
+                              initialValue: _pasienNama,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'Nama Pasien',
+                                prefixIcon: Icon(
+                                  Icons.person_outline,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
                               ),
-                              Text(
-                                'Pekerjaan: ${_pekerjaanPasienController.text.isNotEmpty ? _pekerjaanPasienController.text : 'Belum diisi'}',
+                            ),
+                            const SizedBox(height: 16),
+
+                            // No HP Pasien (Auto-filled)
+                            TextFormField(
+                              initialValue: _pasienNoHp,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'No HP',
+                                prefixIcon: Icon(
+                                  Icons.phone_outlined,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 20),
-                      ],
-
-                      // Nama Suami
-                      TextFormField(
-                        controller: _namaSuamiController,
-                        decoration: InputDecoration(
-                          labelText: 'Nama Suami',
-                          prefixIcon: Icon(
-                            Icons.person_outline,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFEC407A),
-                              width: 2,
                             ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Nama suami tidak boleh kosong';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                      // Pekerjaan Suami
-                      TextFormField(
-                        controller: _pekerjaanSuamiController,
-                        decoration: InputDecoration(
-                          labelText: 'Pekerjaan Suami',
-                          prefixIcon: Icon(
-                            Icons.work_outline,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFEC407A),
-                              width: 2,
+                            // Umur Pasien (Auto-filled)
+                            TextFormField(
+                              initialValue: _pasienUmur?.toString(),
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'Umur',
+                                prefixIcon: Icon(
+                                  Icons.cake_outlined,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
                             ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Pekerjaan suami tidak boleh kosong';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                      // Umur Suami
-                      TextFormField(
-                        controller: _umurSuamiController,
-                        decoration: InputDecoration(
-                          labelText: 'Umur Suami',
-                          prefixIcon: Icon(
-                            Icons.person_outline,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFEC407A),
-                              width: 2,
+                            // Alamat Pasien (Auto-filled)
+                            TextFormField(
+                              initialValue: _pasienAlamat,
+                              enabled: false,
+                              maxLines: 3,
+                              decoration: InputDecoration(
+                                labelText: 'Alamat',
+                                prefixIcon: Icon(
+                                  Icons.location_on_outlined,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
                             ),
-                          ),
-                        ),
-                        keyboardType: TextInputType.number,
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Umur suami tidak boleh kosong';
-                          }
-                          if (int.tryParse(value) == null) {
-                            return 'Umur harus berupa angka';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                      // Agama Suami
-                      TextFormField(
-                        controller: _agamaSuamiController,
-                        decoration: InputDecoration(
-                          labelText: 'Agama Suami',
-                          prefixIcon: Icon(
-                            Icons.church,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFEC407A),
-                              width: 2,
+                            // Agama Pasien (Auto-filled)
+                            TextFormField(
+                              controller: _agamaPasienController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'Agama',
+                                prefixIcon: Icon(
+                                  Icons.church,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
                             ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Agama suami tidak boleh kosong';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
+                            const SizedBox(height: 16),
 
-                      // Agama Pasien
-                      TextFormField(
-                        controller: _agamaPasienController,
-                        decoration: InputDecoration(
-                          labelText: 'Agama Pasien',
-                          prefixIcon: Icon(
-                            Icons.church,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFEC407A),
-                              width: 2,
+                            // Pekerjaan Pasien (Auto-filled)
+                            TextFormField(
+                              controller: _pekerjaanPasienController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'Pekerjaan',
+                                prefixIcon: Icon(
+                                  Icons.work_outline,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
                             ),
-                          ),
+                          ],
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Agama pasien tidak boleh kosong';
-                          }
-                          return null;
-                        },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
 
-                      // Pekerjaan Pasien
-                      TextFormField(
-                        controller: _pekerjaanPasienController,
-                        decoration: InputDecoration(
-                          labelText: 'Pekerjaan Pasien',
-                          prefixIcon: Icon(
-                            Icons.work_outline,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFEC407A),
-                              width: 2,
-                            ),
+                      // DATA SUAMI Section
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(
+                            0xFFEC407A,
+                          ).withValues(alpha: 0.05),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: const Color(
+                              0xFFEC407A,
+                            ).withValues(alpha: 0.2),
                           ),
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Pekerjaan pasien tidak boleh kosong';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _buildSectionHeader(
+                              'DATA SUAMI',
+                              Icons.person_outline,
+                            ),
+                            const SizedBox(height: 16),
 
-                      // Pekerjaan (Field lama - untuk keperluan lain)
-                      TextFormField(
-                        controller: _pekerjaanController,
-                        decoration: InputDecoration(
-                          labelText: 'Pekerjaan',
-                          prefixIcon: Icon(
-                            Icons.work_outline,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFEC407A),
-                              width: 2,
+                            // Nama Suami (Auto-filled)
+                            TextFormField(
+                              controller: _namaSuamiController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'Nama Suami',
+                                prefixIcon: Icon(
+                                  Icons.person_outline,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 16),
+
+                            // Pekerjaan Suami (Auto-filled)
+                            TextFormField(
+                              controller: _pekerjaanSuamiController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'Pekerjaan Suami',
+                                prefixIcon: Icon(
+                                  Icons.work_outline,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Umur Suami (Auto-filled)
+                            TextFormField(
+                              controller: _umurSuamiController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'Umur Suami',
+                                prefixIcon: Icon(
+                                  Icons.person_outline,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Agama Suami (Auto-filled)
+                            TextFormField(
+                              controller: _agamaSuamiController,
+                              enabled: false,
+                              decoration: InputDecoration(
+                                labelText: 'Agama Suami',
+                                prefixIcon: Icon(
+                                  Icons.church,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: const BorderSide(
+                                    color: Color(0xFFEC407A),
+                                    width: 2,
+                                  ),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
+                            ),
+                          ],
                         ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Pekerjaan tidak boleh kosong';
-                          }
-                          return null;
-                        },
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 24),
 
                       // Fasilitas
                       DropdownButtonFormField<String>(
@@ -562,6 +759,35 @@ class _RegistrasiPersalinanFormDialogState
                           setState(() {
                             _fasilitas = value!;
                           });
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Pekerjaan (untuk data persalinan)
+                      TextFormField(
+                        controller: _pekerjaanController,
+                        decoration: InputDecoration(
+                          labelText: 'Pekerjaan',
+                          prefixIcon: Icon(
+                            Icons.work_outline,
+                            color: const Color(0xFFEC407A),
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            borderSide: const BorderSide(
+                              color: Color(0xFFEC407A),
+                              width: 2,
+                            ),
+                          ),
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'Pekerjaan tidak boleh kosong';
+                          }
+                          return null;
                         },
                       ),
                       const SizedBox(height: 16),
@@ -667,63 +893,6 @@ class _RegistrasiPersalinanFormDialogState
                                     DateFormat(
                                       'dd/MM/yyyy',
                                     ).format(_tanggalPartes),
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Tanggal Keluar
-                      InkWell(
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _tanggalKeluar,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime.now().add(
-                              const Duration(days: 365),
-                            ),
-                          );
-                          if (date != null) {
-                            setState(() {
-                              _tanggalKeluar = date;
-                            });
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[400]!),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                color: const Color(0xFFEC407A),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Tanggal Keluar',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  Text(
-                                    DateFormat(
-                                      'dd/MM/yyyy',
-                                    ).format(_tanggalKeluar),
                                     style: GoogleFonts.poppins(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w500,

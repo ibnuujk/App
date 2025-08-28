@@ -815,7 +815,14 @@ class FirebaseService {
           .where('pasienId', isEqualTo: pasienId)
           .orderBy('tanggalPemeriksaan', descending: true)
           .snapshots()
-          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .map(
+            (snapshot) =>
+                snapshot.docs.map((doc) {
+                  final data = doc.data();
+                  data['id'] = doc.id; // Add document ID to the data
+                  return data;
+                }).toList(),
+          )
           .handleError((error) {
             print('Error in getKehamilankuStream: $error');
             return <Map<String, dynamic>>[];
@@ -866,7 +873,14 @@ class FirebaseService {
           .collection('pemeriksaan_ibuhamil')
           .orderBy('tanggalPemeriksaan', descending: true)
           .snapshots()
-          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .map(
+            (snapshot) =>
+                snapshot.docs.map((doc) {
+                  final data = doc.data();
+                  data['id'] = doc.id; // Add document ID to the data
+                  return data;
+                }).toList(),
+          )
           .handleError((error) {
             print('Error in getPemeriksaanIbuHamilStream: $error');
             return <Map<String, dynamic>>[];
@@ -886,7 +900,14 @@ class FirebaseService {
           .where('pasienId', isEqualTo: pasienId)
           .orderBy('tanggalPemeriksaan', descending: true)
           .snapshots()
-          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .map(
+            (snapshot) =>
+                snapshot.docs.map((doc) {
+                  final data = doc.data();
+                  data['id'] = doc.id; // Add document ID to the data
+                  return data;
+                }).toList(),
+          )
           .handleError((error) {
             print('Error in getPemeriksaanIbuHamilByPasienStream: $error');
             return <Map<String, dynamic>>[];
@@ -946,7 +967,14 @@ class FirebaseService {
           .collection('jadwal_konsultasi')
           .orderBy('tanggalKonsultasi', descending: false)
           .snapshots()
-          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .map(
+            (snapshot) =>
+                snapshot.docs.map((doc) {
+                  final data = doc.data();
+                  data['id'] = doc.id; // Add document ID to the data
+                  return data;
+                }).toList(),
+          )
           .handleError((error) {
             print('Error in getJadwalKonsultasiStream: $error');
             return <Map<String, dynamic>>[];
@@ -973,7 +1001,14 @@ class FirebaseService {
           .orderBy('tanggalKonsultasi', descending: false)
           .limit(30) // Limit untuk performa
           .snapshots()
-          .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList())
+          .map(
+            (snapshot) =>
+                snapshot.docs.map((doc) {
+                  final data = doc.data();
+                  data['id'] = doc.id; // Add document ID to the data
+                  return data;
+                }).toList(),
+          )
           .handleError((error) {
             print('Error getting jadwal konsultasi: $error');
             return <Map<String, dynamic>>[];

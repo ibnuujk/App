@@ -1295,6 +1295,8 @@ class _AddPregnancyExaminationDialogState
   final _noHpController = TextEditingController();
   final _umurController = TextEditingController();
   final _alamatController = TextEditingController();
+  final _agamaController = TextEditingController();
+  final _pekerjaanController = TextEditingController();
 
   // Examination data
   final _usiaKehamilanController = TextEditingController();
@@ -1302,9 +1304,7 @@ class _AddPregnancyExaminationDialogState
 
   // Anamnesis
   final _tanggalMasukController = TextEditingController();
-  // final _tanggalKeluarController = TextEditingController(); // Removed as per requirements
-  final _agamaController = TextEditingController();
-  final _pekerjaanController = TextEditingController();
+
   String _jenisKunjungan = 'UMUM';
 
   // Tanda Vital
@@ -1435,6 +1435,8 @@ class _AddPregnancyExaminationDialogState
             _noHpController.text = _noHp ?? '';
             _umurController.text = _umur ?? '';
             _alamatController.text = _alamat ?? '';
+            _agamaController.text = userDoc.agamaPasien ?? '';
+            _pekerjaanController.text = userDoc.pekerjaanPasien ?? '';
 
             // Load HPHT and calculate pregnancy age
             _hpht = userDoc.hpht;
@@ -1442,16 +1444,6 @@ class _AddPregnancyExaminationDialogState
               _usiaKehamilan = _calculatePregnancyAge(_hpht!);
               _hphtController.text = DateFormat('dd/MM/yyyy').format(_hpht!);
               _usiaKehamilanController.text = _usiaKehamilan.toString();
-            }
-
-            // Populate agama and pekerjaan from patient data
-            if (userDoc.agamaPasien != null &&
-                userDoc.agamaPasien!.isNotEmpty) {
-              _agamaController.text = userDoc.agamaPasien!;
-            }
-            if (userDoc.pekerjaanPasien != null &&
-                userDoc.pekerjaanPasien!.isNotEmpty) {
-              _pekerjaanController.text = userDoc.pekerjaanPasien!;
             }
           });
         }
@@ -1522,7 +1514,6 @@ class _AddPregnancyExaminationDialogState
     _usiaKehamilanController.dispose();
     _hphtController.dispose();
     _tanggalMasukController.dispose();
-    // _tanggalKeluarController.dispose(); // Controller removed
     _agamaController.dispose();
     _pekerjaanController.dispose();
     _tekananDarahController.dispose();
@@ -1622,6 +1613,7 @@ class _AddPregnancyExaminationDialogState
 
     try {
       final examinationData = {
+        'tanggalMasuk': _tanggalMasukController.text,
         'id': _firebaseService.generateId(),
         'pasienId': _pasienId,
         'namaPasien': _namaPasien,
@@ -1630,13 +1622,13 @@ class _AddPregnancyExaminationDialogState
         'alamat': _alamat,
         'usiaKehamilan': _usiaKehamilan,
         'hpht': _hpht != null ? DateFormat('dd/MM/yyyy').format(_hpht!) : '',
-
-        // Anamnesis
-        'tanggalMasuk': _tanggalMasukController.text,
-        // 'tanggalKeluar' field removed as per requirements
         'agama': _agamaController.text,
         'pekerjaan': _pekerjaanController.text,
         'jenisKunjungan': _jenisKunjungan,
+
+        // Anamnesis
+
+        // 'tanggalKeluar' field removed as per requirements
 
         // Tanda Vital
         'tekananDarah': _tekananDarahController.text,
@@ -1778,7 +1770,7 @@ class _AddPregnancyExaminationDialogState
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  'Tambah Pemeriksaan Ibu Hamil',
+                  'Tambah Pemeriksaan',
                   style: GoogleFonts.poppins(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -1811,6 +1803,36 @@ class _AddPregnancyExaminationDialogState
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
+                            // ANAMNESIS Section Header
+                            _buildSectionHeader(
+                              'ANAMNESIS',
+                              Icons.medical_services_rounded,
+                            ),
+                            const SizedBox(height: 16),
+
+                            // Tanggal Masuk
+                            TextFormField(
+                              controller: _tanggalMasukController,
+                              decoration: InputDecoration(
+                                labelText: 'Tanggal Masuk/Jam *',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                prefixIcon: Icon(
+                                  Icons.access_time_rounded,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (value == null || value.isEmpty) {
+                                  return 'Masukkan tanggal masuk';
+                                }
+                                return null;
+                              },
+                            ),
+                            const SizedBox(height: 24),
+
+                            // Data Pasien Section Header
                             Row(
                               children: [
                                 Icon(
@@ -1880,6 +1902,36 @@ class _AddPregnancyExaminationDialogState
                                 fillColor: Colors.grey[100],
                               ),
                             ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _agamaController,
+                              enabled:
+                                  false, // Disable editing since it's from patient data
+                              decoration: InputDecoration(
+                                labelText: 'Agama',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            TextFormField(
+                              controller: _pekerjaanController,
+                              enabled:
+                                  false, // Disable editing since it's from patient data
+                              decoration: InputDecoration(
+                                labelText: 'Pekerjaan',
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                filled: true,
+                                fillColor: Colors.grey[100],
+                              ),
+                            ),
+                            const SizedBox(height: 24),
                           ],
                         ),
                       ),
@@ -1981,114 +2033,48 @@ class _AddPregnancyExaminationDialogState
                                         ),
                                       ),
                                     ),
+                                    const SizedBox(height: 12),
+                                    DropdownButtonFormField<String>(
+                                      value: _jenisKunjungan,
+                                      decoration: InputDecoration(
+                                        labelText: 'Jenis Kunjungan *',
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
+                                        ),
+                                        prefixIcon: Icon(
+                                          Icons.category_rounded,
+                                          color: const Color(0xFFEC407A),
+                                        ),
+                                      ),
+                                      items:
+                                          ['UMUM', 'PBI', 'NON PBI'].map((
+                                            String value,
+                                          ) {
+                                            return DropdownMenuItem<String>(
+                                              value: value,
+                                              child: Text(value),
+                                            );
+                                          }).toList(),
+                                      onChanged: (String? newValue) {
+                                        setState(() {
+                                          _jenisKunjungan = newValue!;
+                                        });
+                                      },
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'Pilih jenis kunjungan';
+                                        }
+                                        return null;
+                                      },
+                                    ),
                                   ],
                                 ),
                           ],
                         ),
                       ),
                       const SizedBox(height: 24),
-
-                      // ANAMNESIS Section
-                      _buildSectionHeader(
-                        'ANAMNESIS',
-                        Icons.medical_services_rounded,
-                      ),
-                      const SizedBox(height: 16),
-
-                      TextFormField(
-                        controller: _tanggalMasukController,
-                        decoration: InputDecoration(
-                          labelText: 'Tanggal Masuk/Jam *',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.access_time_rounded,
-                            color: const Color(0xFFEC407A),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Masukkan tanggal masuk';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Agama field - auto-filled from patient data
-                      TextFormField(
-                        controller: _agamaController,
-                        enabled:
-                            false, // Disable editing since it's from patient data
-                        decoration: InputDecoration(
-                          labelText: 'Agama (dari data pasien)',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.church_rounded,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Pekerjaan field - auto-filled from patient data
-                      TextFormField(
-                        controller: _pekerjaanController,
-                        enabled:
-                            false, // Disable editing since it's from patient data
-                        decoration: InputDecoration(
-                          labelText: 'Pekerjaan (dari data pasien)',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.work_rounded,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          filled: true,
-                          fillColor: Colors.grey[100],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      DropdownButtonFormField<String>(
-                        value: _jenisKunjungan,
-                        decoration: InputDecoration(
-                          labelText: 'Jenis Kunjungan *',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          prefixIcon: Icon(
-                            Icons.category_rounded,
-                            color: const Color(0xFFEC407A),
-                          ),
-                        ),
-                        items:
-                            ['UMUM', 'PBI', 'NON PBI'].map((String value) {
-                              return DropdownMenuItem<String>(
-                                value: value,
-                                child: Text(value),
-                              );
-                            }).toList(),
-                        onChanged: (String? newValue) {
-                          setState(() {
-                            _jenisKunjungan = newValue!;
-                          });
-                        },
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Pilih jenis kunjungan';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 24),
-
                       // TANDA VITAL Section
                       _buildSectionHeader(
                         'TANDA VITAL',

@@ -138,113 +138,6 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
       ),
       body: Column(
         children: [
-          // Header Section
-          Container(
-            width: double.infinity,
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFFEC407A),
-                  const Color(0xFFEC407A).withValues(alpha: 0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: BorderRadius.circular(20),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFEC407A).withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Container(
-                      width: 60,
-                      height: 60,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(15),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 2,
-                        ),
-                      ),
-                      child: const Icon(
-                        Icons.chat_rounded,
-                        color: Colors.white,
-                        size: 30,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Chat dengan Bidan',
-                            style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            'Konsultasi langsung dengan bidan',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(
-                        Icons.info_outline_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          'Mohon ditunggu, Bidan akan merespon pesan Anda',
-                          style: GoogleFonts.poppins(
-                            fontSize: 13,
-                            color: Colors.white,
-                            height: 1.4,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-
           // Messages
           Expanded(
             child:
@@ -270,7 +163,7 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Mulai percakapan dengan dokter',
+                            'Mulai percakapan dengan bidan',
                             style: GoogleFonts.poppins(
                               fontSize: 12,
                               color: Colors.grey[500],
@@ -336,7 +229,9 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                                   borderRadius: BorderRadius.circular(18),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       blurRadius: 5,
                                       offset: const Offset(0, 2),
                                     ),
@@ -366,7 +261,9 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                                         fontSize: 10,
                                         color:
                                             isPatient
-                                                ? Colors.white.withValues(alpha: 0.7)
+                                                ? Colors.white.withValues(
+                                                  alpha: 0.7,
+                                                )
                                                 : Colors.grey[600],
                                       ),
                                     ),
@@ -380,7 +277,9 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
                                         color:
                                             message.isRead
                                                 ? Colors.blue[300]
-                                                : Colors.white.withValues(alpha: 0.7),
+                                                : Colors.white.withValues(
+                                                  alpha: 0.7,
+                                                ),
                                       ),
                                     ],
                                   ],

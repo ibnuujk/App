@@ -17,7 +17,7 @@ class PersalinanModel {
   final DateTime tanggalMasuk;
   final String fasilitas; // 'umum' atau 'bpjs'
   final DateTime tanggalPartes;
-  final DateTime tanggalKeluar;
+  final DateTime? tanggalKeluar;
   final String diagnosaKebidanan;
   final String tindakan;
   final String? rujukan; // opsional
@@ -41,7 +41,7 @@ class PersalinanModel {
     required this.tanggalMasuk,
     required this.fasilitas,
     required this.tanggalPartes,
-    required this.tanggalKeluar,
+    this.tanggalKeluar,
     required this.diagnosaKebidanan,
     required this.tindakan,
     this.rujukan,
@@ -67,7 +67,7 @@ class PersalinanModel {
       'tanggalMasuk': tanggalMasuk.toIso8601String(),
       'fasilitas': fasilitas,
       'tanggalPartes': tanggalPartes.toIso8601String(),
-      'tanggalKeluar': tanggalKeluar.toIso8601String(),
+      'tanggalKeluar': tanggalKeluar?.toIso8601String(),
       'diagnosaKebidanan': diagnosaKebidanan,
       'tindakan': tindakan,
       'rujukan': rujukan,
@@ -94,7 +94,10 @@ class PersalinanModel {
       tanggalMasuk: DateTime.parse(map['tanggalMasuk']),
       fasilitas: map['fasilitas'] ?? '',
       tanggalPartes: DateTime.parse(map['tanggalPartes']),
-      tanggalKeluar: DateTime.parse(map['tanggalKeluar']),
+      tanggalKeluar:
+          map['tanggalKeluar'] != null
+              ? DateTime.parse(map['tanggalKeluar'])
+              : null,
       diagnosaKebidanan: map['diagnosaKebidanan'] ?? '',
       tindakan: map['tindakan'] ?? '',
       rujukan: map['rujukan'],

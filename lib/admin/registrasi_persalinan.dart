@@ -94,7 +94,11 @@ class _RegistrasiPersalinanScreenState
                   _errorMessage = 'Error loading patients: $error';
                   _checkAllDataLoaded();
                 });
-                _showErrorSnackBar('Error loading patients: $error');
+
+                // Only show error for non-timeout errors
+                if (!error.toString().contains('TimeoutException')) {
+                  _showErrorSnackBar('Error loading patients: $error');
+                }
 
                 // Auto-retry after 5 seconds for timeout errors
                 if (error.toString().contains('TimeoutException')) {
@@ -145,7 +149,11 @@ class _RegistrasiPersalinanScreenState
                   _errorMessage = 'Error loading reports: $error';
                   _checkAllDataLoaded();
                 });
-                _showErrorSnackBar('Error loading reports: $error');
+
+                // Only show error for non-timeout errors
+                if (!error.toString().contains('TimeoutException')) {
+                  _showErrorSnackBar('Error loading reports: $error');
+                }
 
                 // Auto-retry after 5 seconds for timeout errors
                 if (error.toString().contains('TimeoutException')) {
@@ -1730,7 +1738,7 @@ class _RegistrasiPersalinanScreenState
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        'Kelola Data Pasien',
+                        'Kelola',
                         style: GoogleFonts.poppins(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -1782,7 +1790,7 @@ class _RegistrasiPersalinanScreenState
                                   ),
                                   const SizedBox(height: 8),
                                   Text(
-                                    'Tambahkan pasien pertama',
+                                    'Tambahkan',
                                     style: GoogleFonts.poppins(
                                       fontSize: 14,
                                       color: Colors.grey[500],
@@ -2697,28 +2705,6 @@ class _RegistrasiPersalinanScreenState
                           ),
                         ),
                         const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Kelola Registrasi Persalinan',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 20,
-                                  fontWeight: FontWeight.w700,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              Text(
-                                'Input dan kelola data registrasi persalinan',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: Colors.white.withValues(alpha: 0.9),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -2816,7 +2802,7 @@ class _RegistrasiPersalinanScreenState
                                       size: 20,
                                     ),
                             label: Text(
-                              _isLoading ? 'Memuat...' : 'Kelola Data Pasien',
+                              _isLoading ? 'Memuat...' : 'Kelola',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -2852,7 +2838,7 @@ class _RegistrasiPersalinanScreenState
                                     )
                                     : const Icon(Icons.add_rounded, size: 20),
                             label: Text(
-                              _isLoading ? 'Memuat...' : 'Tambah Registrasi',
+                              _isLoading ? 'Memuat...' : 'Tambah',
                               style: GoogleFonts.poppins(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
@@ -3161,7 +3147,7 @@ class _RegistrasiPersalinanScreenState
               onPressed: () => _showAddEditDialog(),
               icon: const Icon(Icons.add_rounded),
               label: Text(
-                'Tambah Registrasi Pertama',
+                'Tambah Registrasi',
                 style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
               ),
               style: ElevatedButton.styleFrom(

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
@@ -139,11 +140,13 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
 
   Future<void> _approveSchedule(String scheduleId) async {
     try {
+      print('Approving schedule: $scheduleId');
       await _firebaseService.updateJadwalKonsultasi({
         'id': scheduleId,
         'status': 'confirmed',
       });
 
+      print('Schedule approved successfully, reloading...');
       _loadConsultationSchedules();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -151,6 +154,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
         );
       }
     } catch (e) {
+      print('Error approving schedule: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -161,11 +165,13 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
 
   Future<void> _rejectSchedule(String scheduleId) async {
     try {
+      print('Rejecting schedule: $scheduleId');
       await _firebaseService.updateJadwalKonsultasi({
         'id': scheduleId,
         'status': 'rejected',
       });
 
+      print('Schedule rejected successfully, reloading...');
       _loadConsultationSchedules();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -173,6 +179,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
         );
       }
     } catch (e) {
+      print('Error rejecting schedule: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -183,7 +190,10 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
 
   Future<void> _deleteSchedule(String scheduleId) async {
     try {
+      print('Deleting schedule: $scheduleId');
       await _firebaseService.deleteJadwalKonsultasi(scheduleId);
+
+      print('Schedule deleted successfully, reloading...');
       _loadConsultationSchedules();
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -191,6 +201,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
         );
       }
     } catch (e) {
+      print('Error deleting schedule: $e');
       if (mounted) {
         ScaffoldMessenger.of(
           context,
@@ -319,7 +330,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              _buildDialogInfoRow('Nama Pasien', schedule['namaPasien'] ?? '-'),
+              _buildDialogInfoRow('Nama Pasien', schedule['pasienNama'] ?? '-'),
               _buildDialogInfoRow(
                 'Tanggal Konsultasi',
                 _formatDate(schedule['tanggalKonsultasi']),
@@ -662,7 +673,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                           ),
                         ),
                         title: Text(
-                          schedule['namaPasien'] ?? 'Unknown Patient',
+                          schedule['pasienNama'] ?? 'Unknown Patient',
                           style: GoogleFonts.poppins(
                             fontWeight: FontWeight.w600,
                             fontSize: 14,
@@ -997,6 +1008,26 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                       final isConfirmed = schedule['status'] == 'confirmed';
                       final isRejected = schedule['status'] == 'rejected';
 
+                      // Debug: Print schedule details
+                      if (kDebugMode) {
+                        print('Building schedule card $index:');
+                        print(
+                          '  - ID: ${schedule['id']} (type: ${schedule['id'].runtimeType})',
+                        );
+                        print(
+                          '  - Status: ${schedule['status']} (type: ${schedule['status'].runtimeType})',
+                        );
+                        print('  - isConfirmed: $isConfirmed');
+                        print('  - isRejected: $isRejected');
+                        print(
+                          '  - hasExamination: ${schedule['hasExamination']} (type: ${schedule['hasExamination'].runtimeType})',
+                        );
+                        print(
+                          '  - pasienNama: ${schedule['pasienNama']} (type: ${schedule['pasienNama'].runtimeType})',
+                        );
+                        print('  - All keys: ${schedule.keys.toList()}');
+                      }
+
                       return Container(
                         margin: const EdgeInsets.symmetric(
                           horizontal: 16.0,
@@ -1021,18 +1052,20 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: _getStatusColor(
-                                    schedule['status'],
+                                    schedule['status'] ?? 'pending',
                                   ).withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
                                   Icons.schedule_rounded,
-                                  color: _getStatusColor(schedule['status']),
+                                  color: _getStatusColor(
+                                    schedule['status'] ?? 'pending',
+                                  ),
                                   size: 24,
                                 ),
                               ),
                               title: Text(
-                                schedule['namaPasien'] ?? 'Unknown Patient',
+                                schedule['pasienNama'] ?? 'Unknown Patient',
                                 style: GoogleFonts.poppins(
                                   fontWeight: FontWeight.w600,
                                   fontSize: 16,
@@ -1054,6 +1087,19 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                               ),
                               trailing: PopupMenuButton<String>(
                                 onSelected: (value) {
+                                  final scheduleId = schedule['id'] as String?;
+                                  if (scheduleId == null) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Error: Schedule ID tidak ditemukan',
+                                        ),
+                                        backgroundColor: Colors.red,
+                                      ),
+                                    );
+                                    return;
+                                  }
+
                                   switch (value) {
                                     case 'view':
                                       _showScheduleDetailDialog(schedule);
@@ -1061,44 +1107,19 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                     case 'edit':
                                       _showEditScheduleDialog(schedule);
                                       break;
+                                    case 'approve':
+                                      _approveSchedule(scheduleId);
+                                      break;
+                                    case 'reject':
+                                      _rejectSchedule(scheduleId);
+                                      break;
                                     case 'delete':
-                                      _deleteSchedule(schedule['id']);
+                                      _deleteSchedule(scheduleId);
                                       break;
                                   }
                                 },
                                 itemBuilder:
-                                    (context) => [
-                                      const PopupMenuItem(
-                                        value: 'view',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.visibility, size: 16),
-                                            SizedBox(width: 8),
-                                            Text('Lihat Detail'),
-                                          ],
-                                        ),
-                                      ),
-                                      const PopupMenuItem(
-                                        value: 'edit',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.edit, size: 16),
-                                            SizedBox(width: 8),
-                                            Text('Edit'),
-                                          ],
-                                        ),
-                                      ),
-                                      const PopupMenuItem(
-                                        value: 'delete',
-                                        child: Row(
-                                          children: [
-                                            Icon(Icons.delete, size: 16),
-                                            SizedBox(width: 8),
-                                            Text('Hapus'),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
+                                    (context) => _buildPopupMenuItems(schedule),
                               ),
                             ),
                             // Action buttons
@@ -1115,10 +1136,24 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                     if (!isConfirmed)
                                       Expanded(
                                         child: ElevatedButton.icon(
-                                          onPressed:
-                                              () => _approveSchedule(
-                                                schedule['id'],
-                                              ),
+                                          onPressed: () {
+                                            final scheduleId =
+                                                schedule['id'] as String?;
+                                            if (scheduleId != null) {
+                                              _approveSchedule(scheduleId);
+                                            } else {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    'Error: Schedule ID tidak ditemukan',
+                                                  ),
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              );
+                                            }
+                                          },
                                           icon: const Icon(
                                             Icons.check,
                                             size: 16,
@@ -1143,10 +1178,24 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                     if (!isConfirmed)
                                       Expanded(
                                         child: ElevatedButton.icon(
-                                          onPressed:
-                                              () => _rejectSchedule(
-                                                schedule['id'],
-                                              ),
+                                          onPressed: () {
+                                            final scheduleId =
+                                                schedule['id'] as String?;
+                                            if (scheduleId != null) {
+                                              _rejectSchedule(scheduleId);
+                                            } else {
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                const SnackBar(
+                                                  content: Text(
+                                                    'Error: Schedule ID tidak ditemukan',
+                                                  ),
+                                                  backgroundColor: Colors.red,
+                                                ),
+                                              );
+                                            }
+                                          },
                                           icon: const Icon(
                                             Icons.close,
                                             size: 16,
@@ -1323,11 +1372,12 @@ class _AddConsultationScheduleDialogState
 
     try {
       final scheduleData = {
-        'namaPasien': _namaController.text,
+        'pasienNama': _namaController.text,
         'tanggalKonsultasi': _tanggalController.text,
         'waktuKonsultasi': _waktuController.text,
         'keluhan': _keluhanController.text,
         'status': 'pending',
+        'hasExamination': false,
         'createdAt': DateTime.now().toIso8601String(),
       };
 
@@ -1488,7 +1538,7 @@ class _EditConsultationScheduleDialogState
   void initState() {
     super.initState();
     _namaController = TextEditingController(
-      text: widget.schedule['namaPasien'] ?? '',
+      text: widget.schedule['pasienNama'] ?? '',
     );
     _tanggalController = TextEditingController(
       text: widget.schedule['tanggalKonsultasi'] ?? '',
@@ -1546,7 +1596,7 @@ class _EditConsultationScheduleDialogState
 
     try {
       final scheduleData = {
-        'namaPasien': _namaController.text,
+        'pasienNama': _namaController.text,
         'tanggalKonsultasi': _tanggalController.text,
         'waktuKonsultasi': _waktuController.text,
         'keluhan': _keluhanController.text,
@@ -1757,7 +1807,7 @@ class ConsultationScheduleDetailDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildInfoRow('Nama Pasien', schedule['namaPasien'] ?? 'N/A'),
+          _buildInfoRow('Nama Pasien', schedule['pasienNama'] ?? 'N/A'),
           _buildInfoRow('Tanggal', _formatDate(schedule['tanggalKonsultasi'])),
           _buildInfoRow('Waktu', schedule['waktuKonsultasi'] ?? 'N/A'),
           _buildInfoRow('Keluhan', schedule['keluhan'] ?? 'N/A'),
