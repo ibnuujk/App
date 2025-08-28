@@ -107,7 +107,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
           ],
         ),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -133,10 +133,10 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
       },
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFEC407A) : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -144,16 +144,18 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
             Icon(
               icon,
               color: isSelected ? Colors.white : Colors.grey[600],
-              size: 20,
+              size: 18,
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
               style: GoogleFonts.poppins(
                 color: isSelected ? Colors.white : Colors.grey[600],
-                fontSize: 10,
+                fontSize: 9,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
               ),
+              textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
             ),
           ],
         ),
@@ -197,7 +199,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Hello, ${widget.user.nama.isNotEmpty ? widget.user.nama : 'Admin'}',
+                                  '${widget.user.nama.isNotEmpty ? widget.user.nama : 'Admin'}',
                                   style: GoogleFonts.poppins(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w500,
@@ -323,9 +325,9 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                       shrinkWrap: true,
                       physics: const NeverScrollableScrollPhysics(),
                       crossAxisCount: 2,
-                      crossAxisSpacing: 16,
-                      mainAxisSpacing: 16,
-                      childAspectRatio: 1.3,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 12,
+                      childAspectRatio: 1.4,
                       children: [
                         _buildActionButton(
                           Icons.people_rounded,
@@ -423,10 +425,10 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withValues(alpha: 0.1),
@@ -439,27 +441,29 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Container(
-              width: 60,
-              height: 60,
+              width: 50,
+              height: 50,
               decoration: BoxDecoration(
                 color: const Color(0xFFEC407A).withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(
                   color: const Color(0xFFEC407A).withValues(alpha: 0.2),
                   width: 2,
                 ),
               ),
-              child: Icon(icon, color: const Color(0xFFEC407A), size: 28),
+              child: Icon(icon, color: const Color(0xFFEC407A), size: 24),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               title,
               style: GoogleFonts.poppins(
-                fontSize: 14,
+                fontSize: 12,
                 fontWeight: FontWeight.w600,
                 color: const Color(0xFF2D3748),
               ),
               textAlign: TextAlign.center,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
             ),
           ],
         ),

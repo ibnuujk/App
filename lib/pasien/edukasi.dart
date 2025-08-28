@@ -38,6 +38,257 @@ class _EdukasiScreenState extends State<EdukasiScreen>
   Stream<List<String>>? _likedArticleIdsStream;
   Stream<List<String>>? _bookmarkedArticleIdsStream;
 
+  // Method to show article preview
+  void _showArticlePreview(Article article) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) => Container(
+            height: MediaQuery.of(context).size.height * 0.7,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+            ),
+            child: Column(
+              children: [
+                // Handle bar
+                Container(
+                  margin: const EdgeInsets.only(top: 12),
+                  width: 40,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.grey[300],
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                // Article content
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Title
+                        Text(
+                          article.title,
+                          style: GoogleFonts.poppins(
+                            fontSize: 20,
+                            fontWeight: FontWeight.w700,
+                            color: const Color(0xFF2D3748),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Category and read time
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: const Color(
+                                  0xFFEC407A,
+                                ).withValues(alpha: 0.1),
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: Text(
+                                article.category,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.access_time,
+                                  size: 16,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${article.readTime} menit',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+
+                        // Description
+                        Text(
+                          'Deskripsi Artikel',
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF2D3748),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          article.description,
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            color: const Color(0xFF4A5568),
+                            height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 30),
+
+                        // Action buttons
+                        if (article.websiteUrl.isNotEmpty) ...[
+                          SizedBox(
+                            width: double.infinity,
+                            height: 50,
+                            child: ElevatedButton(
+                              onPressed:
+                                  () => _launchWebsite(article.websiteUrl),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFFEC407A),
+                                foregroundColor: Colors.white,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                elevation: 0,
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.open_in_new, size: 20),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Buka Website',
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                        ],
+
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: OutlinedButton(
+                            onPressed: () {
+                              Navigator.pop(context);
+                              _navigateToArticleDetail(article);
+                            },
+                            style: OutlinedButton.styleFrom(
+                              side: const BorderSide(
+                                color: Color(0xFFEC407A),
+                                width: 2,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.article,
+                                  size: 20,
+                                  color: const Color(0xFFEC407A),
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Baca Lebih Lanjut',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFFEC407A),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+    );
+  }
+
+  // Improved website launcher for mobile compatibility
+  Future<void> _launchWebsite(String url) async {
+    try {
+      final uri = Uri.parse(url);
+
+      // Try multiple launch modes for better mobile compatibility
+      if (await canLaunchUrl(uri)) {
+        // First try external application mode
+        try {
+          await launchUrl(uri, mode: LaunchMode.externalApplication);
+        } catch (e) {
+          // Fallback to in-app browser
+          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+        }
+      } else {
+        // Try to launch with different URL schemes
+        final alternativeUrl = url.startsWith('http') ? url : 'https://$url';
+        final alternativeUri = Uri.parse(alternativeUrl);
+
+        if (await canLaunchUrl(alternativeUri)) {
+          await launchUrl(alternativeUri, mode: LaunchMode.externalApplication);
+        } else {
+          throw Exception('Cannot launch URL');
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Tidak dapat membuka website: $url'),
+            backgroundColor: Colors.red,
+            action: SnackBarAction(
+              label: 'Salin URL',
+              onPressed: () {
+                // Copy URL to clipboard
+                // You can add clipboard functionality here if needed
+              },
+            ),
+          ),
+        );
+      }
+    }
+  }
+
+  // Navigate to article detail
+  Future<void> _navigateToArticleDetail(Article article) async {
+    final result = await Navigator.pushNamed(
+      context,
+      RouteHelper.articleDetail,
+      arguments: {'article': article, 'user': widget.user},
+    );
+
+    // Refresh article status when returning from detail
+    if (result == true) {
+      setState(() {
+        // This will trigger a rebuild and refresh the streams
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
@@ -368,59 +619,8 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                             child: ArticleCard(
                               article: currentArticle,
                               onTap: () async {
-                                // Check if article has website URL
-                                if (currentArticle.websiteUrl.isNotEmpty) {
-                                  // Open website URL directly
-                                  try {
-                                    final url = Uri.parse(
-                                      currentArticle.websiteUrl,
-                                    );
-                                    // Use url_launcher to open website
-                                    if (await canLaunchUrl(url)) {
-                                      await launchUrl(
-                                        url,
-                                        mode: LaunchMode.externalApplication,
-                                      );
-                                    } else {
-                                      ScaffoldMessenger.of(
-                                        context,
-                                      ).showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'Tidak dapat membuka website: ${currentArticle.websiteUrl}',
-                                          ),
-                                          backgroundColor: Colors.red,
-                                        ),
-                                      );
-                                    }
-                                  } catch (e) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          'URL tidak valid: ${currentArticle.websiteUrl}',
-                                        ),
-                                        backgroundColor: Colors.red,
-                                      ),
-                                    );
-                                  }
-                                } else {
-                                  // Navigate to article detail if no website URL
-                                  final result = await Navigator.pushNamed(
-                                    context,
-                                    RouteHelper.articleDetail,
-                                    arguments: {
-                                      'article': currentArticle,
-                                      'user': widget.user,
-                                    },
-                                  );
-
-                                  // Refresh article status when returning from detail
-                                  if (result == true) {
-                                    setState(() {
-                                      // This will trigger a rebuild and refresh the streams
-                                    });
-                                  }
-                                }
+                                // Show article preview first
+                                _showArticlePreview(currentArticle);
                               },
                               onLike: () => _handleArticleLike(currentArticle),
                               onBookmark:

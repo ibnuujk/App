@@ -776,33 +776,40 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                   ),
                                 )
                               else
-                                // Button "Pemeriksaan" jika belum selesai
-                                ElevatedButton.icon(
-                                  onPressed:
-                                      () => _navigateToPemeriksaan(schedule),
-                                  icon: Icon(
-                                    Icons.medical_services,
-                                    size: 16,
-                                    color: Colors.white,
+                                // Status "Menunggu Pemeriksaan" jika belum selesai
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 6,
                                   ),
-                                  label: Text(
-                                    'Pemeriksaan',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: Colors.white,
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.orange.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      width: 1,
                                     ),
                                   ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFFEC407A),
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        Icons.schedule,
+                                        color: Colors.orange,
+                                        size: 14,
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        'Menunggu',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.orange,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                             ],
@@ -1165,15 +1172,15 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                       Expanded(
                                         child: ElevatedButton.icon(
                                           onPressed:
-                                              () => _markExaminationCompleted(
-                                                schedule['id'],
+                                              () => _navigateToPemeriksaan(
+                                                schedule,
                                               ),
                                           icon: const Icon(
                                             Icons.medical_services,
                                             size: 16,
                                           ),
                                           label: Text(
-                                            'Selesai',
+                                            'Pemeriksaan',
                                             style: GoogleFonts.poppins(
                                               fontSize: 12,
                                             ),
@@ -1193,28 +1200,44 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                     if (isConfirmed &&
                                         (schedule['hasExamination'] ?? false))
                                       Expanded(
-                                        child: ElevatedButton.icon(
-                                          onPressed:
-                                              () => _navigateToPemeriksaan(
-                                                schedule,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 12,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: Colors.green.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            border: Border.all(
+                                              color: Colors.green.withValues(
+                                                alpha: 0.3,
                                               ),
-                                          icon: const Icon(
-                                            Icons.medical_services,
-                                            size: 16,
-                                          ),
-                                          label: Text(
-                                            'Pemeriksaan',
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 12,
+                                              width: 1,
                                             ),
                                           ),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: Colors.blue,
-                                            foregroundColor: Colors.white,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(8),
-                                            ),
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Icon(
+                                                Icons.check_circle,
+                                                color: Colors.green,
+                                                size: 16,
+                                              ),
+                                              const SizedBox(width: 8),
+                                              Text(
+                                                'STATUS SELESAI',
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: Colors.green,
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),

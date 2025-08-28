@@ -574,12 +574,11 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                             ),
                           ),
                           child: Padding(
-                            padding: const EdgeInsets.all(16),
+                            padding: const EdgeInsets.all(8),
                             child: Image.asset(
-                              'assets/icons/bayi.png',
-                              width: 48,
-                              height: 48,
-                              color: const Color(0xFFEC407A),
+                              'assets/icons/newborn.png',
+                              width: 65,
+                              height: 65,
                             ),
                           ),
                         ),

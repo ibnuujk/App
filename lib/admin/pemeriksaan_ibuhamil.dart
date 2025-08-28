@@ -1554,6 +1554,7 @@ class _AddPregnancyExaminationDialogState
 
   Widget _buildSectionHeader(String title, IconData icon) {
     return Container(
+      width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -1565,12 +1566,15 @@ class _AddPregnancyExaminationDialogState
         children: [
           Icon(icon, color: Colors.white, size: 20),
           const SizedBox(width: 12),
-          Text(
-            title,
-            style: GoogleFonts.poppins(
-              fontWeight: FontWeight.w600,
-              fontSize: 16,
-              color: Colors.white,
+          Expanded(
+            child: Text(
+              title,
+              style: GoogleFonts.poppins(
+                fontWeight: FontWeight.w600,
+                fontSize: 16,
+                color: Colors.white,
+              ),
+              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -2436,6 +2440,10 @@ class _AddPregnancyExaminationDialogState
                                   Icons.pregnant_woman_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
                               items:
                                   ['ya', 'tidak'].map((String value) {
@@ -2573,6 +2581,7 @@ class _AddPregnancyExaminationDialogState
                       Row(
                         children: [
                           Expanded(
+                            flex: 2,
                             child: DropdownButtonFormField<String>(
                               value: _posisiJanin,
                               decoration: InputDecoration(
@@ -2584,12 +2593,19 @@ class _AddPregnancyExaminationDialogState
                                   Icons.baby_changing_station_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
                               items:
                                   ['puki', 'puka'].map((String value) {
                                     return DropdownMenuItem<String>(
                                       value: value,
-                                      child: Text(value.toUpperCase()),
+                                      child: Text(
+                                        value.toUpperCase(),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     );
                                   }).toList(),
                               onChanged: (String? newValue) {
@@ -2601,6 +2617,7 @@ class _AddPregnancyExaminationDialogState
                           ),
                           const SizedBox(width: 12),
                           Expanded(
+                            flex: 1,
                             child: TextFormField(
                               controller: _tfuController,
                               keyboardType: TextInputType.number,
@@ -2612,6 +2629,10 @@ class _AddPregnancyExaminationDialogState
                                 prefixIcon: Icon(
                                   Icons.straighten_rounded,
                                   color: const Color(0xFFEC407A),
+                                ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
                                 ),
                               ),
                             ),
@@ -2650,6 +2671,10 @@ class _AddPregnancyExaminationDialogState
                                   Icons.favorite_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
                               items:
                                   ['teratur', 'tidak'].map((String value) {
@@ -2672,6 +2697,7 @@ class _AddPregnancyExaminationDialogState
                       Row(
                         children: [
                           Expanded(
+                            flex: 2,
                             child: DropdownButtonFormField<String>(
                               value: _letakJanin,
                               decoration: InputDecoration(
@@ -2683,6 +2709,10 @@ class _AddPregnancyExaminationDialogState
                                   Icons.baby_changing_station_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
                               items:
                                   ['memanjang', 'melintang'].map((
@@ -2690,7 +2720,10 @@ class _AddPregnancyExaminationDialogState
                                   ) {
                                     return DropdownMenuItem<String>(
                                       value: value,
-                                      child: Text(value.toUpperCase()),
+                                      child: Text(
+                                        value.toUpperCase(),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     );
                                   }).toList(),
                               onChanged: (String? newValue) {
@@ -2702,6 +2735,7 @@ class _AddPregnancyExaminationDialogState
                           ),
                           const SizedBox(width: 12),
                           Expanded(
+                            flex: 2,
                             child: DropdownButtonFormField<String>(
                               value: _presentasiJanin,
                               decoration: InputDecoration(
@@ -2713,6 +2747,10 @@ class _AddPregnancyExaminationDialogState
                                   Icons.baby_changing_station_rounded,
                                   color: const Color(0xFFEC407A),
                                 ),
+                                contentPadding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 8,
+                                ),
                               ),
                               items:
                                   ['kepala', 'bokong', 'bahu', 'kaki'].map((
@@ -2720,7 +2758,10 @@ class _AddPregnancyExaminationDialogState
                                   ) {
                                     return DropdownMenuItem<String>(
                                       value: value,
-                                      child: Text(value.toUpperCase()),
+                                      child: Text(
+                                        value.toUpperCase(),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     );
                                   }).toList(),
                               onChanged: (String? newValue) {

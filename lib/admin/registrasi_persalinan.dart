@@ -500,14 +500,17 @@ class _RegistrasiPersalinanScreenState
                               ),
                             ),
                             const SizedBox(width: 12),
-                            Text(
-                              report == null
-                                  ? 'Tambah Registrasi Persalinan'
-                                  : 'Edit Registrasi Persalinan',
-                              style: GoogleFonts.poppins(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: const Color(0xFF2D3748),
+                            Expanded(
+                              child: Text(
+                                report == null
+                                    ? 'Tambah Registrasi Persalinan'
+                                    : 'Edit Registrasi Persalinan',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: const Color(0xFF2D3748),
+                                ),
+                                overflow: TextOverflow.ellipsis,
                               ),
                             ),
                           ],
@@ -559,6 +562,7 @@ class _RegistrasiPersalinanScreenState
                                   // Patient Selection
                                   DropdownButtonFormField<UserModel>(
                                     value: _selectedPatient,
+                                    isExpanded: true,
                                     decoration: InputDecoration(
                                       labelText: 'Pilih Pasien',
                                       prefixIcon: Icon(
@@ -586,6 +590,11 @@ class _RegistrasiPersalinanScreenState
                                       ),
                                       filled: true,
                                       fillColor: Colors.grey[50],
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            horizontal: 12,
+                                            vertical: 8,
+                                          ),
                                     ),
                                     items:
                                         _patients.map((patient) {
