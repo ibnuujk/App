@@ -178,8 +178,8 @@ class _LoginScreenState extends State<LoginScreen> {
           padding: const EdgeInsets.all(10.0),
           child: Column(
             children: [
-              // Top Section - Title
-              const SizedBox(height: 20),
+              // Top Section - Title and Logo Combined
+              const SizedBox(height: 10),
               Text(
                 'Persalinanku',
                 style: GoogleFonts.poppins(
@@ -188,8 +188,6 @@ class _LoginScreenState extends State<LoginScreen> {
                   color: Colors.black,
                 ),
               ),
-              const SizedBox(height: 5),
-
               // Logo Section
               Container(
                 width: 480,
@@ -199,27 +197,33 @@ class _LoginScreenState extends State<LoginScreen> {
                   fit: BoxFit.contain,
                 ),
               ),
-              const SizedBox(height: 6),
-
-              // Main Message
-              Text(
-                'Simpan riwayat persalinanmu dengan aman',
-                style: GoogleFonts.poppins(
-                  fontSize: 24,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
+              // Main Message and Secondary Text Combined - Compact Layout
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                child: Column(
+                  children: [
+                    Text(
+                      'Simpan riwayat persalinanmu dengan aman',
+                      style: GoogleFonts.poppins(
+                        fontSize: 24,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'Daftar Sekarang atau Login Dengan Akun Anda',
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: Colors.black87,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
                 ),
-                textAlign: TextAlign.center,
               ),
-              const SizedBox(height: 8),
-
-              // Secondary Text
-              Text(
-                'Daftar Sekarang atau Login Dengan Akun Anda',
-                style: GoogleFonts.poppins(fontSize: 12, color: Colors.black87),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 15),
 
               // Bottom Section - Form
               Container(

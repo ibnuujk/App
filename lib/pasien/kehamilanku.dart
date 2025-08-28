@@ -563,16 +563,6 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                         Container(
                           width: 80,
                           height: 80,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFCDD2),
-                            borderRadius: BorderRadius.circular(40),
-                            border: Border.all(
-                              color: const Color(
-                                0xFFEC407A,
-                              ).withValues(alpha: 0.2),
-                              width: 2,
-                            ),
-                          ),
                           child: Padding(
                             padding: const EdgeInsets.all(8),
                             child: Image.asset(

@@ -229,46 +229,154 @@ class _EdukasiScreenState extends State<EdukasiScreen>
     );
   }
 
-  // Improved website launcher for mobile compatibility
+  // Enhanced website launcher for better mobile compatibility
   Future<void> _launchWebsite(String url) async {
     try {
-      final uri = Uri.parse(url);
+      // Ensure URL has proper scheme
+      String processedUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        processedUrl = 'https://$url';
+      }
 
-      // Try multiple launch modes for better mobile compatibility
-      if (await canLaunchUrl(uri)) {
-        // First try external application mode
-        try {
-          await launchUrl(uri, mode: LaunchMode.externalApplication);
-        } catch (e) {
-          // Fallback to in-app browser
-          await launchUrl(uri, mode: LaunchMode.inAppWebView);
+      final uri = Uri.parse(processedUrl);
+
+      // Try different launch strategies for better compatibility
+      bool launched = false;
+
+      // Strategy 1: Try external application first (browser app)
+      try {
+        if (await canLaunchUrl(uri)) {
+          launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+          if (launched) {
+            print('Successfully launched URL externally: $processedUrl');
+            return;
+          }
         }
-      } else {
-        // Try to launch with different URL schemes
-        final alternativeUrl = url.startsWith('http') ? url : 'https://$url';
+      } catch (e) {
+        print('External launch failed: $e');
+      }
+
+      // Strategy 2: Try in-app web view
+      try {
+        if (await canLaunchUrl(uri)) {
+          launched = await launchUrl(uri, mode: LaunchMode.inAppWebView);
+          if (launched) {
+            print('Successfully launched URL in-app: $processedUrl');
+            return;
+          }
+        }
+      } catch (e) {
+        print('In-app web view failed: $e');
+      }
+
+      // Strategy 3: Try platform default
+      try {
+        if (await canLaunchUrl(uri)) {
+          launched = await launchUrl(uri, mode: LaunchMode.platformDefault);
+          if (launched) {
+            print(
+              'Successfully launched URL with platform default: $processedUrl',
+            );
+            return;
+          }
+        }
+      } catch (e) {
+        print('Platform default failed: $e');
+      }
+
+      // Strategy 4: Try with different URL format
+      try {
+        final alternativeUrl = processedUrl.replaceFirst('https://', 'http://');
         final alternativeUri = Uri.parse(alternativeUrl);
 
         if (await canLaunchUrl(alternativeUri)) {
-          await launchUrl(alternativeUri, mode: LaunchMode.externalApplication);
-        } else {
-          throw Exception('Cannot launch URL');
+          launched = await launchUrl(
+            alternativeUri,
+            mode: LaunchMode.externalApplication,
+          );
+          if (launched) {
+            print('Successfully launched alternative URL: $alternativeUrl');
+            return;
+          }
         }
+      } catch (e) {
+        print('Alternative URL launch failed: $e');
+      }
+
+      // If all strategies fail, show error with more details
+      if (!launched) {
+        throw Exception(
+          'Tidak dapat membuka website: $processedUrl\nCoba buka manual di browser',
+        );
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Tidak dapat membuka website: $url'),
+            content: Text('Error: ${e.toString()}'),
             backgroundColor: Colors.red,
+            duration: const Duration(seconds: 4),
             action: SnackBarAction(
-              label: 'Salin URL',
-              onPressed: () {
-                // Copy URL to clipboard
-                // You can add clipboard functionality here if needed
-              },
+              label: 'Buka Manual',
+              onPressed: () => _openManualBrowser(url),
             ),
           ),
         );
+      }
+    }
+  }
+
+  // Open manual browser as fallback
+  Future<void> _openManualBrowser(String url) async {
+    try {
+      // Ensure URL has proper scheme
+      String processedUrl = url;
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        processedUrl = 'https://$url';
+      }
+
+      final uri = Uri.parse(processedUrl);
+
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        // Show manual instruction
+        if (mounted) {
+          showDialog(
+            context: context,
+            builder:
+                (context) => AlertDialog(
+                  title: const Text('Buka Manual'),
+                  content: Text(
+                    'Salin URL berikut dan buka di browser:\n\n$processedUrl',
+                  ),
+                  actions: [
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text('Tutup'),
+                    ),
+                    TextButton(
+                      onPressed: () {
+                        // TODO: Implement clipboard copy
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('URL telah disalin ke clipboard'),
+                          ),
+                        );
+                      },
+                      child: const Text('Salin URL'),
+                    ),
+                  ],
+                ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
       }
     }
   }
@@ -823,29 +931,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                             spreadRadius: 1,
                             blurRadius: 8,
                             offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        children: [
-                          Icon(Icons.school, color: Colors.white, size: 40),
-                          const SizedBox(height: 12),
-                          Text(
-                            'Edukasi Kehamilan',
-                            style: GoogleFonts.poppins(
-                              fontSize: 24,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Temukan informasi lengkap tentang kehamilan',
-                            style: GoogleFonts.poppins(
-                              fontSize: 14,
-                              color: Colors.white.withValues(alpha: 0.9),
-                            ),
-                            textAlign: TextAlign.center,
                           ),
                         ],
                       ),
