@@ -125,7 +125,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Analytics Dashboard',
+          'Data Analitik ',
           style: GoogleFonts.poppins(
             fontSize: 20,
             fontWeight: FontWeight.w600,

@@ -300,7 +300,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                                   ),
                                   const SizedBox(width: 12),
                                   Text(
-                                    'Tanggal Lahir: ${DateFormat('dd/MM/yyyy').format(_selectedDate)}',
+                                    'Tgl Lahir: ${DateFormat('dd-MM-yyyy').format(_selectedDate)}',
                                     style: GoogleFonts.poppins(),
                                   ),
                                 ],

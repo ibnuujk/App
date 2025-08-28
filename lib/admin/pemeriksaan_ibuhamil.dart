@@ -2412,49 +2412,47 @@ class _AddPregnancyExaminationDialogState
                       }),
                       const SizedBox(height: 16),
 
-                      Row(
+                      // Pemeriksaan Antenatal - Changed from Row to Column to prevent overflow
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _pemeriksaanAntenatal,
-                              decoration: InputDecoration(
-                                labelText: 'Pemeriksaan Antenatal',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.pregnant_woman_rounded,
-                                  color: const Color(0xFFEC407A),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
+                          DropdownButtonFormField<String>(
+                            value: _pemeriksaanAntenatal,
+                            decoration: InputDecoration(
+                              labelText: 'Pemeriksaan Antenatal',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              items:
-                                  ['ya', 'tidak'].map((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value.toUpperCase()),
-                                    );
-                                  }).toList(),
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  _pemeriksaanAntenatal = newValue!;
-                                });
-                              },
+                              prefixIcon: Icon(
+                                Icons.pregnant_woman_rounded,
+                                color: const Color(0xFFEC407A),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
+                            items:
+                                ['ya', 'tidak'].map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value.toUpperCase()),
+                                  );
+                                }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _pemeriksaanAntenatal = newValue!;
+                              });
+                            },
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: TextFormField(
-                              controller: _jumlahAntenatalController,
-                              keyboardType: TextInputType.number,
-                              decoration: InputDecoration(
-                                labelText: 'Kali',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _jumlahAntenatalController,
+                            keyboardType: TextInputType.number,
+                            decoration: InputDecoration(
+                              labelText: 'Kali',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
                             ),
                           ),
@@ -2627,135 +2625,127 @@ class _AddPregnancyExaminationDialogState
                       ),
                       const SizedBox(height: 16),
 
-                      Row(
+                      // His and DJJ/Irama - Changed from Row to Column to prevent overflow
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            child: TextFormField(
-                              controller: _hisController,
-                              decoration: InputDecoration(
-                                labelText: 'His',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.waves_rounded,
-                                  color: const Color(0xFFEC407A),
-                                ),
+                          TextFormField(
+                            controller: _hisController,
+                            decoration: InputDecoration(
+                              labelText: 'His',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.waves_rounded,
+                                color: const Color(0xFFEC407A),
                               ),
                             ),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: DropdownButtonFormField<String>(
-                              value: _djjIrama,
-                              decoration: InputDecoration(
-                                labelText: 'DJJ/Irama',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.favorite_rounded,
-                                  color: const Color(0xFFEC407A),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: _djjIrama,
+                            decoration: InputDecoration(
+                              labelText: 'DJJ/Irama',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              items:
-                                  ['teratur', 'tidak'].map((String value) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(value.toUpperCase()),
-                                    );
-                                  }).toList(),
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  _djjIrama = newValue!;
-                                });
-                              },
+                              prefixIcon: Icon(
+                                Icons.favorite_rounded,
+                                color: const Color(0xFFEC407A),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
+                            items:
+                                ['teratur', 'tidak'].map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(value.toUpperCase()),
+                                  );
+                                }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _djjIrama = newValue!;
+                              });
+                            },
                           ),
                         ],
                       ),
                       const SizedBox(height: 16),
 
-                      Row(
+                      // Letak Janin and Presentasi Janin - Changed from Row to Column to prevent overflow
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Expanded(
-                            flex: 2,
-                            child: DropdownButtonFormField<String>(
-                              value: _letakJanin,
-                              decoration: InputDecoration(
-                                labelText: 'Letak Janin',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.baby_changing_station_rounded,
-                                  color: const Color(0xFFEC407A),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
+                          DropdownButtonFormField<String>(
+                            value: _letakJanin,
+                            decoration: InputDecoration(
+                              labelText: 'Letak Janin',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              items:
-                                  ['memanjang', 'melintang'].map((
-                                    String value,
-                                  ) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(
-                                        value.toUpperCase(),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    );
-                                  }).toList(),
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  _letakJanin = newValue!;
-                                });
-                              },
+                              prefixIcon: Icon(
+                                Icons.baby_changing_station_rounded,
+                                color: const Color(0xFFEC407A),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
+                            items:
+                                ['memanjang', 'melintang'].map((String value) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(
+                                      value.toUpperCase(),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _letakJanin = newValue!;
+                              });
+                            },
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            flex: 2,
-                            child: DropdownButtonFormField<String>(
-                              value: _presentasiJanin,
-                              decoration: InputDecoration(
-                                labelText: 'Presentasi Janin',
-                                border: OutlineInputBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                prefixIcon: Icon(
-                                  Icons.baby_changing_station_rounded,
-                                  color: const Color(0xFFEC407A),
-                                ),
-                                contentPadding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 8,
-                                ),
+                          const SizedBox(height: 12),
+                          DropdownButtonFormField<String>(
+                            value: _presentasiJanin,
+                            decoration: InputDecoration(
+                              labelText: 'Presentasi Janin',
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
                               ),
-                              items:
-                                  ['kepala', 'bokong', 'bahu', 'kaki'].map((
-                                    String value,
-                                  ) {
-                                    return DropdownMenuItem<String>(
-                                      value: value,
-                                      child: Text(
-                                        value.toUpperCase(),
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    );
-                                  }).toList(),
-                              onChanged: (String? newValue) {
-                                setState(() {
-                                  _presentasiJanin = newValue!;
-                                });
-                              },
+                              prefixIcon: Icon(
+                                Icons.baby_changing_station_rounded,
+                                color: const Color(0xFFEC407A),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
                             ),
+                            items:
+                                ['kepala', 'bokong', 'bahu', 'kaki'].map((
+                                  String value,
+                                ) {
+                                  return DropdownMenuItem<String>(
+                                    value: value,
+                                    child: Text(
+                                      value.toUpperCase(),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  );
+                                }).toList(),
+                            onChanged: (String? newValue) {
+                              setState(() {
+                                _presentasiJanin = newValue!;
+                              });
+                            },
                           ),
                         ],
                       ),

@@ -9,6 +9,16 @@ import '../services/firebase_service.dart';
 class ChatAdminScreen extends StatefulWidget {
   const ChatAdminScreen({super.key});
 
+  // Static method to show chat admin screen with fullscreen dialog
+  static void show(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (context) => const ChatAdminScreen(),
+        fullscreenDialog: true, // This will hide bottom navigation
+      ),
+    );
+  }
+
   @override
   State<ChatAdminScreen> createState() => _ChatAdminScreenState();
 }
@@ -128,6 +138,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
 
       // Scroll to bottom
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Check if widget is still mounted before accessing scroll controller
+        if (!mounted) return;
+
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
             _scrollController.position.maxScrollExtent,
@@ -137,6 +150,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
         }
       });
     } catch (e) {
+      // Check if widget is still mounted before showing snackbar
+      if (!mounted) return;
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: $e'),
@@ -147,6 +163,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
   }
 
   void _selectPatient(UserModel patient) {
+    // Check if widget is still mounted before updating state
+    if (!mounted) return;
+
     setState(() {
       _selectedPatient = patient;
       _currentConversationId = _firebaseService.generateConversationId(
@@ -164,40 +183,57 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
         .getConversationMessages(_currentConversationId)
         .listen(
           (messages) {
-            if (mounted) {
-              setState(() {
-                _messages = messages;
-                _isLoading = false;
-              });
+            // Check if widget is still mounted before updating state
+            if (!mounted) return;
 
-              // Mark messages as read when admin opens chat
-              if (messages.isNotEmpty) {
-                _firebaseService.markMessagesAsRead(
-                  _currentConversationId,
-                  'admin',
-                  'admin',
+            setState(() {
+              _messages = messages;
+              _isLoading = false;
+            });
+
+            // Mark messages as read when admin opens chat
+            if (messages.isNotEmpty) {
+              _firebaseService.markMessagesAsRead(
+                _currentConversationId,
+                'admin',
+                'admin',
+              );
+            }
+
+            // Auto scroll to bottom when new messages arrive
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              // Check if widget is still mounted before accessing scroll controller
+              if (!mounted) return;
+
+              if (_scrollController.hasClients && _messages.isNotEmpty) {
+                _scrollController.animateTo(
+                  _scrollController.position.maxScrollExtent,
+                  duration: const Duration(milliseconds: 300),
+                  curve: Curves.easeOut,
                 );
               }
-
-              // Auto scroll to bottom when new messages arrive
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                if (_scrollController.hasClients && _messages.isNotEmpty) {
-                  _scrollController.animateTo(
-                    _scrollController.position.maxScrollExtent,
-                    duration: const Duration(milliseconds: 300),
-                    curve: Curves.easeOut,
-                  );
-                }
-              });
-            }
+            });
           },
           onError: (e) {
-            if (mounted) {
-              setState(() {
-                _isLoading = false;
-              });
-              print('Error loading messages: $e');
-            }
+            // Check if widget is still mounted before updating state
+            if (!mounted) return;
+
+            setState(() {
+              _isLoading = false;
+            });
+            print('Error loading messages: $e');
+
+            // Show error message to user
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Gagal memuat pesan: $e'),
+                backgroundColor: Colors.red,
+                action: SnackBarAction(
+                  label: 'Coba Lagi',
+                  onPressed: () => _selectPatient(patient),
+                ),
+              ),
+            );
           },
         );
   }
@@ -374,8 +410,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                                       ],
                                     ),
                                     onTap: () {
-                                      Navigator.pop(context);
+                                      // Select patient first, then close dialog
                                       _selectPatient(patient);
+                                      Navigator.pop(context);
                                     },
                                   ),
                                 );
@@ -402,483 +439,497 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF8FAFC),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFEC407A),
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: Stack(
-              children: [
-                const Icon(Icons.people_rounded, color: Colors.white),
-                if (_unreadCounts.values.any((count) => count > 0))
-                  Positioned(
-                    right: 0,
-                    top: 0,
-                    child: Container(
-                      padding: const EdgeInsets.all(2),
-                      decoration: BoxDecoration(
-                        color: Colors.red,
-                        borderRadius: BorderRadius.circular(6),
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 12,
-                        minHeight: 12,
-                      ),
-                      child: Text(
-                        '${_unreadCounts.values.fold(0, (a, b) => a + b)}',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            onPressed: _showPatientSelector,
-            tooltip: 'Pilih Pasien',
+    return PopScope(
+      canPop: true,
+      onPopInvoked: (didPop) {
+        // Ensure proper navigation back and hide bottom navigation
+        if (didPop) {
+          Navigator.of(context).pop();
+        }
+      },
+      child: Scaffold(
+        backgroundColor: const Color(0xFFF8FAFC),
+        bottomNavigationBar: null, // Hide bottom navigation
+        appBar: AppBar(
+          backgroundColor: const Color(0xFFEC407A),
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header Section
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFFEC407A),
-                      const Color(0xFFEC407A).withValues(alpha: 0.8),
-                    ],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFFEC407A).withValues(alpha: 0.3),
-                      blurRadius: 15,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Icon(
-                        Icons.chat_rounded,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Chat dengan Pasien',
-                            style: GoogleFonts.poppins(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              color: Colors.white,
-                            ),
+          actions: [
+            IconButton(
+              icon: Stack(
+                children: [
+                  const Icon(Icons.people_rounded, color: Colors.white),
+                  if (_unreadCounts.values.any((count) => count > 0))
+                    Positioned(
+                      right: 0,
+                      top: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(2),
+                        decoration: BoxDecoration(
+                          color: Colors.red,
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        constraints: const BoxConstraints(
+                          minWidth: 12,
+                          minHeight: 12,
+                        ),
+                        child: Text(
+                          '${_unreadCounts.values.fold(0, (a, b) => a + b)}',
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
                           ),
-                          if (_selectedPatient != null)
-                            Text(
-                              'Chat dengan ${_selectedPatient!.nama}',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.white.withValues(alpha: 0.9),
-                              ),
-                            )
-                          else
-                            Text(
-                              'Pilih pasien untuk memulai chat',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                color: Colors.white.withValues(alpha: 0.9),
-                              ),
-                            ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.3),
-                          width: 2,
+                          textAlign: TextAlign.center,
                         ),
                       ),
-                      child: IconButton(
-                        onPressed: _showPatientSelector,
-                        icon: Icon(Icons.people_rounded, color: Colors.white),
-                        tooltip: 'Pilih Pasien',
-                      ),
                     ),
-                  ],
-                ),
+                ],
               ),
-
-              // Messages
-              Expanded(
-                child:
-                    _isLoading
-                        ? const Center(
-                          child: CircularProgressIndicator(
-                            color: Color(0xFFEC407A),
-                          ),
-                        )
-                        : _selectedPatient == null
-                        ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 120,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFFEC407A,
-                                  ).withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(60),
-                                ),
-                                child: Icon(
-                                  Icons.chat_bubble_outline_rounded,
-                                  size: 60,
-                                  color: const Color(0xFFEC407A),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                'Pilih pasien untuk memulai chat',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF2D3748),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Pilih pasien dari daftar untuk memulai percakapan',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              ElevatedButton(
-                                onPressed: _showPatientSelector,
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFEC407A),
-                                  foregroundColor: Colors.white,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                  ),
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 24,
-                                    vertical: 12,
-                                  ),
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(Icons.people_rounded, size: 20),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'Pilih Pasien',
-                                      style: GoogleFonts.poppins(
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                        : _messages.isEmpty
-                        ? Center(
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 120,
-                                height: 120,
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFFEC407A,
-                                  ).withValues(alpha: 0.1),
-                                  borderRadius: BorderRadius.circular(60),
-                                ),
-                                child: Icon(
-                                  Icons.chat_bubble_outline_rounded,
-                                  size: 60,
-                                  color: const Color(0xFFEC407A),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              Text(
-                                'Belum ada pesan',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w600,
-                                  color: const Color(0xFF2D3748),
-                                ),
-                              ),
-                              const SizedBox(height: 8),
-                              Text(
-                                'Mulai percakapan dengan ${_selectedPatient!.nama}',
-                                style: GoogleFonts.poppins(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                            ],
-                          ),
-                        )
-                        : ListView.builder(
-                          controller: _scrollController,
-                          padding: const EdgeInsets.all(16),
-                          itemCount: _messages.length,
-                          itemBuilder: (context, index) {
-                            final message = _messages[index];
-                            final isAdmin = message.senderRole == 'admin';
-                            final showDate =
-                                index == 0 ||
-                                !_isSameDay(
-                                  _messages[index - 1].timestamp,
-                                  message.timestamp,
-                                );
-
-                            return Column(
-                              children: [
-                                if (showDate)
-                                  Container(
-                                    margin: const EdgeInsets.symmetric(
-                                      vertical: 8,
-                                    ),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: const Color(
-                                        0xFFEC407A,
-                                      ).withValues(alpha: 0.1),
-                                      borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(
-                                        color: const Color(
-                                          0xFFEC407A,
-                                        ).withValues(alpha: 0.3),
-                                        width: 1,
-                                      ),
-                                    ),
-                                    child: Text(
-                                      _formatDate(message.timestamp),
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 12,
-                                        color: const Color(0xFFEC407A),
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                  ),
-                                Align(
-                                  alignment:
-                                      isAdmin
-                                          ? Alignment.centerRight
-                                          : Alignment.centerLeft,
-                                  child: Container(
-                                    margin: const EdgeInsets.only(bottom: 8),
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 16,
-                                      vertical: 12,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          isAdmin
-                                              ? const Color(0xFFEC407A)
-                                              : Colors.white,
-                                      borderRadius: BorderRadius.circular(18),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: Colors.black.withValues(
-                                            alpha: 0.1,
-                                          ),
-                                          blurRadius: 10,
-                                          offset: const Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          isAdmin
-                                              ? CrossAxisAlignment.end
-                                              : CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          message.message,
-                                          style: GoogleFonts.poppins(
-                                            color:
-                                                isAdmin
-                                                    ? Colors.white
-                                                    : const Color(0xFF2D3748),
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              DateFormat(
-                                                'HH:mm',
-                                              ).format(message.timestamp),
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 10,
-                                                color:
-                                                    isAdmin
-                                                        ? Colors.white
-                                                            .withValues(
-                                                              alpha: 0.7,
-                                                            )
-                                                        : Colors.grey[600],
-                                              ),
-                                            ),
-                                            if (isAdmin) ...[
-                                              const SizedBox(width: 4),
-                                              Icon(
-                                                message.isRead
-                                                    ? Icons.done_all
-                                                    : Icons.done,
-                                                size: 12,
-                                                color:
-                                                    message.isRead
-                                                        ? Colors.blue[300]
-                                                        : Colors.white
-                                                            .withValues(
-                                                              alpha: 0.7,
-                                                            ),
-                                              ),
-                                            ],
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
-                        ),
-              ),
-
-              // Message Input
-              if (_selectedPatient != null)
+              onPressed: _showPatientSelector,
+              tooltip: 'Pilih Pasien',
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Header Section
                 Container(
+                  width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: const BorderRadius.only(
-                      topLeft: Radius.circular(20),
-                      topRight: Radius.circular(20),
+                    gradient: LinearGradient(
+                      colors: [
+                        const Color(0xFFEC407A),
+                        const Color(0xFFEC407A).withValues(alpha: 0.8),
+                      ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
+                    borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
+                        color: const Color(0xFFEC407A).withValues(alpha: 0.3),
                         blurRadius: 15,
-                        offset: const Offset(0, -8),
+                        offset: const Offset(0, 8),
                       ),
                     ],
                   ),
                   child: Row(
                     children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _messageController,
-                          decoration: InputDecoration(
-                            hintText: 'Ketik pesan...',
-                            hintStyle: GoogleFonts.poppins(
-                              color: Colors.grey[500],
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(25),
-                              borderSide: BorderSide(color: Colors.grey[300]!),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(25),
-                              borderSide: BorderSide(color: Colors.grey[300]!),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(25),
-                              borderSide: const BorderSide(
-                                color: Color(0xFFEC407A),
-                                width: 2,
-                              ),
-                            ),
-                            filled: true,
-                            fillColor: Colors.grey[50],
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 20,
-                              vertical: 12,
-                            ),
-                          ),
-                          maxLines: null,
-                          textInputAction: TextInputAction.send,
-                          onSubmitted: (_) => _sendMessage(),
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          Icons.chat_rounded,
+                          color: Colors.white,
+                          size: 24,
                         ),
                       ),
-                      const SizedBox(width: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEC407A),
-                          borderRadius: BorderRadius.circular(25),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFFEC407A,
-                              ).withValues(alpha: 0.3),
-                              blurRadius: 10,
-                              offset: const Offset(0, 4),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Chat dengan Pasien',
+                              style: GoogleFonts.poppins(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                color: Colors.white,
+                              ),
                             ),
+                            if (_selectedPatient != null)
+                              Text(
+                                'Chat dengan ${_selectedPatient!.nama}',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
+                              )
+                            else
+                              Text(
+                                'Pilih pasien untuk memulai chat',
+                                style: GoogleFonts.poppins(
+                                  fontSize: 14,
+                                  color: Colors.white.withValues(alpha: 0.9),
+                                ),
+                              ),
                           ],
                         ),
-                        child: IconButton(
-                          onPressed: _sendMessage,
-                          icon: const Icon(
-                            Icons.send_rounded,
-                            color: Colors.white,
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.3),
+                            width: 2,
                           ),
+                        ),
+                        child: IconButton(
+                          onPressed: _showPatientSelector,
+                          icon: Icon(Icons.people_rounded, color: Colors.white),
+                          tooltip: 'Pilih Pasien',
                         ),
                       ),
                     ],
                   ),
                 ),
-            ],
+
+                // Messages
+                Expanded(
+                  child:
+                      _isLoading
+                          ? const Center(
+                            child: CircularProgressIndicator(
+                              color: Color(0xFFEC407A),
+                            ),
+                          )
+                          : _selectedPatient == null
+                          ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFEC407A,
+                                    ).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(60),
+                                  ),
+                                  child: Icon(
+                                    Icons.chat_bubble_outline_rounded,
+                                    size: 60,
+                                    color: const Color(0xFFEC407A),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  'Pilih pasien untuk memulai chat',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF2D3748),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Pilih pasien dari daftar untuk memulai percakapan',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                ElevatedButton(
+                                  onPressed: _showPatientSelector,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xFFEC407A),
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 12,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(Icons.people_rounded, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Pilih Pasien',
+                                        style: GoogleFonts.poppins(
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : _messages.isEmpty
+                          ? Center(
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Container(
+                                  width: 120,
+                                  height: 120,
+                                  decoration: BoxDecoration(
+                                    color: const Color(
+                                      0xFFEC407A,
+                                    ).withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(60),
+                                  ),
+                                  child: Icon(
+                                    Icons.chat_bubble_outline_rounded,
+                                    size: 60,
+                                    color: const Color(0xFFEC407A),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+                                Text(
+                                  'Belum ada pesan',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF2D3748),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  'Mulai percakapan dengan ${_selectedPatient!.nama}',
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 14,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          )
+                          : ListView.builder(
+                            controller: _scrollController,
+                            padding: const EdgeInsets.all(16),
+                            itemCount: _messages.length,
+                            itemBuilder: (context, index) {
+                              final message = _messages[index];
+                              final isAdmin = message.senderRole == 'admin';
+                              final showDate =
+                                  index == 0 ||
+                                  !_isSameDay(
+                                    _messages[index - 1].timestamp,
+                                    message.timestamp,
+                                  );
+
+                              return Column(
+                                children: [
+                                  if (showDate)
+                                    Container(
+                                      margin: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 6,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: const Color(
+                                          0xFFEC407A,
+                                        ).withValues(alpha: 0.1),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: const Color(
+                                            0xFFEC407A,
+                                          ).withValues(alpha: 0.3),
+                                          width: 1,
+                                        ),
+                                      ),
+                                      child: Text(
+                                        _formatDate(message.timestamp),
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          color: const Color(0xFFEC407A),
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                    ),
+                                  Align(
+                                    alignment:
+                                        isAdmin
+                                            ? Alignment.centerRight
+                                            : Alignment.centerLeft,
+                                    child: Container(
+                                      margin: const EdgeInsets.only(bottom: 8),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color:
+                                            isAdmin
+                                                ? const Color(0xFFEC407A)
+                                                : Colors.white,
+                                        borderRadius: BorderRadius.circular(18),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Colors.black.withValues(
+                                              alpha: 0.1,
+                                            ),
+                                            blurRadius: 10,
+                                            offset: const Offset(0, 4),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            isAdmin
+                                                ? CrossAxisAlignment.end
+                                                : CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            message.message,
+                                            style: GoogleFonts.poppins(
+                                              color:
+                                                  isAdmin
+                                                      ? Colors.white
+                                                      : const Color(0xFF2D3748),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Text(
+                                                DateFormat(
+                                                  'HH:mm',
+                                                ).format(message.timestamp),
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 10,
+                                                  color:
+                                                      isAdmin
+                                                          ? Colors.white
+                                                              .withValues(
+                                                                alpha: 0.7,
+                                                              )
+                                                          : Colors.grey[600],
+                                                ),
+                                              ),
+                                              if (isAdmin) ...[
+                                                const SizedBox(width: 4),
+                                                Icon(
+                                                  message.isRead
+                                                      ? Icons.done_all
+                                                      : Icons.done,
+                                                  size: 12,
+                                                  color:
+                                                      message.isRead
+                                                          ? Colors.blue[300]
+                                                          : Colors.white
+                                                              .withValues(
+                                                                alpha: 0.7,
+                                                              ),
+                                                ),
+                                              ],
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              );
+                            },
+                          ),
+                ),
+
+                // Message Input
+                if (_selectedPatient != null)
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.1),
+                          blurRadius: 15,
+                          offset: const Offset(0, -8),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextField(
+                            controller: _messageController,
+                            decoration: InputDecoration(
+                              hintText: 'Ketik pesan...',
+                              hintStyle: GoogleFonts.poppins(
+                                color: Colors.grey[500],
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25),
+                                borderSide: BorderSide(
+                                  color: Colors.grey[300]!,
+                                ),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(25),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFEC407A),
+                                  width: 2,
+                                ),
+                              ),
+                              filled: true,
+                              fillColor: Colors.grey[50],
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20,
+                                vertical: 12,
+                              ),
+                            ),
+                            maxLines: null,
+                            textInputAction: TextInputAction.send,
+                            onSubmitted: (_) => _sendMessage(),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFEC407A),
+                            borderRadius: BorderRadius.circular(25),
+                            boxShadow: [
+                              BoxShadow(
+                                color: const Color(
+                                  0xFFEC407A,
+                                ).withValues(alpha: 0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
+                          ),
+                          child: IconButton(
+                            onPressed: _sendMessage,
+                            icon: const Icon(
+                              Icons.send_rounded,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
-      ),
-    );
+      ), // Close Scaffold
+    ); // Close PopScope
   }
 
   bool _isSameDay(DateTime date1, DateTime date2) {

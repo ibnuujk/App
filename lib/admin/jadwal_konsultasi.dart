@@ -310,7 +310,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
               ),
               const SizedBox(width: 12),
               Text(
-                'Lakukan Pemeriksaan',
+                'Pemeriksaan',
                 style: GoogleFonts.poppins(
                   fontWeight: FontWeight.w600,
                   color: const Color(0xFF2D3748),
@@ -355,7 +355,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
             ElevatedButton(
               onPressed: () async {
                 Navigator.of(context).pop();
-                // Navigate to pemeriksaan screen with schedule data
+
                 final result = await Navigator.push(
                   context,
                   MaterialPageRoute(
@@ -368,7 +368,6 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                   ),
                 );
 
-                // If examination was completed, mark schedule as having examination
                 if (result == true) {
                   await _markExaminationCompleted(schedule['id']);
                 }
@@ -785,43 +784,6 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                       ),
                                     ],
                                   ),
-                                )
-                              else
-                                // Status "Menunggu Pemeriksaan" jika belum selesai
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 12,
-                                    vertical: 6,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.orange.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.orange.withValues(
-                                        alpha: 0.3,
-                                      ),
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        Icons.schedule,
-                                        color: Colors.orange,
-                                        size: 14,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        'Menunggu',
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: Colors.orange,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
                                 ),
                             ],
 
@@ -878,19 +840,6 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                 pinned: true,
                 backgroundColor: const Color(0xFFEC407A),
                 elevation: 0,
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Container(
-                    color: const Color(0xFFEC407A),
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        20.0,
-                        60.0,
-                        20.0,
-                        20.0,
-                      ),
-                    ),
-                  ),
-                ),
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
                   onPressed: () => Navigator.pop(context),

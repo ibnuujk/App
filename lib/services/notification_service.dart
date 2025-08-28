@@ -630,6 +630,59 @@ class NotificationService {
     }
   }
 
+  // Show schedule update notification for admin
+  static Future<void> showScheduleUpdateNotificationForAdmin({
+    required String scheduleId,
+    required String patientName,
+    required String status,
+    required String scheduleType,
+    String? note,
+  }) async {
+    try {
+      const AndroidNotificationDetails androidPlatformChannelSpecifics =
+          AndroidNotificationDetails(
+            'schedule_channel',
+            'Schedule Notifications',
+            channelDescription:
+                'This channel is used for schedule notifications.',
+            importance: Importance.defaultImportance,
+            priority: Priority.defaultPriority,
+            showWhen: true,
+            icon: '@drawable/ic_notification',
+            color: Color(0xFFEC407A),
+          );
+
+      const NotificationDetails platformChannelSpecifics = NotificationDetails(
+        android: androidPlatformChannelSpecifics,
+      );
+
+      String statusText = '';
+      switch (status) {
+        case 'accepted':
+          statusText = 'Diterima';
+          break;
+        case 'rejected':
+          statusText = 'Ditolak';
+          break;
+        case 'completed':
+          statusText = 'Selesai';
+          break;
+        default:
+          statusText = status;
+      }
+
+      await _notifications.show(
+        '${scheduleId}_update'.hashCode,
+        'Update Status Temu Janji',
+        '$patientName - $scheduleType: $statusText',
+        platformChannelSpecifics,
+        payload: 'schedule_update:$scheduleId',
+      );
+    } catch (e) {
+      print('Error showing schedule update notification for admin: $e');
+    }
+  }
+
   // Get unread chat count for admin
   static Stream<int> getUnreadChatCountForAdmin() {
     return _firestore

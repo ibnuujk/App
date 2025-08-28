@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'notification_service.dart';
-import '../models/user_model.dart';
 
 class NotificationListenerService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -16,6 +15,7 @@ class NotificationListenerService {
   static void initializeAdminListeners() {
     _listenToNewChatsForAdmin();
     _listenToNewSchedulesForAdmin();
+    _listenToScheduleUpdatesForAdmin(); // Tambahkan listener untuk update status
   }
 
   // Initialize listeners for pasien
@@ -28,22 +28,31 @@ class NotificationListenerService {
   static void _listenToNewChatsForAdmin() {
     _chatSubscription = _firestore
         .collection('chats')
-        .where('receiverId', isEqualTo: _auth.currentUser?.uid)
+        .where(
+          'recipientId',
+          isEqualTo: 'admin',
+        ) // Admin selalu recipientId = 'admin'
+        .where('senderRole', isEqualTo: 'pasien') // Hanya chat dari pasien
         .where('isRead', isEqualTo: false)
         .snapshots()
-        .listen((snapshot) {
-          for (var change in snapshot.docChanges) {
-            if (change.type == DocumentChangeType.added) {
-              final data = change.doc.data() as Map<String, dynamic>;
-              _showChatNotificationForAdmin(
-                chatId: change.doc.id,
-                senderName: data['senderName'] ?? 'Unknown',
-                message: data['message'] ?? '',
-                senderId: data['senderId'] ?? '',
-              );
+        .listen(
+          (snapshot) {
+            for (var change in snapshot.docChanges) {
+              if (change.type == DocumentChangeType.added) {
+                final data = change.doc.data() as Map<String, dynamic>;
+                _showChatNotificationForAdmin(
+                  chatId: change.doc.id,
+                  senderName: data['senderName'] ?? 'Pasien',
+                  message: data['message'] ?? '',
+                  senderId: data['senderId'] ?? '',
+                );
+              }
             }
-          }
-        });
+          },
+          onError: (error) {
+            print('Error listening to admin chats: $error');
+          },
+        );
   }
 
   // Listen to new chats for pasien
@@ -74,19 +83,25 @@ class NotificationListenerService {
         .collection('konsultasi')
         .where('status', isEqualTo: 'pending')
         .snapshots()
-        .listen((snapshot) {
-          for (var change in snapshot.docChanges) {
-            if (change.type == DocumentChangeType.added) {
-              final data = change.doc.data() as Map<String, dynamic>;
-              _showScheduleNotificationForAdmin(
-                scheduleId: change.doc.id,
-                patientName: data['pasienNama'] ?? 'Unknown',
-                scheduleType: data['jenisKonsultasi'] ?? 'Konsultasi',
-                scheduleTime: (data['tanggalKonsultasi'] as Timestamp).toDate(),
-              );
+        .listen(
+          (snapshot) {
+            for (var change in snapshot.docChanges) {
+              if (change.type == DocumentChangeType.added) {
+                final data = change.doc.data() as Map<String, dynamic>;
+                _showScheduleNotificationForAdmin(
+                  scheduleId: change.doc.id,
+                  patientName: data['pasienNama'] ?? 'Pasien',
+                  scheduleType: data['jenisKonsultasi'] ?? 'Konsultasi',
+                  scheduleTime:
+                      (data['tanggalKonsultasi'] as Timestamp).toDate(),
+                );
+              }
             }
-          }
-        });
+          },
+          onError: (error) {
+            print('Error listening to admin schedules: $error');
+          },
+        );
   }
 
   // Listen to schedule status updates for pasien
@@ -113,6 +128,34 @@ class NotificationListenerService {
             }
           }
         });
+  }
+
+  // Listen to schedule updates for admin (when admin changes status)
+  static void _listenToScheduleUpdatesForAdmin() {
+    _scheduleSubscription = _firestore
+        .collection('konsultasi')
+        .where('status', whereIn: ['accepted', 'rejected', 'completed'])
+        .where('isNotified', isEqualTo: false)
+        .snapshots()
+        .listen(
+          (snapshot) {
+            for (var change in snapshot.docChanges) {
+              if (change.type == DocumentChangeType.modified) {
+                final data = change.doc.data() as Map<String, dynamic>;
+                _showScheduleUpdateNotificationForAdmin(
+                  scheduleId: change.doc.id,
+                  patientName: data['pasienNama'] ?? 'Pasien',
+                  status: data['status'] ?? '',
+                  scheduleType: data['jenisKonsultasi'] ?? 'Konsultasi',
+                  note: data['catatanAdmin'],
+                );
+              }
+            }
+          },
+          onError: (error) {
+            print('Error listening to admin schedule updates: $error');
+          },
+        );
   }
 
   // Show chat notification for admin
@@ -157,6 +200,23 @@ class NotificationListenerService {
       patientName: patientName,
       scheduleType: scheduleType,
       scheduleTime: scheduleTime,
+    );
+  }
+
+  // Show schedule update notification for admin
+  static void _showScheduleUpdateNotificationForAdmin({
+    required String scheduleId,
+    required String patientName,
+    required String status,
+    required String scheduleType,
+    String? note,
+  }) {
+    NotificationService.showScheduleUpdateNotificationForAdmin(
+      scheduleId: scheduleId,
+      patientName: patientName,
+      status: status,
+      scheduleType: scheduleType,
+      note: note,
     );
   }
 

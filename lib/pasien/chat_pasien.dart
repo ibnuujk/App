@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../models/chat_model.dart';
 import '../../models/user_model.dart';
 import '../../services/firebase_service.dart';
+import 'dart:async'; // Add this import for StreamSubscription
 
 class ChatPasienScreen extends StatefulWidget {
   final UserModel user;
@@ -23,6 +24,9 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
   String _conversationId = '';
   bool _isLoading = true;
 
+  // Add StreamSubscription to properly manage the stream
+  StreamSubscription<List<ChatModel>>? _messagesSubscription;
+
   @override
   void initState() {
     super.initState();
@@ -32,46 +36,73 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
 
   @override
   void dispose() {
+    // Cancel stream subscription to prevent memory leaks
+    _messagesSubscription?.cancel();
     _messageController.dispose();
     _scrollController.dispose();
     super.dispose();
   }
 
   Future<void> _loadMessages() async {
+    if (!mounted) return;
+
     setState(() {
       _isLoading = true;
     });
 
     try {
-      _firebaseService.getConversationMessages(_conversationId).listen((
-        messages,
-      ) {
-        setState(() {
-          _messages = messages;
-          _isLoading = false;
-        });
+      // Store stream subscription for proper management
+      _messagesSubscription = _firebaseService
+          .getConversationMessages(_conversationId)
+          .listen(
+            (messages) {
+              // Check if widget is still mounted before updating state
+              if (!mounted) return;
 
-        // Mark messages as read when user opens chat
-        if (messages.isNotEmpty) {
-          _firebaseService.markMessagesAsRead(
-            _conversationId,
-            widget.user.id,
-            'pasien',
+              setState(() {
+                _messages = messages;
+                _isLoading = false;
+              });
+
+              // Mark messages as read when user opens chat
+              if (messages.isNotEmpty) {
+                _firebaseService.markMessagesAsRead(
+                  _conversationId,
+                  widget.user.id,
+                  'pasien',
+                );
+              }
+
+              // Auto scroll to bottom when new messages arrive
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                // Check if widget is still mounted before accessing scroll controller
+                if (!mounted) return;
+
+                if (_scrollController.hasClients && _messages.isNotEmpty) {
+                  _scrollController.animateTo(
+                    _scrollController.position.maxScrollExtent,
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                  );
+                }
+              });
+            },
+            onError: (e) {
+              // Check if widget is still mounted before updating state
+              if (!mounted) return;
+
+              setState(() {
+                _isLoading = false;
+              });
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text('Error: $e')));
+            },
           );
-        }
-
-        // Auto scroll to bottom when new messages arrive
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (_scrollController.hasClients && _messages.isNotEmpty) {
-            _scrollController.animateTo(
-              _scrollController.position.maxScrollExtent,
-              duration: const Duration(milliseconds: 300),
-              curve: Curves.easeOut,
-            );
-          }
-        });
-      });
     } catch (e) {
+      // Check if widget is still mounted before updating state
+      if (!mounted) return;
+
       setState(() {
         _isLoading = false;
       });
@@ -102,6 +133,9 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
 
       // Scroll to bottom
       WidgetsBinding.instance.addPostFrameCallback((_) {
+        // Check if widget is still mounted before accessing scroll controller
+        if (!mounted) return;
+
         if (_scrollController.hasClients) {
           _scrollController.animateTo(
             _scrollController.position.maxScrollExtent,
@@ -111,6 +145,9 @@ class _ChatPasienScreenState extends State<ChatPasienScreen> {
         }
       });
     } catch (e) {
+      // Check if widget is still mounted before showing snackbar
+      if (!mounted) return;
+
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Error: $e')));

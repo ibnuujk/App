@@ -175,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
       backgroundColor: Colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(10.0),
+          padding: const EdgeInsets.all(1.0),
           child: Column(
             children: [
               // Top Section - Title and Logo Combined
@@ -190,8 +190,8 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               // Logo Section
               Container(
-                width: 480,
-                height: 500,
+                width: 400,
+                height: 410,
                 child: Image.asset(
                   'assets/icons/logo.png',
                   fit: BoxFit.contain,
@@ -199,7 +199,7 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
               // Main Message and Secondary Text Combined - Compact Layout
               Container(
-                margin: const EdgeInsets.only(top: 8),
+                margin: const EdgeInsets.only(top: 1),
                 child: Column(
                   children: [
                     Text(
@@ -223,7 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
               ),
-              const SizedBox(height: 15),
+              const SizedBox(height: 4),
 
               // Bottom Section - Form
               Container(
@@ -359,9 +359,9 @@ class _LoginScreenState extends State<LoginScreen> {
                                   ),
                         ),
                       ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 10),
 
-                      // Register Link
+                      // Register Linkr
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [

@@ -13,11 +13,8 @@ class PersalinanModel {
   final String agamaSuami;
   final String agamaPasien;
   final String pekerjaanPasien;
-  final String pekerjaan;
   final DateTime tanggalMasuk;
-  final String fasilitas; // 'umum' atau 'bpjs'
-  final DateTime tanggalPartes;
-  final DateTime? tanggalKeluar;
+  final String fasilitas;
   final String diagnosaKebidanan;
   final String tindakan;
   final String? rujukan; // opsional
@@ -37,11 +34,8 @@ class PersalinanModel {
     required this.agamaSuami,
     required this.agamaPasien,
     required this.pekerjaanPasien,
-    required this.pekerjaan,
     required this.tanggalMasuk,
     required this.fasilitas,
-    required this.tanggalPartes,
-    this.tanggalKeluar,
     required this.diagnosaKebidanan,
     required this.tindakan,
     this.rujukan,
@@ -63,11 +57,8 @@ class PersalinanModel {
       'agamaSuami': agamaSuami,
       'agamaPasien': agamaPasien,
       'pekerjaanPasien': pekerjaanPasien,
-      'pekerjaan': pekerjaan,
       'tanggalMasuk': tanggalMasuk.toIso8601String(),
       'fasilitas': fasilitas,
-      'tanggalPartes': tanggalPartes.toIso8601String(),
-      'tanggalKeluar': tanggalKeluar?.toIso8601String(),
       'diagnosaKebidanan': diagnosaKebidanan,
       'tindakan': tindakan,
       'rujukan': rujukan,
@@ -90,14 +81,8 @@ class PersalinanModel {
       agamaSuami: map['agamaSuami'] ?? '',
       agamaPasien: map['agamaPasien'] ?? '',
       pekerjaanPasien: map['pekerjaanPasien'] ?? '',
-      pekerjaan: map['pekerjaan'] ?? '',
       tanggalMasuk: DateTime.parse(map['tanggalMasuk']),
       fasilitas: map['fasilitas'] ?? '',
-      tanggalPartes: DateTime.parse(map['tanggalPartes']),
-      tanggalKeluar:
-          map['tanggalKeluar'] != null
-              ? DateTime.parse(map['tanggalKeluar'])
-              : null,
       diagnosaKebidanan: map['diagnosaKebidanan'] ?? '',
       tindakan: map['tindakan'] ?? '',
       rujukan: map['rujukan'],
@@ -119,11 +104,8 @@ class PersalinanModel {
     String? agamaSuami,
     String? agamaPasien,
     String? pekerjaanPasien,
-    String? pekerjaan,
     DateTime? tanggalMasuk,
     String? fasilitas,
-    DateTime? tanggalPartes,
-    DateTime? tanggalKeluar,
     String? diagnosaKebidanan,
     String? tindakan,
     String? rujukan,
@@ -143,11 +125,8 @@ class PersalinanModel {
       agamaSuami: agamaSuami ?? this.agamaSuami,
       agamaPasien: agamaPasien ?? this.agamaPasien,
       pekerjaanPasien: pekerjaanPasien ?? this.pekerjaanPasien,
-      pekerjaan: pekerjaan ?? this.pekerjaan,
       tanggalMasuk: tanggalMasuk ?? this.tanggalMasuk,
       fasilitas: fasilitas ?? this.fasilitas,
-      tanggalPartes: tanggalPartes ?? this.tanggalPartes,
-      tanggalKeluar: tanggalKeluar ?? this.tanggalKeluar,
       diagnosaKebidanan: diagnosaKebidanan ?? this.diagnosaKebidanan,
       tindakan: tindakan ?? this.tindakan,
       rujukan: rujukan ?? this.rujukan,

@@ -31,14 +31,12 @@ class _RegistrasiPersalinanFormDialogState
   final _agamaSuamiController = TextEditingController();
   final _agamaPasienController = TextEditingController();
   final _pekerjaanPasienController = TextEditingController();
-  final _pekerjaanController = TextEditingController();
   final _diagnosaController = TextEditingController();
   final _tindakanController = TextEditingController();
   final _rujukanController = TextEditingController();
   final _penolongController = TextEditingController();
 
   DateTime _tanggalMasuk = DateTime.now();
-  DateTime _tanggalPartes = DateTime.now();
   String _fasilitas = 'umum';
   bool _isLoading = false;
 
@@ -102,14 +100,12 @@ class _RegistrasiPersalinanFormDialogState
       _agamaSuamiController.text = data.agamaSuami;
       _agamaPasienController.text = data.agamaPasien;
       _pekerjaanPasienController.text = data.pekerjaanPasien;
-      _pekerjaanController.text = data.pekerjaan;
       _diagnosaController.text = data.diagnosaKebidanan;
       _tindakanController.text = data.tindakan;
       _rujukanController.text = data.rujukan ?? '';
       _penolongController.text = data.penolongPersalinan;
 
       _tanggalMasuk = data.tanggalMasuk;
-      _tanggalPartes = data.tanggalPartes;
       _fasilitas = data.fasilitas;
     }
 
@@ -178,7 +174,6 @@ class _RegistrasiPersalinanFormDialogState
     _agamaSuamiController.dispose();
     _agamaPasienController.dispose();
     _pekerjaanPasienController.dispose();
-    _pekerjaanController.dispose();
     _diagnosaController.dispose();
     _tindakanController.dispose();
     _rujukanController.dispose();
@@ -207,9 +202,7 @@ class _RegistrasiPersalinanFormDialogState
         agamaSuami: _agamaSuamiController.text.trim(),
         agamaPasien: _agamaPasienController.text.trim(),
         pekerjaanPasien: _pekerjaanPasienController.text.trim(),
-        pekerjaan: _pekerjaanController.text.trim(),
         tanggalMasuk: _tanggalMasuk,
-        tanggalPartes: _tanggalPartes,
         diagnosaKebidanan: _diagnosaController.text.trim(),
         tindakan: _tindakanController.text.trim(),
         rujukan: _rujukanController.text.trim(),
@@ -763,36 +756,6 @@ class _RegistrasiPersalinanFormDialogState
                       ),
                       const SizedBox(height: 16),
 
-                      // Pekerjaan (untuk data persalinan)
-                      TextFormField(
-                        controller: _pekerjaanController,
-                        decoration: InputDecoration(
-                          labelText: 'Pekerjaan',
-                          prefixIcon: Icon(
-                            Icons.work_outline,
-                            color: const Color(0xFFEC407A),
-                          ),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: const BorderSide(
-                              color: Color(0xFFEC407A),
-                              width: 2,
-                            ),
-                          ),
-                        ),
-                        validator: (value) {
-                          if (value == null || value.isEmpty) {
-                            return 'Pekerjaan tidak boleh kosong';
-                          }
-                          return null;
-                        },
-                      ),
-                      const SizedBox(height: 16),
-
-                      // Tanggal Masuk
                       InkWell(
                         onTap: () async {
                           final date = await showDatePicker(
@@ -849,23 +812,7 @@ class _RegistrasiPersalinanFormDialogState
                       ),
                       const SizedBox(height: 16),
 
-                      // Tanggal Partes
                       InkWell(
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _tanggalPartes,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime.now().add(
-                              const Duration(days: 365),
-                            ),
-                          );
-                          if (date != null) {
-                            setState(() {
-                              _tanggalPartes = date;
-                            });
-                          }
-                        },
                         child: Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
@@ -887,15 +834,6 @@ class _RegistrasiPersalinanFormDialogState
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
                                       color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  Text(
-                                    DateFormat(
-                                      'dd/MM/yyyy',
-                                    ).format(_tanggalPartes),
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
                                     ),
                                   ),
                                 ],

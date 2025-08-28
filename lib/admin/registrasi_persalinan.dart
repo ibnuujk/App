@@ -425,9 +425,6 @@ class _RegistrasiPersalinanScreenState
     final _pekerjaanPasienController = TextEditingController(
       text: report?.pekerjaanPasien ?? '',
     );
-    final _pekerjaanController = TextEditingController(
-      text: report?.pekerjaan ?? '',
-    );
     final _diagnosaController = TextEditingController(
       text: report?.diagnosaKebidanan ?? '',
     );
@@ -1035,48 +1032,6 @@ class _RegistrasiPersalinanScreenState
                                     ),
                                   ),
                                   const SizedBox(height: 16),
-
-                                  // Job
-                                  TextFormField(
-                                    controller: _pekerjaanController,
-                                    decoration: InputDecoration(
-                                      labelText: 'Pekerjaan',
-                                      prefixIcon: Icon(
-                                        Icons.work_rounded,
-                                        color: const Color(0xFFEC407A),
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey[300]!,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: BorderSide(
-                                          color: Colors.grey[300]!,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                        borderSide: const BorderSide(
-                                          color: Color(0xFFEC407A),
-                                          width: 2,
-                                        ),
-                                      ),
-                                      filled: true,
-                                      fillColor: Colors.grey[50],
-                                    ),
-                                    validator: (value) {
-                                      if (value == null || value.isEmpty) {
-                                        return 'Pekerjaan tidak boleh kosong';
-                                      }
-                                      return null;
-                                    },
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // Admission Date
                                   _buildDatePickerTile(
                                     'Tanggal Masuk',
                                     DateFormat(
@@ -1384,15 +1339,8 @@ class _RegistrasiPersalinanScreenState
                                                   _pekerjaanPasienController
                                                       .text
                                                       .trim(),
-                                              pekerjaan:
-                                                  _pekerjaanController.text
-                                                      .trim(),
                                               tanggalMasuk: _tanggalMasuk,
                                               fasilitas: _fasilitas,
-                                              tanggalPartes:
-                                                  _tanggalMasuk, // Use tanggalMasuk as default
-                                              tanggalKeluar:
-                                                  _tanggalMasuk, // Use tanggalMasuk as default
                                               diagnosaKebidanan:
                                                   _diagnosaController.text
                                                       .trim(),
@@ -1489,12 +1437,6 @@ class _RegistrasiPersalinanScreenState
       ),
       child: Row(
         children: [
-          Icon(
-            Icons.calendar_today_rounded,
-            color: const Color(0xFFEC407A),
-            size: 20,
-          ),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
