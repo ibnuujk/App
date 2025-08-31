@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'notification_service.dart';
+import 'notification_integration_service.dart';
 
 class NotificationListenerService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -94,6 +95,7 @@ class NotificationListenerService {
                   scheduleType: data['jenisKonsultasi'] ?? 'Konsultasi',
                   scheduleTime:
                       (data['tanggalKonsultasi'] as Timestamp).toDate(),
+                  patientId: data['pasienId'] ?? '',
                 );
               }
             }
@@ -165,6 +167,15 @@ class NotificationListenerService {
     required String message,
     required String senderId,
   }) {
+    // Use NotificationIntegrationService to create persistent notifications
+    NotificationIntegrationService.notifyAdminNewChat(
+      chatId: chatId,
+      patientName: senderName,
+      message: message,
+      patientId: senderId,
+    );
+
+    // Also show local notification for immediate feedback
     NotificationService.showChatNotificationForAdmin(
       chatId: chatId,
       senderName: senderName,
@@ -194,7 +205,18 @@ class NotificationListenerService {
     required String patientName,
     required String scheduleType,
     required DateTime scheduleTime,
+    required String patientId,
   }) {
+    // Use NotificationIntegrationService to create persistent notifications
+    NotificationIntegrationService.notifyAdminNewAppointment(
+      appointmentId: scheduleId,
+      patientName: patientName,
+      appointmentType: scheduleType,
+      appointmentTime: scheduleTime,
+      patientId: patientId,
+    );
+
+    // Also show local notification for immediate feedback
     NotificationService.showScheduleNotificationForAdmin(
       scheduleId: scheduleId,
       patientName: patientName,

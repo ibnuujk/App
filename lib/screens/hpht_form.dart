@@ -5,6 +5,7 @@ import '../models/user_model.dart';
 import '../services/firebase_service.dart';
 import '../routes/route_helper.dart';
 import '../utilities/pregnancy_calculator.dart';
+import '../utilities/safe_navigation.dart';
 
 class HPHTFormScreen extends StatefulWidget {
   final UserModel user;
@@ -393,6 +394,10 @@ class _HPHTFormScreenState extends State<HPHTFormScreen> {
         ),
         backgroundColor: const Color(0xFF20B2AA),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),

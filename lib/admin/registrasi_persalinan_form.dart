@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utilities/safe_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/persalinan_model.dart';
@@ -214,7 +215,7 @@ class _RegistrasiPersalinanFormDialogState
       await _firebaseService.createPersalinan(newReport);
 
       if (mounted) {
-        Navigator.pop(context);
+        NavigationHelper.safeNavigateBack(context);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
@@ -331,7 +332,7 @@ class _RegistrasiPersalinanFormDialogState
                   ),
                 ),
                 IconButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => NavigationHelper.safeNavigateBack(context),
                   icon: const Icon(Icons.close),
                 ),
               ],
@@ -369,7 +370,6 @@ class _RegistrasiPersalinanFormDialogState
                             ),
                             const SizedBox(height: 16),
 
-                            // Tanggal Masuk
                             InkWell(
                               onTap: () async {
                                 final date = await showDatePicker(
@@ -755,95 +755,6 @@ class _RegistrasiPersalinanFormDialogState
                         },
                       ),
                       const SizedBox(height: 16),
-
-                      InkWell(
-                        onTap: () async {
-                          final date = await showDatePicker(
-                            context: context,
-                            initialDate: _tanggalMasuk,
-                            firstDate: DateTime(2020),
-                            lastDate: DateTime.now().add(
-                              const Duration(days: 365),
-                            ),
-                          );
-                          if (date != null) {
-                            setState(() {
-                              _tanggalMasuk = date;
-                            });
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[400]!),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                color: const Color(0xFFEC407A),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Tanggal Masuk',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                  Text(
-                                    DateFormat(
-                                      'dd/MM/yyyy',
-                                    ).format(_tanggalMasuk),
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w500,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      InkWell(
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            border: Border.all(color: Colors.grey[400]!),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.calendar_today,
-                                color: const Color(0xFFEC407A),
-                              ),
-                              const SizedBox(width: 12),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Tanggal Persalinan',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: Colors.grey[600],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
                       // Diagnosa Kebidanan
                       TextFormField(
                         controller: _diagnosaController,
@@ -967,7 +878,7 @@ class _RegistrasiPersalinanFormDialogState
               children: [
                 Expanded(
                   child: TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => NavigationHelper.safeNavigateBack(context),
                     child: Text(
                       'Batal',
                       style: GoogleFonts.poppins(color: Colors.grey[600]),

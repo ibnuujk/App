@@ -101,6 +101,10 @@ class _PanelEdukasiState extends State<PanelEdukasi>
         title: Text('Panel Edukasi Admin', style: GoogleFonts.poppins()),
         backgroundColor: const Color(0xFFEC407A),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
+        ),
         bottom: TabBar(
           controller: _tabController,
           indicatorColor: Colors.white,

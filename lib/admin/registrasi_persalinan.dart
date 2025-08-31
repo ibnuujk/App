@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utilities/safe_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../../models/persalinan_model.dart';
@@ -1280,7 +1281,10 @@ class _RegistrasiPersalinanScreenState
                           children: [
                             Expanded(
                               child: TextButton(
-                                onPressed: () => Navigator.pop(context),
+                                onPressed:
+                                    () => NavigationHelper.safeNavigateBack(
+                                      context,
+                                    ),
                                 child: Text(
                                   'Batal',
                                   style: GoogleFonts.poppins(
@@ -1371,7 +1375,9 @@ class _RegistrasiPersalinanScreenState
                                                 newReport,
                                               );
                                             }
-                                            Navigator.pop(context);
+                                            NavigationHelper.safeNavigateBack(
+                                              context,
+                                            );
                                           } catch (e) {
                                             ScaffoldMessenger.of(
                                               context,
@@ -1586,7 +1592,8 @@ class _RegistrasiPersalinanScreenState
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed:
+                          () => NavigationHelper.safeNavigateBack(context),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFFEC407A),
                         foregroundColor: Colors.white,
@@ -1664,32 +1671,6 @@ class _RegistrasiPersalinanScreenState
               padding: const EdgeInsets.all(20),
               child: Column(
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFEC407A).withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Icon(
-                          Icons.people_rounded,
-                          color: const Color(0xFFEC407A),
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Kelola',
-                        style: GoogleFonts.poppins(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF2D3748),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
                   Expanded(
                     child:
                         _isLoadingPatients
@@ -1852,7 +1833,8 @@ class _RegistrasiPersalinanScreenState
                     children: [
                       Expanded(
                         child: TextButton(
-                          onPressed: () => Navigator.pop(context),
+                          onPressed:
+                              () => NavigationHelper.safeNavigateBack(context),
                           child: Text(
                             'Tutup',
                             style: GoogleFonts.poppins(color: Colors.grey),
@@ -1880,7 +1862,7 @@ class _RegistrasiPersalinanScreenState
                       Expanded(
                         child: ElevatedButton(
                           onPressed: () {
-                            Navigator.pop(context);
+                            NavigationHelper.safeNavigateBack(context);
                             _showAddEditPatientDialog();
                           },
                           style: ElevatedButton.styleFrom(
@@ -2339,7 +2321,10 @@ class _RegistrasiPersalinanScreenState
                           children: [
                             Expanded(
                               child: TextButton(
-                                onPressed: () => Navigator.pop(context),
+                                onPressed:
+                                    () => NavigationHelper.safeNavigateBack(
+                                      context,
+                                    ),
                                 child: Text(
                                   'Batal',
                                   style: GoogleFonts.poppins(
@@ -2444,7 +2429,9 @@ class _RegistrasiPersalinanScreenState
                                               await _updatePatient(newPatient);
                                             }
 
-                                            Navigator.pop(context);
+                                            NavigationHelper.safeNavigateBack(
+                                              context,
+                                            );
                                           } catch (e) {
                                             ScaffoldMessenger.of(
                                               context,
@@ -2513,7 +2500,7 @@ class _RegistrasiPersalinanScreenState
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => NavigationHelper.safeNavigateBack(context),
                 child: Text(
                   'Batal',
                   style: GoogleFonts.poppins(color: Colors.grey),
@@ -2521,7 +2508,7 @@ class _RegistrasiPersalinanScreenState
               ),
               ElevatedButton(
                 onPressed: () async {
-                  Navigator.pop(context);
+                  NavigationHelper.safeNavigateBack(context);
                   await _deletePatient(patient.id);
                 },
                 style: ElevatedButton.styleFrom(
@@ -2557,7 +2544,7 @@ class _RegistrasiPersalinanScreenState
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => NavigationHelper.safeNavigateBack(context),
                 child: Text(
                   'Batal',
                   style: GoogleFonts.poppins(color: Colors.grey),
@@ -2565,7 +2552,7 @@ class _RegistrasiPersalinanScreenState
               ),
               ElevatedButton(
                 onPressed: () async {
-                  Navigator.pop(context);
+                  NavigationHelper.safeNavigateBack(context);
                   await _deleteDeliveryRegistration(registration.id);
                 },
                 style: ElevatedButton.styleFrom(
@@ -2598,7 +2585,7 @@ class _RegistrasiPersalinanScreenState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: SafeArea(
@@ -2632,25 +2619,6 @@ class _RegistrasiPersalinanScreenState
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Icon(
-                            Icons.assignment_rounded,
-                            color: Colors.white,
-                            size: 24,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    // Connection Status Indicator
                     if (_errorMessage != null &&
                         _errorMessage!.contains('TimeoutException'))
                       Container(
@@ -2717,89 +2685,6 @@ class _RegistrasiPersalinanScreenState
                       ],
                     ),
                     const SizedBox(height: 20),
-                    // Action Buttons Row
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed:
-                                _isLoading
-                                    ? null
-                                    : () => _showPatientManagementDialog(),
-                            icon:
-                                _isLoading
-                                    ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Color(0xFFEC407A),
-                                            ),
-                                      ),
-                                    )
-                                    : const Icon(
-                                      Icons.people_rounded,
-                                      size: 20,
-                                    ),
-                            label: Text(
-                              _isLoading ? 'Memuat...' : 'Kelola',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFFEC407A),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: ElevatedButton.icon(
-                            onPressed:
-                                _isLoading ? null : () => _showAddEditDialog(),
-                            icon:
-                                _isLoading
-                                    ? const SizedBox(
-                                      width: 20,
-                                      height: 20,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor:
-                                            AlwaysStoppedAnimation<Color>(
-                                              Color(0xFFEC407A),
-                                            ),
-                                      ),
-                                    )
-                                    : const Icon(Icons.add_rounded, size: 20),
-                            label: Text(
-                              _isLoading ? 'Memuat...' : 'Tambah',
-                              style: GoogleFonts.poppins(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.white,
-                              foregroundColor: const Color(0xFFEC407A),
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 20),
-                    // Search Bar
                     TextField(
                       controller: _searchController,
                       enabled: !_isLoading,
