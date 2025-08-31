@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utilities/safe_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../models/user_model.dart';
@@ -122,7 +123,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen>
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
         title: Text(
           'Data Analitik ',

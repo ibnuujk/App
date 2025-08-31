@@ -7,16 +7,22 @@ import '../models/user_model.dart';
 import '../services/firebase_service.dart';
 
 class ChatAdminScreen extends StatefulWidget {
-  const ChatAdminScreen({super.key});
+  final bool showBackButton;
+
+  const ChatAdminScreen({super.key, this.showBackButton = false});
 
   // Static method to show chat admin screen with fullscreen dialog
-  static void show(BuildContext context) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => const ChatAdminScreen(),
-        fullscreenDialog: true, // This will hide bottom navigation
-      ),
-    );
+  static Future<void> show(BuildContext context) async {
+    try {
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => const ChatAdminScreen(showBackButton: true),
+          fullscreenDialog: true, // This will hide bottom navigation
+        ),
+      );
+    } catch (e) {
+      print('Navigation error: $e');
+    }
   }
 
   @override
@@ -36,6 +42,7 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
   StreamSubscription<List<UserModel>>? _patientsSubscription;
   StreamSubscription<List<ChatModel>>? _messagesSubscription;
   Map<String, int> _unreadCounts = {};
+  bool _isNavigating = false;
 
   @override
   void initState() {
@@ -45,6 +52,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
 
   @override
   void dispose() {
+    // Cancel navigation state to prevent late operations
+    _isNavigating = false;
+
     _messageController.dispose();
     _scrollController.dispose();
     _patientsSubscription?.cancel();
@@ -114,6 +124,51 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
         });
       }
     });
+  }
+
+  // Safe navigation method to prevent assertion errors
+  Future<void> _safeNavigateBack() async {
+    if (_isNavigating) return; // Prevent double navigation
+
+    _isNavigating = true;
+
+    try {
+      // Add small delay to prevent race conditions
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      print('Navigation error: $e');
+      // If navigation fails, try to force reset navigation state
+      if (mounted) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _isNavigating = false;
+        });
+      }
+    } finally {
+      _isNavigating = false;
+    }
+  }
+
+  // Safe dialog navigation
+  Future<void> _safeCloseDialog() async {
+    if (_isNavigating) return;
+
+    _isNavigating = true;
+
+    try {
+      await Future.delayed(const Duration(milliseconds: 50));
+
+      if (mounted && Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+    } catch (e) {
+      print('Dialog close error: $e');
+    } finally {
+      _isNavigating = false;
+    }
   }
 
   Future<void> _sendMessage() async {
@@ -410,9 +465,9 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                                       ],
                                     ),
                                     onTap: () {
-                                      // Select patient first, then close dialog
+                                      // Select patient first, then close dialog safely
                                       _selectPatient(patient);
-                                      Navigator.pop(context);
+                                      _safeCloseDialog();
                                     },
                                   ),
                                 );
@@ -423,7 +478,7 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                   SizedBox(
                     width: double.infinity,
                     child: TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: _safeCloseDialog,
                       child: Text(
                         'Batal',
                         style: GoogleFonts.poppins(color: Colors.grey),
@@ -440,11 +495,12 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      canPop: true,
-      onPopInvoked: (didPop) {
-        // Ensure proper navigation back and hide bottom navigation
-        if (didPop) {
-          Navigator.of(context).pop();
+      canPop: widget.showBackButton,
+      onPopInvokedWithResult: (didPop, result) {
+        // Handle back button press safely
+        if (didPop && widget.showBackButton) {
+          // Navigation was successful
+          print('Back navigation completed');
         }
       },
       child: Scaffold(
@@ -453,10 +509,23 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
         appBar: AppBar(
           backgroundColor: const Color(0xFFEC407A),
           elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back, color: Colors.white),
-            onPressed: () => Navigator.pop(context),
+          title: Text(
+            _selectedPatient != null
+                ? 'Chat dengan ${_selectedPatient!.nama}'
+                : 'Chat Admin',
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.w600,
+            ),
           ),
+          leading:
+              widget.showBackButton
+                  ? IconButton(
+                    icon: const Icon(Icons.arrow_back, color: Colors.white),
+                    onPressed: _safeNavigateBack,
+                  )
+                  : null,
+          automaticallyImplyLeading: widget.showBackButton,
           actions: [
             IconButton(
               icon: Stack(
@@ -924,10 +993,10 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                       ],
                     ),
                   ),
-              ],
-            ),
-          ),
-        ),
+              ], // Close children of main Column
+            ), // Close main Column
+          ), // Close Padding
+        ), // Close SafeArea / body
       ), // Close Scaffold
     ); // Close PopScope
   }

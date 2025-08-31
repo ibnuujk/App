@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utilities/safe_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/user_model.dart';
@@ -150,7 +151,7 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: SafeArea(
@@ -318,7 +319,9 @@ class _AdminConversationsScreenState extends State<AdminConversationsScreen> {
                               width: 120,
                               height: 120,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFEC407A).withValues(alpha: 0.1),
+                                color: const Color(
+                                  0xFFEC407A,
+                                ).withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(60),
                               ),
                               child: Icon(
@@ -743,7 +746,7 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: Column(
@@ -766,7 +769,9 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
                             width: 120,
                             height: 120,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFEC407A).withValues(alpha: 0.1),
+                              color: const Color(
+                                0xFFEC407A,
+                              ).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(60),
                             ),
                             child: Icon(
@@ -852,7 +857,9 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
                                   borderRadius: BorderRadius.circular(18),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withValues(alpha: 0.05),
+                                      color: Colors.black.withValues(
+                                        alpha: 0.05,
+                                      ),
                                       blurRadius: 5,
                                       offset: const Offset(0, 2),
                                     ),
@@ -882,7 +889,9 @@ class _ChatWithPatientScreenState extends State<_ChatWithPatientScreen> {
                                         fontSize: 10,
                                         color:
                                             isAdmin
-                                                ? Colors.white.withValues(alpha: 0.7)
+                                                ? Colors.white.withValues(
+                                                  alpha: 0.7,
+                                                )
                                                 : Colors.grey[600],
                                       ),
                                     ),

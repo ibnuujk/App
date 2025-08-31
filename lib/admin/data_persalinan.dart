@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import '../../models/user_model.dart';
+import '../utilities/safe_navigation.dart';
 
 class DataPersalinanScreen extends StatefulWidget {
   const DataPersalinanScreen({super.key});
@@ -12,7 +13,8 @@ class DataPersalinanScreen extends StatefulWidget {
   State<DataPersalinanScreen> createState() => _DataPersalinanScreenState();
 }
 
-class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
+class _DataPersalinanScreenState extends State<DataPersalinanScreen>
+    with SafeNavigationMixin {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = '';
 
@@ -45,7 +47,7 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: Column(
@@ -658,8 +660,6 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
                           const Color(0xFF9C27B0),
                           [
                             'Tanggal Masuk: ${_formatDate(registrasiData['tanggalMasuk'])}',
-                            'Tanggal Partes: ${_formatDate(registrasiData['tanggalPartes'])}',
-                            'Tanggal Keluar: ${_formatDate(registrasiData['tanggalKeluar'])}',
                             'Fasilitas: ${registrasiData['fasilitas'] ?? 'Tidak ada data'}',
                             'Diagnosa: ${registrasiData['diagnosaKebidanan'] ?? 'Tidak ada data'}',
                             'Tindakan: ${registrasiData['tindakan'] ?? 'Tidak ada data'}',
@@ -848,7 +848,7 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
                     style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
                   ),
                   onTap: () {
-                    Navigator.pop(context);
+                    safeCloseDialog();
                     // Add edit functionality here
                   },
                 ),
@@ -862,7 +862,7 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen> {
                     ),
                   ),
                   onTap: () {
-                    Navigator.pop(context);
+                    safeCloseDialog();
                     // Add delete functionality here
                   },
                 ),
@@ -1059,7 +1059,7 @@ class ChildbirthReportScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -1284,7 +1284,7 @@ class PostpartumReportScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(
@@ -1553,7 +1553,7 @@ class BirthCertificateScreen extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: StreamBuilder<QuerySnapshot>(

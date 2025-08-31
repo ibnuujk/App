@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utilities/safe_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 
@@ -489,7 +490,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => NavigationHelper.safeNavigateBack(context),
                 child: Text(
                   'Batal',
                   style: GoogleFonts.poppins(color: Colors.grey),
@@ -497,7 +498,7 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  NavigationHelper.safeNavigateBack(context);
                   RouteHelper.navigateToLogin(context);
                 },
                 style: ElevatedButton.styleFrom(

@@ -1029,10 +1029,10 @@ class PdfService {
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14),
           ),
           pw.SizedBox(height: 10),
-          _buildKeteranganRow('Nama', keterangan.pasienNama),
-          _buildKeteranganRow('Umur', '${keterangan.pasienUmur} tahun'),
-          _buildKeteranganRow('Agama', keterangan.agama),
-          _buildKeteranganRow('Pekerjaan', keterangan.pekerjaan),
+          _buildKeteranganRow('Nama', keterangan.nama),
+          _buildKeteranganRow('Umur', '${keterangan.umur} tahun'),
+          _buildKeteranganRow('Agama', keterangan.agamaPasien),
+          _buildKeteranganRow('Pekerjaan', keterangan.pekerjaanPasien),
 
           pw.SizedBox(height: 15),
 
@@ -1055,7 +1055,7 @@ class PdfService {
             style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 14),
           ),
           pw.SizedBox(height: 10),
-          _buildKeteranganRow('Alamat', keterangan.pasienAlamat),
+          _buildKeteranganRow('Alamat', keterangan.alamat),
 
           pw.SizedBox(height: 20),
 

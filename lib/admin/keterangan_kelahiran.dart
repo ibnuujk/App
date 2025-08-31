@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utilities/safe_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import '../models/laporan_pasca_persalinan_model.dart';
@@ -31,7 +32,15 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
   final _beratBadanController = TextEditingController();
   final _kelahiranAnakKeController = TextEditingController(text: '1');
 
-  // Father's data controllers
+  // Mother's data controllers (editable but auto-filled)
+  final _namaPasienController = TextEditingController();
+  final _umurPasienController = TextEditingController();
+  final _agamaPasienController = TextEditingController();
+  final _pekerjaanPasienController = TextEditingController();
+  final _alamatController = TextEditingController();
+
+  // Father's data controllers (editable)
+  final _namaSuamiController = TextEditingController();
   final _umurSuamiController = TextEditingController();
   final _agamaSuamiController = TextEditingController();
   final _pekerjaanSuamiController = TextEditingController();
@@ -41,19 +50,16 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
   String _jenisKelamin = 'laki-laki';
 
   // Data that will be auto-filled from database
-  String _pasienNama = '';
-  int _pasienUmur = 0;
-  String _pasienAgama =
+  int _umur = 0;
+  String _agamaPasien =
       'Islam'; // Default value since UserModel doesn't have agama
   String _pasienPekerjaan =
       'Ibu Rumah Tangga'; // Default value since UserModel doesn't have pekerjaan
-  String _namaSuami = '';
   int _umurSuami = 0;
   String _agamaSuami =
       'Islam'; // Default value, will be updated from registrasi persalinan
   String _pekerjaanSuami =
       'Karyawan'; // Default value, will be updated from registrasi persalinan
-  String _pasienAlamat = '';
 
   List<KeteranganKelahiranModel> _keteranganList = [];
   bool _isLoading = true;
@@ -77,19 +83,22 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
           _isLoading = false;
         });
 
-        // Show error with retry option
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Gagal memuat data awal: $e'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 5),
-            action: SnackBarAction(
-              label: 'Coba Lagi',
-              textColor: Colors.white,
-              onPressed: _initializeData,
+        // Only show error for critical issues, not timeout
+        if (!e.toString().toLowerCase().contains('timeout') &&
+            !e.toString().toLowerCase().contains('time limit')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal memuat data awal: ${e.toString()}'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 3),
+              action: SnackBarAction(
+                label: 'Coba Lagi',
+                textColor: Colors.white,
+                onPressed: _initializeData,
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     }
   }
@@ -101,6 +110,16 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
     _panjangBadanController.dispose();
     _beratBadanController.dispose();
     _kelahiranAnakKeController.dispose();
+
+    // Mother's data controllers
+    _namaPasienController.dispose();
+    _umurPasienController.dispose();
+    _agamaPasienController.dispose();
+    _pekerjaanPasienController.dispose();
+    _alamatController.dispose();
+
+    // Father's data controllers
+    _namaSuamiController.dispose();
     _umurSuamiController.dispose();
     _agamaSuamiController.dispose();
     _pekerjaanSuamiController.dispose();
@@ -109,7 +128,6 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
 
   Future<void> _loadDataFromDatabase() async {
     try {
-      // Load patient data for parent information
       final registrasiData = await _firebaseService
           .getPersalinanById(
             widget.laporanPascaPersalinanData.laporanPersalinanId,
@@ -117,40 +135,52 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
           .timeout(const Duration(seconds: 30));
 
       if (registrasiData != null) {
-        // Load mother's data from users collection
         final userData = await _firebaseService
             .getUserById(registrasiData.pasienId)
             .timeout(const Duration(seconds: 30));
 
         if (userData != null) {
           setState(() {
-            // Mother's data from users collection
-            _pasienNama = userData.nama;
-            _pasienUmur = userData.umur;
-            _pasienAlamat = userData.alamat;
+            _umur = userData.umur;
+            _pekerjaanSuami = registrasiData.pekerjaanSuami;
 
-            // Father's data from persalinan collection
-            _namaSuami = registrasiData.namaSuami;
-            _pekerjaanSuami = registrasiData.pekerjaan;
+            // Auto-fill mother's data controllers
+            _namaPasienController.text = userData.nama;
+            _umurPasienController.text = userData.umur.toString();
+            _agamaPasienController.text =
+                _agamaPasien; // Use default or database value
+            _pekerjaanPasienController.text =
+                _pasienPekerjaan; // Use default or database value
+            _alamatController.text = userData.alamat;
 
-            // Set father's data controllers with loaded values
+            // Auto-fill father's data controllers
+            _namaSuamiController.text = registrasiData.namaSuami;
             _umurSuamiController.text = _umurSuami.toString();
             _agamaSuamiController.text = _agamaSuami;
-            _pekerjaanSuamiController.text = _pekerjaanSuami;
+            _pekerjaanSuamiController.text = registrasiData.pekerjaanSuami;
           });
         } else {
-          // Fallback if user data not found
           setState(() {
-            _pasienNama = 'Data tidak ditemukan';
-            _pasienUmur = 0;
-            _pasienAlamat = 'Data tidak ditemukan';
+            _umur = 0;
+
+            // Set fallback values in controllers
+            _namaPasienController.text = 'Data tidak ditemukan';
+            _umurPasienController.text = '0';
+            _agamaPasienController.text = _agamaPasien;
+            _pekerjaanPasienController.text = _pasienPekerjaan;
+            _alamatController.text = 'Data tidak ditemukan';
           });
         }
       } else {
         // Fallback if registrasi data not found
         setState(() {
-          _namaSuami = 'Data tidak ditemukan';
           _pekerjaanSuami = 'Data tidak ditemukan';
+
+          // Set fallback values in father's controllers
+          _namaSuamiController.text = 'Data tidak ditemukan';
+          _umurSuamiController.text = '0';
+          _agamaSuamiController.text = _agamaSuami;
+          _pekerjaanSuamiController.text = 'Data tidak ditemukan';
         });
       }
 
@@ -213,7 +243,7 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
           setState(() {
             if (examinationData['namaSuami'] != null &&
                 examinationData['namaSuami'].toString().isNotEmpty) {
-              _namaSuami = examinationData['namaSuami'];
+              _namaSuamiController.text = examinationData['namaSuami'];
             }
             if (examinationData['umurSuami'] != null) {
               _umurSuami = examinationData['umurSuami'];
@@ -250,7 +280,7 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
           .getKeteranganKelahiranByLaporanPascaId(
             widget.laporanPascaPersalinanData.id,
           )
-          .timeout(const Duration(seconds: 20));
+          .timeout(const Duration(seconds: 30));
 
       await for (final keteranganList in stream) {
         if (mounted) {
@@ -275,18 +305,22 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
             _keteranganList = []; // Empty list if all methods fail
           });
 
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Tidak dapat memuat data: $e'),
-              backgroundColor: Colors.red,
-              duration: const Duration(seconds: 5),
-              action: SnackBarAction(
-                label: 'Coba Lagi',
-                textColor: Colors.white,
-                onPressed: _loadKeteranganKelahiran,
+          // Only show error for critical issues, not timeout
+          if (!e.toString().toLowerCase().contains('timeout') &&
+              !e.toString().toLowerCase().contains('time limit')) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Gagal memuat data tersimpan: ${e.toString()}'),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 3),
+                action: SnackBarAction(
+                  label: 'Coba Lagi',
+                  textColor: Colors.white,
+                  onPressed: _loadKeteranganKelahiran,
+                ),
               ),
-            ),
-          );
+            );
+          }
         }
       }
     }
@@ -351,21 +385,15 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
         panjangBadan: _panjangBadanController.text.trim(),
         beratBadan: _beratBadanController.text.trim(),
         kelahiranAnakKe: int.tryParse(_kelahiranAnakKeController.text) ?? 1,
-        pasienNama: _pasienNama,
-        pasienUmur: _pasienUmur,
-        agama: _pasienAgama,
-        pekerjaan: _pasienPekerjaan,
-        namaSuami: _namaSuami,
+        nama: _namaPasienController.text.trim(),
+        umur: int.tryParse(_umurPasienController.text) ?? _umur,
+        agamaPasien: _agamaPasienController.text.trim(),
+        pekerjaanPasien: _pekerjaanPasienController.text.trim(),
+        namaSuami: _namaSuamiController.text.trim(),
         umurSuami: int.tryParse(_umurSuamiController.text) ?? _umurSuami,
-        agamaSuami:
-            _agamaSuamiController.text.isNotEmpty
-                ? _agamaSuamiController.text
-                : _agamaSuami,
-        pekerjaanSuami:
-            _pekerjaanSuamiController.text.isNotEmpty
-                ? _pekerjaanSuamiController.text
-                : _pekerjaanSuami,
-        pasienAlamat: _pasienAlamat,
+        agamaSuami: _agamaSuamiController.text.trim(),
+        pekerjaanSuami: _pekerjaanSuamiController.text.trim(),
+        alamat: _alamatController.text.trim(),
         createdAt: DateTime.now(),
       );
 
@@ -389,12 +417,16 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
           if (mounted) {
             try {
               // Try to navigate using named route first
-              Navigator.of(
-                context,
-              ).pushNamedAndRemoveUntil('/home-admin', (route) => false);
+              if (Navigator.canPop(context)) {
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/home-admin', (route) => false);
+              }
             } catch (e) {
               // Fallback: pop all routes to go back to home
-              Navigator.of(context).popUntil((route) => route.isFirst);
+              if (Navigator.canPop(context)) {
+                Navigator.of(context).popUntil((route) => route.isFirst);
+              }
             }
           }
         });
@@ -419,6 +451,12 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
     _namaAnakController.clear();
     _jamLahirController.clear();
     _kelahiranAnakKeController.text = '1';
+
+    // Don't clear mother's data as it should remain auto-filled
+    // Only clear if user wants to reset completely
+
+    // Clear father's data
+    _namaSuamiController.clear();
     _umurSuamiController.clear();
     _agamaSuamiController.clear();
     _pekerjaanSuamiController.clear();
@@ -652,7 +690,7 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: SafeArea(
@@ -662,6 +700,7 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
@@ -671,10 +710,7 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
-                borderRadius: const BorderRadius.only(
-                  bottomLeft: Radius.circular(20),
-                  bottomRight: Radius.circular(20),
-                ),
+                borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
                     color: const Color(0xFFEC407A).withValues(alpha: 0.3),
@@ -774,7 +810,7 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
                         ),
                       )
                       : SingleChildScrollView(
-                        padding: const EdgeInsets.all(20),
+                        padding: const EdgeInsets.fromLTRB(20, 4, 20, 20),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -902,46 +938,73 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
                                     ),
 
                                     // Data Ibu Section
-                                    _buildSectionTitle(
-                                      'IBU (Data otomatis terisi sesuai database)',
-                                    ),
-                                    _buildReadOnlyField(
-                                      'Nama Ibu',
-                                      _pasienNama,
+                                    _buildSectionTitle('IBU'),
+                                    _buildTextField(
+                                      controller: _namaPasienController,
+                                      label: 'Nama Ibu',
+                                      validator:
+                                          (value) =>
+                                              value?.isEmpty == true
+                                                  ? 'Wajib diisi'
+                                                  : null,
                                     ),
                                     Row(
                                       children: [
                                         Expanded(
-                                          child: _buildReadOnlyField(
-                                            'Umur Ibu',
-                                            '$_pasienUmur tahun',
+                                          child: _buildTextField(
+                                            controller: _umurPasienController,
+                                            label: 'Umur Ibu',
+                                            keyboardType: TextInputType.number,
+                                            validator:
+                                                (value) =>
+                                                    value?.isEmpty == true
+                                                        ? 'Wajib diisi'
+                                                        : null,
                                           ),
                                         ),
                                         const SizedBox(width: 12),
                                         Expanded(
-                                          child: _buildReadOnlyField(
-                                            'Agama Ibu',
-                                            _pasienAgama,
+                                          child: _buildTextField(
+                                            controller: _agamaPasienController,
+                                            label: 'Agama Ibu',
+                                            validator:
+                                                (value) =>
+                                                    value?.isEmpty == true
+                                                        ? 'Wajib diisi'
+                                                        : null,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    _buildReadOnlyField(
-                                      'Pekerjaan Ibu',
-                                      _pasienPekerjaan,
+                                    _buildTextField(
+                                      controller: _pekerjaanPasienController,
+                                      label: 'Pekerjaan Ibu',
+                                      validator:
+                                          (value) =>
+                                              value?.isEmpty == true
+                                                  ? 'Wajib diisi'
+                                                  : null,
                                     ),
-                                    _buildReadOnlyField(
-                                      'Alamat Ibu',
-                                      _pasienAlamat,
+                                    _buildTextField(
+                                      controller: _alamatController,
+                                      label: 'Alamat Ibu',
+                                      validator:
+                                          (value) =>
+                                              value?.isEmpty == true
+                                                  ? 'Wajib diisi'
+                                                  : null,
                                     ),
 
                                     // Data Ayah Section
-                                    _buildSectionTitle(
-                                      'AYAH (Data dapat diubah)',
-                                    ),
-                                    _buildReadOnlyField(
-                                      'Nama Ayah',
-                                      _namaSuami,
+                                    _buildSectionTitle('AYAH'),
+                                    _buildTextField(
+                                      controller: _namaSuamiController,
+                                      label: 'Nama Ayah',
+                                      validator:
+                                          (value) =>
+                                              value?.isEmpty == true
+                                                  ? 'Wajib diisi'
+                                                  : null,
                                     ),
                                     _buildTextField(
                                       controller: _umurSuamiController,

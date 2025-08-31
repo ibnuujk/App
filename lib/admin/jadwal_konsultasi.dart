@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utilities/safe_navigation.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
@@ -842,7 +843,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                 elevation: 0,
                 leading: IconButton(
                   icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => NavigationHelper.safeNavigateBack(context),
                 ),
               ),
 
@@ -1333,7 +1334,7 @@ class _AddConsultationScheduleDialogState
       await FirebaseService().createJadwalKonsultasi(scheduleData);
 
       if (mounted) {
-        Navigator.pop(context);
+        NavigationHelper.safeNavigateBack(context);
         widget.onScheduleAdded();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Schedule added successfully')),
@@ -1439,7 +1440,10 @@ class _AddConsultationScheduleDialogState
       ),
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          onPressed:
+              _isLoading
+                  ? null
+                  : () => NavigationHelper.safeNavigateBack(context),
           child: const Text('Batal'),
         ),
         ElevatedButton(
@@ -1558,7 +1562,7 @@ class _EditConsultationScheduleDialogState
       await FirebaseService().updateJadwalKonsultasi(dataWithId);
 
       if (mounted) {
-        Navigator.pop(context);
+        NavigationHelper.safeNavigateBack(context);
         widget.onScheduleUpdated();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Schedule updated successfully')),
@@ -1682,7 +1686,10 @@ class _EditConsultationScheduleDialogState
       ),
       actions: [
         TextButton(
-          onPressed: _isLoading ? null : () => Navigator.pop(context),
+          onPressed:
+              _isLoading
+                  ? null
+                  : () => NavigationHelper.safeNavigateBack(context),
           child: const Text('Batal'),
         ),
         ElevatedButton(
@@ -1861,7 +1868,7 @@ class ConsultationScheduleDetailDialog extends StatelessWidget {
       ),
       actions: [
         TextButton(
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
           child: const Text('Tutup'),
         ),
       ],

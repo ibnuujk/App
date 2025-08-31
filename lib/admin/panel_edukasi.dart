@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utilities/safe_navigation.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../models/user_model.dart';
@@ -936,11 +937,19 @@ class _PanelEdukasiState extends State<PanelEdukasi>
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context, false);
+                  }
+                },
                 child: Text('Batal'),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context, true);
+                  }
+                },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: Text('Hapus', style: TextStyle(color: Colors.white)),
               ),
@@ -984,11 +993,19 @@ class _PanelEdukasiState extends State<PanelEdukasi>
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context, false),
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context, false);
+                  }
+                },
                 child: Text('Batal'),
               ),
               ElevatedButton(
-                onPressed: () => Navigator.pop(context, true),
+                onPressed: () {
+                  if (Navigator.canPop(context)) {
+                    Navigator.pop(context, true);
+                  }
+                },
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
                 child: Text('Hapus', style: TextStyle(color: Colors.white)),
               ),

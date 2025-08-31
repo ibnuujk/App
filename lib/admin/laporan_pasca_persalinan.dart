@@ -5,6 +5,7 @@ import '../models/laporan_persalinan_model.dart';
 import '../models/laporan_pasca_persalinan_model.dart';
 import '../services/firebase_service.dart';
 import 'keterangan_kelahiran.dart';
+import '../utilities/safe_navigation.dart';
 
 class LaporanPascaPersalinanScreen extends StatefulWidget {
   final LaporanPersalinanModel laporanPersalinanData;
@@ -20,7 +21,8 @@ class LaporanPascaPersalinanScreen extends StatefulWidget {
 }
 
 class _LaporanPascaPersalinanScreenState
-    extends State<LaporanPascaPersalinanScreen> {
+    extends State<LaporanPascaPersalinanScreen>
+    with SafeNavigationMixin {
   final FirebaseService _firebaseService = FirebaseService();
   final _formKey = GlobalKey<FormState>();
 
@@ -116,7 +118,7 @@ class _LaporanPascaPersalinanScreenState
     try {
       _firebaseService
           .getLaporanPascaPersalinanByLaporanId(widget.laporanPersalinanData.id)
-          .timeout(const Duration(seconds: 15)) // Increase timeout
+          .timeout(const Duration(seconds: 30)) // Increased timeout
           .listen(
             (laporanList) {
               if (mounted) {
@@ -131,18 +133,28 @@ class _LaporanPascaPersalinanScreenState
               if (mounted) {
                 setState(() {
                   _isLoading = false;
+                  // Set empty list on error to allow user to continue
+                  _laporanPascaList = [];
                 });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error loading data: $error'),
-                    backgroundColor: Colors.red,
-                    action: SnackBarAction(
-                      label: 'Retry',
-                      textColor: Colors.white,
-                      onPressed: _loadLaporanPascaPersalinan,
+
+                // Only show error for critical issues, not timeout
+                if (!error.toString().toLowerCase().contains('timeout') &&
+                    !error.toString().toLowerCase().contains('time limit')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Gagal memuat data tersimpan: ${error.toString()}',
+                      ),
+                      backgroundColor: Colors.orange,
+                      duration: const Duration(seconds: 3),
+                      action: SnackBarAction(
+                        label: 'Coba Lagi',
+                        textColor: Colors.white,
+                        onPressed: _loadLaporanPascaPersalinan,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                }
               }
             },
           );
@@ -151,18 +163,25 @@ class _LaporanPascaPersalinanScreenState
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _laporanPascaList = [];
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: _loadLaporanPascaPersalinan,
+
+        // Only show error for critical issues, not timeout
+        if (!e.toString().toLowerCase().contains('timeout') &&
+            !e.toString().toLowerCase().contains('time limit')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal memuat data: ${e.toString()}'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 3),
+              action: SnackBarAction(
+                label: 'Coba Lagi',
+                textColor: Colors.white,
+                onPressed: _loadLaporanPascaPersalinan,
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     }
   }
@@ -451,7 +470,7 @@ class _LaporanPascaPersalinanScreenState
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: SafeArea(

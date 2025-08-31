@@ -1,6 +1,6 @@
 class KeteranganKelahiranModel {
   final String id;
-  final String laporanPascaPersalinanId; // Link to laporan pasca persalinan
+  final String laporanPascaPersalinanId;
   final String pasienId;
 
   // Data Anak
@@ -8,23 +8,23 @@ class KeteranganKelahiranModel {
   final DateTime hariTanggalLahir;
   final String jamLahir;
   final String tempatLahir;
-  final String jenisKelamin; // laki-laki/perempuan
+  final String jenisKelamin;
   final String panjangBadan;
   final String beratBadan;
   final int kelahiranAnakKe;
 
-  // Data Ibu (auto filled from database)
-  final String pasienNama;
-  final int pasienUmur;
-  final String agama;
-  final String pekerjaan;
+  // Data Ibu
+  final String nama;
+  final int umur;
+  final String agamaPasien;
+  final String pekerjaanPasien;
 
-  // Data Ayah (auto filled from database)
+  // Data Ayah
   final String namaSuami;
   final int umurSuami;
   final String agamaSuami;
   final String pekerjaanSuami;
-  final String pasienAlamat;
+  final String alamat;
 
   final DateTime createdAt;
   final DateTime? updatedAt;
@@ -41,15 +41,15 @@ class KeteranganKelahiranModel {
     required this.panjangBadan,
     required this.beratBadan,
     required this.kelahiranAnakKe,
-    required this.pasienNama,
-    required this.pasienUmur,
-    required this.agama,
-    required this.pekerjaan,
+    required this.nama,
+    required this.umur,
+    required this.agamaPasien,
+    required this.pekerjaanPasien,
     required this.namaSuami,
     required this.umurSuami,
     required this.agamaSuami,
     required this.pekerjaanSuami,
-    required this.pasienAlamat,
+    required this.alamat,
     required this.createdAt,
     this.updatedAt,
   });
@@ -70,15 +70,15 @@ class KeteranganKelahiranModel {
       panjangBadan: map['panjangBadan'] ?? '',
       beratBadan: map['beratBadan'] ?? '',
       kelahiranAnakKe: map['kelahiranAnakKe'] ?? 1,
-      pasienNama: map['pasienNama'] ?? '',
-      pasienUmur: map['pasienUmur'] ?? 0,
-      agama: map['agama'] ?? '',
-      pekerjaan: map['pekerjaan'] ?? '',
+      nama: map['nama'] ?? '',
+      umur: map['umur'] ?? 0,
+      agamaPasien: map['agamaPasien'] ?? '',
+      pekerjaanPasien: map['pekerjaanPasien'] ?? '',
       namaSuami: map['namaSuami'] ?? '',
       umurSuami: map['umurSuami'] ?? 0,
       agamaSuami: map['agamaSuami'] ?? '',
       pekerjaanSuami: map['pekerjaanSuami'] ?? '',
-      pasienAlamat: map['pasienAlamat'] ?? '',
+      alamat: map['alamat'] ?? '',
       createdAt:
           map['createdAt'] != null
               ? DateTime.parse(map['createdAt'])
@@ -101,15 +101,15 @@ class KeteranganKelahiranModel {
       'panjangBadan': panjangBadan,
       'beratBadan': beratBadan,
       'kelahiranAnakKe': kelahiranAnakKe,
-      'pasienNama': pasienNama,
-      'pasienUmur': pasienUmur,
-      'agama': agama,
-      'pekerjaan': pekerjaan,
+      'nama': nama,
+      'umur': umur,
+      'agamaPasien': agamaPasien,
+      'pekerjaanPasien': pekerjaanPasien,
       'namaSuami': namaSuami,
       'umurSuami': umurSuami,
       'agamaSuami': agamaSuami,
       'pekerjaanSuami': pekerjaanSuami,
-      'pasienAlamat': pasienAlamat,
+      'alamat': alamat,
       'createdAt': createdAt.toIso8601String(),
       'updatedAt': updatedAt?.toIso8601String(),
     };

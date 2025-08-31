@@ -24,12 +24,9 @@ class _EdukasiScreenState extends State<EdukasiScreen>
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
   String _selectedCategory = 'Semua Jenis';
-  String _selectedContentType = 'Semua Konten';
   bool _isFilterExpanded = false;
   bool _isHeaderVisible = true; // New variable for header visibility
   late ScrollController _scrollController; // New scroll controller
-  late ScrollController
-  _contentTypeScrollController; // New scroll controller for content type
 
   // Firebase service for article interactions
   final FirebaseService _firebaseService = FirebaseService();
@@ -402,8 +399,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
 
     _scrollController = ScrollController(); // Initialize scroll controller
     _scrollController.addListener(_onScroll); // Add scroll listener
-    _contentTypeScrollController =
-        ScrollController(); // Initialize content type scroll controller
 
     _animationController = AnimationController(
       duration: const Duration(milliseconds: 800),
@@ -463,8 +458,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
   void dispose() {
     _scrollController.removeListener(_onScroll); // Remove scroll listener
     _scrollController.dispose(); // Dispose scroll controller
-    _contentTypeScrollController
-        .dispose(); // Dispose content type scroll controller
     _animationController.dispose();
     super.dispose();
   }
@@ -492,38 +485,10 @@ class _EdukasiScreenState extends State<EdukasiScreen>
     });
   }
 
-  void _handleContentTypeSelected(String contentType) {
-    setState(() {
-      _selectedContentType = contentType;
-    });
-  }
-
   void _toggleFilterExpansion() {
     setState(() {
       _isFilterExpanded = !_isFilterExpanded;
     });
-  }
-
-  void _scrollContentTypeLeft() {
-    // Scroll content type filter to the left
-    if (_contentTypeScrollController.hasClients) {
-      _contentTypeScrollController.animateTo(
-        _contentTypeScrollController.offset - 200,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
-  }
-
-  void _scrollContentTypeRight() {
-    // Scroll content type filter to the right
-    if (_contentTypeScrollController.hasClients) {
-      _contentTypeScrollController.animateTo(
-        _contentTypeScrollController.offset + 200,
-        duration: const Duration(milliseconds: 300),
-        curve: Curves.easeInOut,
-      );
-    }
   }
 
   // Handle article like action
@@ -563,9 +528,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
         '_getFilteredArticles: Total articles available: ${articles.length}',
       );
       print('_getFilteredArticles: Selected category: "$_selectedCategory"');
-      print(
-        '_getFilteredArticles: Selected content type: "$_selectedContentType"',
-      );
 
       // Filter by category
       if (_selectedCategory != 'Semua Jenis') {
@@ -575,58 +537,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                 .toList();
         print(
           '_getFilteredArticles: After category filter: ${articles.length} articles',
-        );
-      }
-
-      // Filter by content type (based on article title/content patterns)
-      if (_selectedContentType != 'Semua Konten') {
-        articles =
-            articles.where((article) {
-              final title = article.title?.toLowerCase() ?? '';
-              final content = article.description?.toLowerCase() ?? '';
-
-              switch (_selectedContentType) {
-                case 'Nutrisi & Gizi':
-                  return title.contains('nutrisi') ||
-                      title.contains('gizi') ||
-                      content.contains('nutrisi') ||
-                      content.contains('gizi');
-                case 'Perkembangan Janin':
-                  return title.contains('perkembangan') ||
-                      title.contains('janin') ||
-                      content.contains('perkembangan') ||
-                      content.contains('janin');
-                case 'Tips Kesehatan':
-                  return title.contains('tips') ||
-                      title.contains('kesehatan') ||
-                      content.contains('tips') ||
-                      content.contains('kesehatan');
-                case 'Pemeriksaan Medis':
-                  return title.contains('pemeriksaan') ||
-                      title.contains('medis') ||
-                      content.contains('pemeriksaan') ||
-                      content.contains('medis');
-                case 'Persiapan Persalinan':
-                  return title.contains('persiapan') ||
-                      title.contains('persalinan') ||
-                      content.contains('persiapan') ||
-                      content.contains('persalinan');
-                case 'Kesehatan Mental':
-                  return title.contains('mental') ||
-                      title.contains('emosi') ||
-                      content.contains('mental') ||
-                      content.contains('emosi');
-                case 'Olahraga & Aktivitas':
-                  return title.contains('olahraga') ||
-                      title.contains('aktivitas') ||
-                      content.contains('olahraga') ||
-                      content.contains('aktivitas');
-                default:
-                  return true;
-              }
-            }).toList();
-        print(
-          '_getFilteredArticles: After content type filter: ${articles.length} articles',
         );
       }
 
@@ -662,9 +572,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
           '_buildArticlesSection: Filtered articles: ${filteredArticles.length}',
         );
         print('_buildArticlesSection: Selected category: "$_selectedCategory"');
-        print(
-          '_buildArticlesSection: Selected content type: "$_selectedContentType"',
-        );
 
         if (filteredArticles.isEmpty) {
           // Check if there are no articles at all
@@ -675,8 +582,7 @@ class _EdukasiScreenState extends State<EdukasiScreen>
             return _buildNoArticlesState();
           }
           // Check if it's due to filters
-          if (_selectedCategory != 'Semua Jenis' ||
-              _selectedContentType != 'Semua Konten') {
+          if (_selectedCategory != 'Semua Jenis') {
             print(
               '_buildArticlesSection: No articles found for current filters, showing empty state',
             );
@@ -885,7 +791,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
             onPressed: () {
               setState(() {
                 _selectedCategory = 'Semua Jenis';
-                _selectedContentType = 'Semua Konten';
               });
             },
             style: ElevatedButton.styleFrom(
@@ -1006,12 +911,8 @@ class _EdukasiScreenState extends State<EdukasiScreen>
           ),
           const SizedBox(height: 16),
 
-          // Content Type Filter - With navigation buttons
-          _buildContentTypeFilterWithNavigation(),
-
           // Active Filters Summary
-          if (_selectedCategory != 'Semua Jenis' ||
-              _selectedContentType != 'Semua Konten')
+          if (_selectedCategory != 'Semua Jenis')
             Container(
               margin: const EdgeInsets.only(top: 16),
               padding: const EdgeInsets.all(12),
@@ -1044,7 +945,6 @@ class _EdukasiScreenState extends State<EdukasiScreen>
                     onPressed: () {
                       setState(() {
                         _selectedCategory = 'Semua Jenis';
-                        _selectedContentType = 'Semua Konten';
                       });
                     },
                     child: Text(
@@ -1064,144 +964,10 @@ class _EdukasiScreenState extends State<EdukasiScreen>
     );
   }
 
-  Widget _buildContentTypeFilterWithNavigation() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Jenis Konten',
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: Colors.grey[700],
-          ),
-        ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            // Left Navigation Button
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: IconButton(
-                onPressed: _scrollContentTypeLeft,
-                icon: Icon(
-                  Icons.chevron_left,
-                  color: Colors.grey[600],
-                  size: 20,
-                ),
-                padding: EdgeInsets.zero,
-              ),
-            ),
-            const SizedBox(width: 8),
-
-            // Content Type Chips Container
-            Expanded(
-              child: SizedBox(
-                height: 40,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  controller: _contentTypeScrollController,
-                  itemCount: _getContentTypeOptions().length,
-                  itemBuilder: (context, index) {
-                    final option = _getContentTypeOptions()[index];
-                    final isSelected = _selectedContentType == option;
-                    return Container(
-                      margin: const EdgeInsets.only(right: 8),
-                      child: GestureDetector(
-                        onTap: () => _handleContentTypeSelected(option),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color:
-                                isSelected
-                                    ? const Color(0xFFEC407A)
-                                    : Colors.grey[100],
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color:
-                                  isSelected
-                                      ? const Color(0xFFEC407A)
-                                      : Colors.grey[300]!,
-                              width: 1,
-                            ),
-                          ),
-                          child: Center(
-                            child: Text(
-                              option,
-                              style: GoogleFonts.poppins(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
-                                color:
-                                    isSelected
-                                        ? Colors.white
-                                        : Colors.grey[700],
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-
-            const SizedBox(width: 8),
-
-            // Right Navigation Button
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.grey[300]!),
-              ),
-              child: IconButton(
-                onPressed: _scrollContentTypeRight,
-                icon: Icon(
-                  Icons.chevron_right,
-                  color: Colors.grey[600],
-                  size: 20,
-                ),
-                padding: EdgeInsets.zero,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  List<String> _getContentTypeOptions() {
-    return [
-      'Semua Konten',
-      'Nutrisi & Gizi',
-      'Perkembangan Janin',
-      'Tips Kesehatan',
-      'Pemeriksaan Medis',
-      'Persiapan Persalinan',
-      'Kesehatan Mental',
-      'Olahraga & Aktivitas',
-    ];
-  }
-
   String _getActiveFiltersText() {
     List<String> activeFilters = [];
     if (_selectedCategory != 'Semua Jenis') {
       activeFilters.add(_selectedCategory);
-    }
-    if (_selectedContentType != 'Semua Konten') {
-      activeFilters.add(_selectedContentType);
     }
     return activeFilters.join(', ');
   }

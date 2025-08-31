@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../utilities/safe_navigation.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
@@ -7,6 +8,7 @@ import '../models/user_model.dart';
 import '../models/persalinan_model.dart';
 import '../services/firebase_service.dart';
 import 'registrasi_persalinan_form.dart';
+import 'patient_pregnancy_management.dart';
 
 class PemeriksaanIbuHamilScreen extends StatefulWidget {
   final UserModel user;
@@ -36,15 +38,31 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
   @override
   void initState() {
     super.initState();
-    _loadPregnancyExaminations();
-    _loadPersalinanData();
 
-    // Auto show form if there's consultation schedule data
+    // Check if there's consultation schedule data first
     if (widget.consultationSchedule != null) {
+      // Show form first, then redirect
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _showFormFromConsultation();
       });
+    } else {
+      // Redirect to new patient management screen
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && Navigator.canPop(context)) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      PatientPregnancyManagementScreen(user: widget.user),
+            ),
+          );
+        }
+      });
     }
+
+    _loadPregnancyExaminations();
+    _loadPersalinanData();
   }
 
   Future<void> _loadPregnancyExaminations() async {
@@ -171,8 +189,17 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
               consultationSchedule: widget.consultationSchedule,
             ),
       ).then((_) {
-        // Reload data after dialog closes
-        _loadPregnancyExaminations();
+        // After form completion, redirect to patient management
+        if (mounted && Navigator.canPop(context)) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      PatientPregnancyManagementScreen(user: widget.user),
+            ),
+          );
+        }
       });
     }
   }
@@ -204,7 +231,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: SafeArea(
@@ -3085,7 +3112,7 @@ class _AddPregnancyExaminationDialogState
               children: [
                 Expanded(
                   child: TextButton(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => NavigationHelper.safeNavigateBack(context),
                     child: Text(
                       'Batal',
                       style: GoogleFonts.poppins(
@@ -3284,29 +3311,14 @@ class PregnancyExaminationDetailDialog extends StatelessWidget {
                         'Tekanan Darah',
                         examination['tekananDarah'] ?? '-',
                       ),
+
+                      _buildDetailRow(
+                        'HB (Hemoglobin)',
+                        '${examination['hb']} g/dL',
+                      ),
                       _buildDetailRow(
                         'Tinggi Badan',
                         '${examination['tinggiBadan']} cm',
-                      ),
-                      _buildDetailRow(
-                        'Lingkar Lengan',
-                        '${examination['lingkarLengan']} cm',
-                      ),
-                      _buildDetailRow(
-                        'Hemoglobin',
-                        '${examination['hemoglobin']} g/dL',
-                      ),
-                      _buildDetailRow(
-                        'Protein Urin',
-                        examination['proteinUrin'] ?? '-',
-                      ),
-                      _buildDetailRow(
-                        'Gula Darah',
-                        '${examination['gulaDarah']} mg/dL',
-                      ),
-                      _buildDetailRow(
-                        'Status Gizi',
-                        examination['statusGizi'] ?? '-',
                       ),
                     ]),
 
@@ -3348,7 +3360,7 @@ class PregnancyExaminationDetailDialog extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => NavigationHelper.safeNavigateBack(context),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFFEC407A),
                   foregroundColor: Colors.white,
@@ -3606,7 +3618,7 @@ class _EditExaminationDialogState extends State<EditExaminationDialog> {
 
       await widget.firebaseService.updatePemeriksaanIbuHamil(updatedData);
 
-      Navigator.pop(context);
+      NavigationHelper.safeNavigateBack(context);
       widget.onSaved();
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -3705,7 +3717,7 @@ class _EditExaminationDialogState extends State<EditExaminationDialog> {
                 ),
                 IconButton(
                   icon: const Icon(Icons.close),
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => NavigationHelper.safeNavigateBack(context),
                 ),
               ],
             ),
@@ -3857,7 +3869,7 @@ class _EditExaminationDialogState extends State<EditExaminationDialog> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 TextButton(
-                  onPressed: () => Navigator.pop(context),
+                  onPressed: () => NavigationHelper.safeNavigateBack(context),
                   child: Text(
                     'Batal',
                     style: GoogleFonts.poppins(color: Colors.grey[600]),

@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'dart:async';
 import '../models/user_model.dart';
 import '../services/firebase_service.dart';
+import '../utilities/safe_navigation.dart';
 
 class DataPasienScreen extends StatefulWidget {
   const DataPasienScreen({super.key});
@@ -12,7 +13,8 @@ class DataPasienScreen extends StatefulWidget {
   State<DataPasienScreen> createState() => _DataPasienScreenState();
 }
 
-class _DataPasienScreenState extends State<DataPasienScreen> {
+class _DataPasienScreenState extends State<DataPasienScreen>
+    with SafeNavigationMixin {
   final FirebaseService _firebaseService = FirebaseService();
   final TextEditingController _searchController = TextEditingController();
 
@@ -420,7 +422,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                   ),
                   actions: [
                     TextButton(
-                      onPressed: () => Navigator.pop(context),
+                      onPressed: safeCloseDialog,
                       child: Text(
                         'Batal',
                         style: GoogleFonts.poppins(color: Colors.grey[600]),
@@ -514,7 +516,7 @@ class _DataPasienScreenState extends State<DataPasienScreen> {
                                       );
                                     }
 
-                                    Navigator.pop(context);
+                                    safeCloseDialog();
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(

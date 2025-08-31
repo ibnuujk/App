@@ -5,6 +5,7 @@ import '../models/laporan_persalinan_model.dart';
 import '../models/persalinan_model.dart';
 import '../services/firebase_service.dart';
 import 'laporan_pasca_persalinan.dart';
+import '../utilities/safe_navigation.dart';
 
 class LaporanPersalinanScreen extends StatefulWidget {
   final PersalinanModel registrasiData;
@@ -16,7 +17,8 @@ class LaporanPersalinanScreen extends StatefulWidget {
       _LaporanPersalinanScreenState();
 }
 
-class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
+class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen>
+    with SafeNavigationMixin {
   final FirebaseService _firebaseService = FirebaseService();
   final TextEditingController _catatanController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
@@ -45,7 +47,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
     try {
       _firebaseService
           .getLaporanPersalinanByRegistrasiId(widget.registrasiData.id)
-          .timeout(const Duration(seconds: 15)) // Increase timeout
+          .timeout(const Duration(seconds: 30)) // Increased timeout
           .listen(
             (laporanList) {
               if (mounted) {
@@ -62,18 +64,28 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
               if (mounted) {
                 setState(() {
                   _isLoading = false;
+                  // Set empty list on error to allow user to continue
+                  _laporanList = [];
                 });
-                ScaffoldMessenger.of(context).showSnackBar(
-                  SnackBar(
-                    content: Text('Error loading data: $error'),
-                    backgroundColor: Colors.red,
-                    action: SnackBarAction(
-                      label: 'Retry',
-                      textColor: Colors.white,
-                      onPressed: _loadLaporanPersalinan,
+
+                // Only show error for critical issues, not timeout
+                if (!error.toString().toLowerCase().contains('timeout') &&
+                    !error.toString().toLowerCase().contains('time limit')) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Gagal memuat data tersimpan: ${error.toString()}',
+                      ),
+                      backgroundColor: Colors.orange,
+                      duration: const Duration(seconds: 3),
+                      action: SnackBarAction(
+                        label: 'Coba Lagi',
+                        textColor: Colors.white,
+                        onPressed: _loadLaporanPersalinan,
+                      ),
                     ),
-                  ),
-                );
+                  );
+                }
               }
             },
           );
@@ -82,18 +94,25 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
       if (mounted) {
         setState(() {
           _isLoading = false;
+          _laporanList = [];
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: $e'),
-            backgroundColor: Colors.red,
-            action: SnackBarAction(
-              label: 'Retry',
-              textColor: Colors.white,
-              onPressed: _loadLaporanPersalinan,
+
+        // Only show error for critical issues, not timeout
+        if (!e.toString().toLowerCase().contains('timeout') &&
+            !e.toString().toLowerCase().contains('time limit')) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Gagal memuat data: ${e.toString()}'),
+              backgroundColor: Colors.orange,
+              duration: const Duration(seconds: 3),
+              action: SnackBarAction(
+                label: 'Coba Lagi',
+                textColor: Colors.white,
+                onPressed: _loadLaporanPersalinan,
+              ),
             ),
-          ),
-        );
+          );
+        }
       }
     }
   }
@@ -165,7 +184,7 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
       ),
       body: SafeArea(
