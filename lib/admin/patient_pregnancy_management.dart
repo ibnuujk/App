@@ -7,6 +7,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../models/persalinan_model.dart';
 import '../services/firebase_service.dart';
+import '../services/pdf_service.dart';
 
 class PatientPregnancyManagementScreen extends StatefulWidget {
   final UserModel user;
@@ -33,6 +34,46 @@ class _PatientPregnancyManagementScreenState
     super.initState();
     _loadPatientsWithExaminations();
     _loadPersalinanData();
+  }
+
+  // Refresh data method
+  Future<void> _refreshData() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    try {
+      await Future.wait([
+        _loadPatientsWithExaminations(),
+        _loadPersalinanData(),
+      ]);
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Data berhasil diperbarui',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.green,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Gagal memperbarui data: $e',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -320,6 +361,21 @@ class _PatientPregnancyManagementScreenState
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => NavigationHelper.safeNavigateBack(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: () {
+              // Show loading indicator
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Memperbarui data...'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+              _refreshData();
+            },
+          ),
+        ],
       ),
       body: SafeArea(
         child: Padding(
@@ -746,6 +802,89 @@ class PatientExaminationHistoryScreen extends StatelessWidget {
     );
   }
 
+  // Download PDF for individual examination
+  Future<void> _downloadExaminationPDF(
+    BuildContext context,
+    Map<String, dynamic> examination,
+  ) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => AlertDialog(
+              content: Row(
+                children: [
+                  const CircularProgressIndicator(color: Color(0xFFEC407A)),
+                  const SizedBox(width: 16),
+                  Text('Membuat PDF...', style: GoogleFonts.poppins()),
+                ],
+              ),
+            ),
+      );
+
+      // Create UserModel from patient data
+      final patientInfo = patientData['patientInfo'] as Map<String, dynamic>;
+      final user = UserModel(
+        id: patientInfo['pasienId'] ?? '',
+        email: patientInfo['email'] ?? '',
+        password: '',
+        nama: patientInfo['namaPasien'] ?? '',
+        noHp: patientInfo['noHp'] ?? '',
+        alamat: patientInfo['alamat'] ?? '',
+        tanggalLahir: DateTime.now(), // Default value
+        umur: patientInfo['umur'] ?? 0,
+        role: 'pasien',
+        createdAt: DateTime.now(),
+        hpht:
+            patientInfo['hpht'] != null
+                ? DateTime.tryParse(patientInfo['hpht'])
+                : null,
+        pregnancyStatus: patientInfo['pregnancyStatus'],
+        agamaPasien: patientInfo['agamaPasien'],
+        pekerjaanPasien: patientInfo['pekerjaanPasien'],
+        jenisAsuransi: patientInfo['jenisAsuransi'],
+      );
+
+      // Create examination list with single examination
+      final examinationList = [examination];
+
+      // Generate PDF using existing service
+      await PdfService.generatePemeriksaanReport(
+        user: user,
+        pemeriksaanList: examinationList,
+      );
+
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show success message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'PDF berhasil dibuat dan dapat diunduh',
+            style: GoogleFonts.poppins(),
+          ),
+          backgroundColor: Colors.green,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    } catch (e) {
+      // Close loading dialog
+      Navigator.pop(context);
+
+      // Show error message
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error membuat PDF: $e', style: GoogleFonts.poppins()),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final patientInfo = patientData['patientInfo'] as Map<String, dynamic>?;
@@ -1037,7 +1176,7 @@ class PatientExaminationHistoryScreen extends StatelessWidget {
 
                             const SizedBox(height: 16),
 
-                            // Examination Number Badge and Detail Button
+                            // Examination Number Badge and Action Buttons
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
@@ -1061,32 +1200,74 @@ class PatientExaminationHistoryScreen extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                ElevatedButton.icon(
-                                  onPressed:
-                                      () => _showExaminationDetail(
-                                        context,
-                                        examination,
+                                Row(
+                                  children: [
+                                    // Download PDF Button
+                                    ElevatedButton.icon(
+                                      onPressed:
+                                          () => _downloadExaminationPDF(
+                                            context,
+                                            examination,
+                                          ),
+                                      icon: const Icon(
+                                        Icons.download,
+                                        size: 16,
                                       ),
-                                  icon: const Icon(Icons.visibility, size: 16),
-                                  label: Text(
-                                    'Detail',
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                      label: Text(
+                                        'PDF',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.green,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: Colors.blue,
-                                    foregroundColor: Colors.white,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 12,
-                                      vertical: 6,
+                                    const SizedBox(width: 8),
+                                    // Detail Button
+                                    ElevatedButton.icon(
+                                      onPressed:
+                                          () => _showExaminationDetail(
+                                            context,
+                                            examination,
+                                          ),
+                                      icon: const Icon(
+                                        Icons.visibility,
+                                        size: 16,
+                                      ),
+                                      label: Text(
+                                        'Detail',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.blue,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                      ),
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                    minimumSize: const Size(0, 32),
-                                  ),
+                                  ],
                                 ),
                               ],
                             ),

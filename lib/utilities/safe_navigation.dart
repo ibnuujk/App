@@ -6,14 +6,12 @@ import 'package:google_fonts/google_fonts.dart';
 mixin SafeNavigationMixin<T extends StatefulWidget> on State<T> {
   bool _isNavigating = false;
 
-  /// Safe navigation back with checks and error handling
   Future<void> safeNavigateBack() async {
-    if (_isNavigating) return; // Prevent double navigation
+    if (_isNavigating) return;
 
     _isNavigating = true;
 
     try {
-      // Add small delay to prevent race conditions
       await Future.delayed(const Duration(milliseconds: 50));
 
       if (mounted && Navigator.canPop(context)) {
@@ -21,7 +19,6 @@ mixin SafeNavigationMixin<T extends StatefulWidget> on State<T> {
       }
     } catch (e) {
       print('Navigation error: $e');
-      // If navigation fails, try to force reset navigation state
       if (mounted) {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           _isNavigating = false;
@@ -34,7 +31,6 @@ mixin SafeNavigationMixin<T extends StatefulWidget> on State<T> {
     }
   }
 
-  /// Safe navigation push with error handling
   Future<T?> safeNavigateTo<T>(Widget destination) async {
     if (_isNavigating) return null;
 
@@ -73,12 +69,10 @@ mixin SafeNavigationMixin<T extends StatefulWidget> on State<T> {
     }
   }
 
-  /// Reset navigation state - call in dispose if needed
   void resetNavigationState() {
     _isNavigating = false;
   }
 
-  /// Safe AppBar leading widget
   Widget buildSafeBackButton({
     Color iconColor = Colors.white,
     VoidCallback? onPressed,
@@ -89,7 +83,6 @@ mixin SafeNavigationMixin<T extends StatefulWidget> on State<T> {
     );
   }
 
-  /// Safe PopScope wrapper for handling back gesture
   Widget buildSafePopScope({
     required Widget child,
     bool canPop = true,
@@ -109,9 +102,7 @@ mixin SafeNavigationMixin<T extends StatefulWidget> on State<T> {
   }
 }
 
-/// Utility class for static navigation helpers
 class NavigationHelper {
-  /// Safe static navigation method
   static Future<void> safeNavigateBack(BuildContext context) async {
     try {
       await Future.delayed(const Duration(milliseconds: 50));
@@ -124,7 +115,6 @@ class NavigationHelper {
     }
   }
 
-  /// Safe static navigation push
   static Future<T?> safeNavigateTo<T>(
     BuildContext context,
     Widget destination,
@@ -143,7 +133,6 @@ class NavigationHelper {
     }
   }
 
-  /// Create safe AppBar with back button
   static PreferredSizeWidget buildSafeAppBar({
     required String title,
     Color backgroundColor = const Color(0xFFEC407A),

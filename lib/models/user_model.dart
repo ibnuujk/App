@@ -28,6 +28,7 @@ class UserModel {
   // New fields for patient information
   final String? agamaPasien;
   final String? pekerjaanPasien;
+  final String? jenisAsuransi; // 'bpjs' atau 'umum'
 
   UserModel({
     required this.id,
@@ -53,6 +54,7 @@ class UserModel {
     this.agamaSuami,
     this.agamaPasien,
     this.pekerjaanPasien,
+    this.jenisAsuransi,
   });
 
   Map<String, dynamic> toMap() {
@@ -80,6 +82,7 @@ class UserModel {
       'agamaSuami': agamaSuami,
       'agamaPasien': agamaPasien,
       'pekerjaanPasien': pekerjaanPasien,
+      'jenisAsuransi': jenisAsuransi,
     };
   }
 
@@ -127,6 +130,7 @@ class UserModel {
       agamaSuami: map['agamaSuami'],
       agamaPasien: map['agamaPasien'],
       pekerjaanPasien: map['pekerjaanPasien'],
+      jenisAsuransi: map['jenisAsuransi'],
     );
   }
 
@@ -154,6 +158,7 @@ class UserModel {
     String? agamaSuami,
     String? agamaPasien,
     String? pekerjaanPasien,
+    String? jenisAsuransi,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -179,6 +184,7 @@ class UserModel {
       agamaSuami: agamaSuami ?? this.agamaSuami,
       agamaPasien: agamaPasien ?? this.agamaPasien,
       pekerjaanPasien: pekerjaanPasien ?? this.pekerjaanPasien,
+      jenisAsuransi: jenisAsuransi ?? this.jenisAsuransi,
     );
   }
 }

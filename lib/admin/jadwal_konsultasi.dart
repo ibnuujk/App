@@ -217,13 +217,14 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
         'id': scheduleId,
         'hasExamination': true,
         'examinationDate': DateTime.now().toIso8601String(),
+        'status': 'selesai', // Update status to completed
       });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              'Pemeriksaan telah ditandai sebagai selesai',
+              'Pemeriksaan telah selesai dan status diubah menjadi "Selesai"',
               style: GoogleFonts.poppins(),
             ),
             backgroundColor: Colors.green,
@@ -470,8 +471,8 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
       ]);
     } else if (status == 'confirmed') {
       if (!hasExamination) {
-        // If confirmed but no examination yet, show edit option only
-        items.add(
+        // If confirmed but no examination yet, show edit and examination options
+        items.addAll([
           const PopupMenuItem<String>(
             value: 'edit',
             child: Row(
@@ -482,8 +483,21 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
               ],
             ),
           ),
-        );
+          const PopupMenuItem<String>(
+            value: 'pemeriksaan',
+            child: Row(
+              children: [
+                Icon(Icons.medical_services, size: 16, color: Colors.blue),
+                SizedBox(width: 8),
+                Text('Pemeriksaan'),
+              ],
+            ),
+          ),
+        ]);
       }
+    } else if (status == 'selesai') {
+      // For completed examinations, only show view and delete options
+      // No edit or examination options
     }
 
     // Always show delete option
@@ -511,6 +525,8 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
         return 'Diterima';
       case 'rejected':
         return 'Ditolak';
+      case 'selesai':
+        return 'Selesai';
       default:
         return 'Unknown';
     }
@@ -524,6 +540,8 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
         return Colors.green;
       case 'rejected':
         return Colors.red;
+      case 'selesai':
+        return Colors.blue;
       default:
         return Colors.grey;
     }
@@ -836,7 +854,6 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
             slivers: [
               // Sliver App Bar yang akan hide/show
               SliverAppBar(
-                expandedHeight: 120.0,
                 floating: false,
                 pinned: true,
                 backgroundColor: const Color(0xFFEC407A),
@@ -847,7 +864,6 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                 ),
               ),
 
-              // Sliver untuk upcoming appointments
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.all(16.0),
@@ -855,7 +871,6 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                 ),
               ),
 
-              // Sliver untuk status cards
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -1721,6 +1736,8 @@ class ConsultationScheduleDetailDialog extends StatelessWidget {
         return 'Diterima';
       case 'rejected':
         return 'Ditolak';
+      case 'selesai':
+        return 'Selesai';
       default:
         return 'Unknown';
     }
@@ -1734,6 +1751,8 @@ class ConsultationScheduleDetailDialog extends StatelessWidget {
         return Colors.green;
       case 'rejected':
         return Colors.red;
+      case 'selesai':
+        return Colors.blue;
       default:
         return Colors.grey;
     }

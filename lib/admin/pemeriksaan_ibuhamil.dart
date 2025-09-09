@@ -751,6 +751,8 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
                                             ),
                                           const SizedBox(width: 12),
                                         ],
+
+                                        const SizedBox(width: 8),
                                         PopupMenuButton<String>(
                                           icon: Container(
                                             padding: const EdgeInsets.all(8),
@@ -1043,7 +1045,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
           examination: examination,
           firebaseService: _firebaseService,
           onSaved: () {
-            _loadPregnancyExaminations(); // Refresh the list
+            _loadPregnancyExaminations();
           },
         );
       },

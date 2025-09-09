@@ -151,9 +151,7 @@ class _DataPasienScreenState extends State<DataPasienScreen>
     final _formKey = GlobalKey<FormState>();
     final _namaController = TextEditingController(text: patient?.nama ?? '');
     final _emailController = TextEditingController(text: patient?.email ?? '');
-    final _passwordController = TextEditingController(
-      text: patient?.password ?? '',
-    );
+
     final _noHpController = TextEditingController(text: patient?.noHp ?? '');
     final _alamatController = TextEditingController(
       text: patient?.alamat ?? '',
@@ -229,25 +227,7 @@ class _DataPasienScreenState extends State<DataPasienScreen>
                               return null;
                             },
                           ),
-                          const SizedBox(height: 16),
-                          _buildFormField(
-                            controller: _passwordController,
-                            label: 'Password',
-                            icon: Icons.lock_rounded,
-                            obscureText: true,
-                            validator: (value) {
-                              if (patient == null &&
-                                  (value == null || value.isEmpty)) {
-                                return 'Password tidak boleh kosong';
-                              }
-                              if (value != null &&
-                                  value.isNotEmpty &&
-                                  value.length < 6) {
-                                return 'Password minimal 6 karakter';
-                              }
-                              return null;
-                            },
-                          ),
+
                           const SizedBox(height: 16),
                           _buildFormField(
                             controller: _noHpController,
@@ -446,9 +426,8 @@ class _DataPasienScreenState extends State<DataPasienScreen>
                                       nama: _namaController.text,
                                       email: _emailController.text,
                                       password:
-                                          _passwordController.text.isNotEmpty
-                                              ? _passwordController.text
-                                              : patient?.password ?? '',
+                                          patient?.password ??
+                                          '', // Keep existing password
                                       noHp: _noHpController.text,
                                       alamat: _alamatController.text,
                                       tanggalLahir: _selectedDate,

@@ -49,17 +49,12 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
   DateTime _hariTanggalLahir = DateTime.now();
   String _jenisKelamin = 'laki-laki';
 
-  // Data that will be auto-filled from database
   int _umur = 0;
-  String _agamaPasien =
-      'Islam'; // Default value since UserModel doesn't have agama
-  String _pasienPekerjaan =
-      'Ibu Rumah Tangga'; // Default value since UserModel doesn't have pekerjaan
+  String _agamaPasien = 'Islam';
+  String _pasienPekerjaan = 'Ibu Rumah Tangga';
   int _umurSuami = 0;
-  String _agamaSuami =
-      'Islam'; // Default value, will be updated from registrasi persalinan
-  String _pekerjaanSuami =
-      'Karyawan'; // Default value, will be updated from registrasi persalinan
+  String _agamaSuami = 'Islam';
+  String _pekerjaanSuami = 'Karyawan';
 
   List<KeteranganKelahiranModel> _keteranganList = [];
   bool _isLoading = true;

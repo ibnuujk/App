@@ -98,7 +98,7 @@ class _PanelEdukasiState extends State<PanelEdukasi>
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text('Panel Edukasi Admin', style: GoogleFonts.poppins()),
+        title: Text('Panel Edukasi', style: GoogleFonts.poppins()),
         backgroundColor: const Color(0xFFEC407A),
         elevation: 0,
         leading: IconButton(

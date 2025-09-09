@@ -165,53 +165,56 @@ class NotificationService {
     }
   }
 
-  // Get notifications for current user
+  // Get notifications for current user (optimized for admin performance)
   static Stream<List<NotificationModel>> getNotifications() {
     final currentUserId = _auth.currentUser?.uid;
     if (currentUserId == null) return Stream.value([]);
 
     try {
+      // Use only essential fields for faster loading
       return _firestore
           .collection('notifications')
           .where('receiverId', isEqualTo: currentUserId)
-          .orderBy('createdAt', descending: true)
-          .limit(15) // Reduce limit for faster loading
+          .limit(50) // Get more documents to sort in memory
           .snapshots()
           .map((snapshot) {
-            try {
-              return snapshot.docs.map((doc) {
-                try {
-                  final data = doc.data();
-                  // Ensure createdAt field exists, use serverTimestamp if not
-                  if (data['createdAt'] == null) {
-                    data['createdAt'] = FieldValue.serverTimestamp();
-                  }
-                  return NotificationModel.fromMap({'id': doc.id, ...data});
-                } catch (e) {
-                  print('Error parsing notification document ${doc.id}: $e');
-                  final data = doc.data();
-                  // Return a default notification if parsing fails
-                  return NotificationModel(
-                    id: doc.id,
-                    userId: data['receiverId'] ?? currentUserId ?? '',
-                    receiverId: data['receiverId'] ?? currentUserId ?? '',
-                    title: data['title'] ?? 'Notifikasi',
-                    message: data['message'] ?? 'Pesan notifikasi',
-                    type: data['type'] ?? 'general',
-                    referenceId: data['referenceId'] ?? '',
-                    isRead: data['isRead'] ?? false,
-                    createdAt: DateTime.now(),
-                  );
-                }
-              }).toList();
-            } catch (e) {
-              print('Error processing notifications snapshot: $e');
-              return <NotificationModel>[];
-            }
+            if (snapshot.docs.isEmpty) return <NotificationModel>[];
+
+            return snapshot.docs.map((doc) {
+              try {
+                final data = doc.data();
+                return NotificationModel(
+                  id: doc.id,
+                  userId: data['userId'] ?? data['receiverId'] ?? currentUserId,
+                  receiverId: data['receiverId'] ?? currentUserId,
+                  title: data['title'] ?? 'Notifikasi',
+                  message: data['message'] ?? 'Pesan notifikasi',
+                  type: data['type'] ?? 'general',
+                  referenceId: data['referenceId'] ?? '',
+                  isRead: data['isRead'] ?? false,
+                  createdAt:
+                      data['createdAt'] != null
+                          ? (data['createdAt'] as Timestamp).toDate()
+                          : DateTime.now(),
+                );
+              } catch (e) {
+                print('Error parsing notification ${doc.id}: $e');
+                return NotificationModel(
+                  id: doc.id,
+                  userId: currentUserId,
+                  receiverId: currentUserId,
+                  title: 'Notifikasi',
+                  message: 'Pesan notifikasi',
+                  type: 'general',
+                  referenceId: '',
+                  isRead: false,
+                  createdAt: DateTime.now(),
+                );
+              }
+            }).toList();
           })
           .handleError((error) {
             print('Error in notifications stream: $error');
-            // Return empty list on error instead of throwing
             return <NotificationModel>[];
           });
     } catch (e) {
@@ -350,7 +353,7 @@ class NotificationService {
           .collection('notifications')
           .where('receiverId', isEqualTo: currentUserId)
           .where('isRead', isEqualTo: false)
-          .limit(50) // Reduce limit for faster loading
+          .limit(20) // Reduce limit for faster performance
           .snapshots()
           .map((snapshot) => snapshot.docs.length)
           .handleError((error) {

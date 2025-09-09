@@ -475,6 +475,44 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
                     ),
                   ),
                 ],
+
+                // Download Button
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: ElevatedButton.icon(
+                        onPressed:
+                            () => _downloadIndividualExamination(pemeriksaan),
+                        icon: Icon(
+                          Icons.download_rounded,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        label: Text(
+                          'Download PDF',
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white,
+                          ),
+                        ),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFFEC407A),
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 12,
+                            horizontal: 16,
+                          ),
+                          elevation: 2,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -929,6 +967,66 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
         setState(() {
           _isDownloading = false;
         });
+      }
+    }
+  }
+
+  Future<void> _downloadIndividualExamination(
+    Map<String, dynamic> examination,
+  ) async {
+    try {
+      // Show loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => AlertDialog(
+              content: Row(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(width: 20),
+                  Text(
+                    'Membuat PDF...',
+                    style: GoogleFonts.poppins(fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+      );
+
+      // Generate PDF for individual examination
+      await PdfService.generatePemeriksaanReport(
+        user: widget.user,
+        pemeriksaanList: [examination],
+      );
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show success message
+      if (mounted) {
+        _showSnackBar('✅ PDF pemeriksaan berhasil diunduh!');
+      }
+    } catch (e) {
+      print('Error downloading individual examination PDF: $e');
+
+      // Close loading dialog
+      if (mounted) Navigator.pop(context);
+
+      // Show error message
+      if (mounted) {
+        String errorMessage = 'Gagal membuat PDF';
+        if (e.toString().contains('permission')) {
+          errorMessage =
+              'Izin akses file diperlukan. Silakan coba lagi dan berikan izin.';
+        } else if (e.toString().contains('space')) {
+          errorMessage =
+              'Ruang penyimpanan tidak cukup. Silakan kosongkan beberapa file.';
+        } else if (e.toString().contains('network') ||
+            e.toString().contains('internet')) {
+          errorMessage = 'Koneksi internet bermasalah. Silakan coba lagi.';
+        }
+        _showSnackBar(errorMessage, isError: true);
       }
     }
   }

@@ -459,13 +459,6 @@ class _LaporanPascaPersalinanScreenState
     return Scaffold(
       backgroundColor: const Color(0xFFF8FAFC),
       appBar: AppBar(
-        title: Text(
-          'Laporan Pasca Persalinan',
-          style: GoogleFonts.poppins(
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-          ),
-        ),
         backgroundColor: const Color(0xFFEC407A),
         elevation: 0,
         leading: IconButton(
