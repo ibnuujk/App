@@ -733,7 +733,7 @@ class _DataPasienScreenState extends State<DataPasienScreen>
                       children: [
                         Expanded(
                           child: _buildStatusCard(
-                            'Total Pasien',
+                            'Pasien',
                             _allPatients.length,
                             Colors.white,
                           ),

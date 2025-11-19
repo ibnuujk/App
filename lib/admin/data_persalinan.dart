@@ -239,7 +239,7 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
                     children: [
                       Expanded(
                         child: _buildStatCard(
-                          'Total Pasien',
+                          'Pasien',
                           _patients.length.toString(),
                           Icons.circle,
                           Colors.white,

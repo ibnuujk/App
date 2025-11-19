@@ -208,21 +208,6 @@ class _JadwalPasienScreenState extends State<JadwalPasienScreen> {
                 ),
               ),
             ),
-            ElevatedButton.icon(
-              onPressed: () => _addToCalendar(appointment),
-              icon: const Icon(Icons.calendar_today, size: 18),
-              label: Text(
-                'Tambah ke Kalender',
-                style: GoogleFonts.poppins(fontWeight: FontWeight.w600),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFEC407A),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-              ),
-            ),
           ],
         );
       },
@@ -292,6 +277,25 @@ class _JadwalPasienScreenState extends State<JadwalPasienScreen> {
 
   Future<void> _addToCalendar(Map<String, dynamic> appointment) async {
     try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder:
+            (context) => AlertDialog(
+              content: Row(
+                children: [
+                  const CircularProgressIndicator(),
+                  const SizedBox(width: 20),
+                  Text(
+                    'Menambahkan ke kalender...',
+                    style: GoogleFonts.poppins(fontSize: 14),
+                  ),
+                ],
+              ),
+            ),
+      );
+
       final appointmentDate = _parseAppointmentDate(
         appointment['tanggalKonsultasi'],
       );
@@ -315,45 +319,105 @@ class _JadwalPasienScreenState extends State<JadwalPasienScreen> {
 
       final endTime = startTime.add(const Duration(hours: 1));
 
+      // Create detailed event description
+      final description = StringBuffer();
+      description.writeln('Konsultasi dengan Bidan Umiyatun S.ST');
+      description.writeln('');
+      description.writeln(
+        'Keluhan: ${appointment['keluhan'] ?? 'Tidak ada keluhan'}',
+      );
+      description.writeln('');
+      description.writeln(
+        'Status: ${_getStatusText(appointment['status'] ?? 'pending')}',
+      );
+      description.writeln('');
+      description.writeln(
+        'Catatan: ${appointment['catatan'] ?? 'Tidak ada catatan'}',
+      );
+      description.writeln('');
+      description.writeln('---');
+      description.writeln('Klinik Persalinanku');
+      description.writeln('Jl. Penatusan Gang Mutiara II RT 04 RW 03');
+      description.writeln('Desa Jatisari - Kec. Kedungreja - Kab. Cilacap');
+
       final event = Event(
         title: 'Konsultasi - ${appointment['namaPasien'] ?? 'Temu Janji'}',
-        description:
-            'Keluhan: ${appointment['keluhan'] ?? 'Tidak ada keluhan'}',
-        location: 'Klinik Persalinanku',
+        description: description.toString(),
+        location:
+            'Klinik Persalinanku, Jl. Penatusan Gang Mutiara II RT 04 RW 03, Desa Jatisari - Kec. Kedungreja - Kab. Cilacap',
         startDate: startTime,
         endDate: endTime,
-        iosParams: const IOSParams(reminder: Duration(minutes: 30)),
+        iosParams: const IOSParams(
+          reminder: Duration(minutes: 30),
+          url: 'https://maps.google.com/?q=Klinik+Persalinanku+Cilacap',
+        ),
         androidParams: const AndroidParams(emailInvites: []),
       );
 
       final success = await Add2Calendar.addEvent2Cal(event);
 
+      // Close loading dialog
+      if (mounted) Navigator.of(context).pop();
+
       if (success) {
-        Navigator.of(context).pop(); // Close dialog
+        Navigator.of(context).pop(); // Close appointment details dialog
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Row(
+                children: [
+                  const Icon(Icons.check_circle, color: Colors.white),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Berhasil menambahkan ke kalender!',
+                      style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              ),
+              backgroundColor: Colors.green,
+              behavior: SnackBarBehavior.floating,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              duration: const Duration(seconds: 3),
+            ),
+          );
+        }
+      } else {
+        throw Exception(
+          'Gagal menambahkan ke kalender. Pastikan aplikasi kalender tersedia.',
+        );
+      }
+    } catch (e) {
+      // Close loading dialog if still open
+      if (mounted) Navigator.of(context).pop();
+
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Berhasil menambahkan ke kalender'),
-            backgroundColor: Colors.green,
+            content: Row(
+              children: [
+                const Icon(Icons.error, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Gagal menambahkan ke kalender: ${e.toString()}',
+                    style: GoogleFonts.poppins(fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
             ),
+            duration: const Duration(seconds: 4),
           ),
         );
-      } else {
-        throw Exception('Gagal menambahkan ke kalender');
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: Colors.red,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-      );
     }
   }
 

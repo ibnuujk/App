@@ -504,65 +504,7 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
         }
       },
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
-        bottomNavigationBar: null, // Hide bottom navigation
-        appBar: AppBar(
-          backgroundColor: const Color(0xFFEC407A),
-          elevation: 0,
-          title: Text(
-            _selectedPatient != null
-                ? 'Chat dengan ${_selectedPatient!.nama}'
-                : 'Chat Admin',
-            style: GoogleFonts.poppins(
-              color: Colors.white,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          leading:
-              widget.showBackButton
-                  ? IconButton(
-                    icon: const Icon(Icons.arrow_back, color: Colors.white),
-                    onPressed: _safeNavigateBack,
-                  )
-                  : null,
-          automaticallyImplyLeading: widget.showBackButton,
-          actions: [
-            IconButton(
-              icon: Stack(
-                children: [
-                  const Icon(Icons.people_rounded, color: Colors.white),
-                  if (_unreadCounts.values.any((count) => count > 0))
-                    Positioned(
-                      right: 0,
-                      top: 0,
-                      child: Container(
-                        padding: const EdgeInsets.all(2),
-                        decoration: BoxDecoration(
-                          color: Colors.red,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        constraints: const BoxConstraints(
-                          minWidth: 12,
-                          minHeight: 12,
-                        ),
-                        child: Text(
-                          '${_unreadCounts.values.fold(0, (a, b) => a + b)}',
-                          style: GoogleFonts.poppins(
-                            color: Colors.white,
-                            fontSize: 8,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              onPressed: _showPatientSelector,
-              tooltip: 'Pilih Pasien',
-            ),
-          ],
-        ),
+        backgroundColor: Colors.white,
         body: SafeArea(
           child: Padding(
             padding: const EdgeInsets.all(16.0),
@@ -620,7 +562,7 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                             ),
                             if (_selectedPatient != null)
                               Text(
-                                'Chat dengan ${_selectedPatient!.nama}',
+                                '${_selectedPatient!.nama}',
                                 style: GoogleFonts.poppins(
                                   fontSize: 14,
                                   color: Colors.white.withValues(alpha: 0.9),

@@ -7,6 +7,7 @@ import '../../services/notification_service.dart';
 import '../../widgets/simple_notification_badge.dart';
 import '../../routes/route_helper.dart';
 import '../../screens/notification_screen.dart';
+import '../../utilities/safe_navigation.dart';
 import 'jadwal_pasien.dart';
 import 'profile.dart';
 
@@ -922,18 +923,18 @@ class _HomePasienScreenState extends State<HomePasienScreen>
 
   String _formatDate(DateTime date) {
     final months = [
-      'Januari',
-      'Februari',
-      'Maret',
+      'Jan',
+      'Febi',
+      'Mar',
       'April',
       'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
+      'Jun',
+      'Jul',
+      'Agu',
+      'Sep',
+      'Okt',
+      'Nov',
+      'Des',
     ];
     return '${date.day} ${months[date.month - 1]} ${date.year}';
   }
@@ -946,35 +947,29 @@ class _HomePasienScreenState extends State<HomePasienScreen>
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            title: Row(
-              children: [
-                Icon(Icons.logout_rounded, color: Colors.red, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  'Logout',
-                  style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
-                ),
-              ],
+            title: Text(
+              'Logout',
+              style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
             ),
             content: Text(
-              'Apakah Anda yakin ingin keluar dari aplikasi?',
+              'Apakah Anda yakin ingin keluar?',
               style: GoogleFonts.poppins(),
             ),
             actions: [
               TextButton(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => NavigationHelper.safeNavigateBack(context),
                 child: Text(
                   'Batal',
-                  style: GoogleFonts.poppins(color: Colors.grey[600]),
+                  style: GoogleFonts.poppins(color: Colors.grey),
                 ),
               ),
               ElevatedButton(
                 onPressed: () {
-                  Navigator.pop(context);
+                  NavigationHelper.safeNavigateBack(context);
                   RouteHelper.navigateToLogin(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red,
+                  backgroundColor: const Color(0xFFEC407A),
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
