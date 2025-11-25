@@ -455,12 +455,9 @@ class _HomePasienScreenState extends State<HomePasienScreen>
                         children: [
                           _buildNotificationIcon(() {
                             // Navigate to notification screen
-                            Navigator.push(
+                            RouteHelper.navigateToNotification(
                               context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) => const NotificationScreen(),
-                              ),
+                              widget.user,
                             );
                           }),
                           const SizedBox(width: 12),

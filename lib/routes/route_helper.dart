@@ -25,6 +25,7 @@ import '../screens/education_main_screen.dart';
 import '../screens/article_list_screen.dart';
 import '../screens/article_detail_screen.dart';
 import '../screens/article_admin_screen.dart';
+import '../screens/notification_screen.dart';
 
 import '../admin/panel_edukasi.dart';
 
@@ -113,7 +114,6 @@ class RouteHelper {
         return MaterialPageRoute(builder: (_) => AnalyticsScreen(user: user));
 
       case educationManagement:
-        final user = settings.arguments as UserModel;
         return MaterialPageRoute(
           builder:
               (_) => Scaffold(
@@ -187,6 +187,12 @@ class RouteHelper {
         final user = settings.arguments as UserModel;
         return MaterialPageRoute(
           builder: (_) => JadwalPasienScreen(user: user),
+        );
+
+      case notification:
+        final user = settings.arguments as UserModel?;
+        return MaterialPageRoute(
+          builder: (_) => NotificationScreen(user: user),
         );
 
       default:

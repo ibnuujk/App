@@ -223,12 +223,9 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
                             children: [
                               _buildNotificationIcon(() {
                                 // Navigate to notification screen
-                                Navigator.push(
+                                RouteHelper.navigateToNotification(
                                   context,
-                                  MaterialPageRoute(
-                                    builder:
-                                        (context) => const NotificationScreen(),
-                                  ),
+                                  widget.user,
                                 );
                               }),
                               const SizedBox(width: 12),
