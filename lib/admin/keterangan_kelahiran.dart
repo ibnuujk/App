@@ -137,22 +137,33 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
         if (userData != null) {
           setState(() {
             _umur = userData.umur;
-            _pekerjaanSuami = registrasiData.pekerjaanSuami;
 
-            // Auto-fill mother's data controllers
+            // Auto-fill mother's data controllers from userData
             _namaPasienController.text = userData.nama;
             _umurPasienController.text = userData.umur.toString();
-            _agamaPasienController.text =
-                _agamaPasien; // Use default or database value
+            _agamaPasienController.text = userData.agamaPasien ?? _agamaPasien;
             _pekerjaanPasienController.text =
-                _pasienPekerjaan; // Use default or database value
+                userData.pekerjaanPasien ?? _pasienPekerjaan;
             _alamatController.text = userData.alamat;
 
-            // Auto-fill father's data controllers
-            _namaSuamiController.text = registrasiData.namaSuami;
-            _umurSuamiController.text = _umurSuami.toString();
-            _agamaSuamiController.text = _agamaSuami;
-            _pekerjaanSuamiController.text = registrasiData.pekerjaanSuami;
+            // Auto-fill father's data controllers from userData (prioritize userData over registrasiData)
+            final namaSuamiValue =
+                userData.namaSuami ?? registrasiData.namaSuami;
+            _namaSuamiController.text = namaSuamiValue;
+
+            if (userData.umurSuami != null) {
+              _umurSuami = userData.umurSuami!;
+              _umurSuamiController.text = userData.umurSuami.toString();
+            } else {
+              _umurSuamiController.text = _umurSuami.toString();
+            }
+
+            _agamaSuamiController.text = userData.agamaSuami ?? _agamaSuami;
+
+            final pekerjaanSuamiValue =
+                userData.pekerjaanSuami ?? registrasiData.pekerjaanSuami;
+            _pekerjaanSuamiController.text = pekerjaanSuamiValue;
+            _pekerjaanSuami = pekerjaanSuamiValue;
           });
         } else {
           setState(() {
@@ -167,16 +178,74 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
           });
         }
       } else {
-        // Fallback if registrasi data not found
-        setState(() {
-          _pekerjaanSuami = 'Data tidak ditemukan';
+        // Fallback if registrasi data not found - try to load from userData directly
+        if (widget.laporanPascaPersalinanData.pasienId.isNotEmpty) {
+          try {
+            final userData = await _firebaseService
+                .getUserById(widget.laporanPascaPersalinanData.pasienId)
+                .timeout(const Duration(seconds: 30));
 
-          // Set fallback values in father's controllers
-          _namaSuamiController.text = 'Data tidak ditemukan';
-          _umurSuamiController.text = '0';
-          _agamaSuamiController.text = _agamaSuami;
-          _pekerjaanSuamiController.text = 'Data tidak ditemukan';
-        });
+            if (userData != null) {
+              setState(() {
+                // Auto-fill mother's data from userData
+                _namaPasienController.text = userData.nama;
+                _umurPasienController.text = userData.umur.toString();
+                _agamaPasienController.text =
+                    userData.agamaPasien?.isNotEmpty == true
+                        ? userData.agamaPasien!
+                        : _agamaPasien;
+                _pekerjaanPasienController.text =
+                    userData.pekerjaanPasien?.isNotEmpty == true
+                        ? userData.pekerjaanPasien!
+                        : _pasienPekerjaan;
+                _alamatController.text = userData.alamat;
+
+                // Auto-fill father's data from userData
+                _namaSuamiController.text =
+                    userData.namaSuami ?? 'Data tidak ditemukan';
+                if (userData.umurSuami != null) {
+                  _umurSuami = userData.umurSuami!;
+                  _umurSuamiController.text = userData.umurSuami.toString();
+                } else {
+                  _umurSuamiController.text = '0';
+                }
+                _agamaSuamiController.text = userData.agamaSuami ?? _agamaSuami;
+                final pekerjaanSuamiValue =
+                    userData.pekerjaanSuami ?? 'Data tidak ditemukan';
+                _pekerjaanSuamiController.text = pekerjaanSuamiValue;
+                _pekerjaanSuami = pekerjaanSuamiValue;
+              });
+            } else {
+              // Set fallback values if userData also not found
+              setState(() {
+                _pekerjaanSuami = 'Data tidak ditemukan';
+                _namaSuamiController.text = 'Data tidak ditemukan';
+                _umurSuamiController.text = '0';
+                _agamaSuamiController.text = _agamaSuami;
+                _pekerjaanSuamiController.text = 'Data tidak ditemukan';
+              });
+            }
+          } catch (e) {
+            print('Error loading userData directly: $e');
+            // Set fallback values
+            setState(() {
+              _pekerjaanSuami = 'Data tidak ditemukan';
+              _namaSuamiController.text = 'Data tidak ditemukan';
+              _umurSuamiController.text = '0';
+              _agamaSuamiController.text = _agamaSuami;
+              _pekerjaanSuamiController.text = 'Data tidak ditemukan';
+            });
+          }
+        } else {
+          // Set fallback values if pasienId is empty
+          setState(() {
+            _pekerjaanSuami = 'Data tidak ditemukan';
+            _namaSuamiController.text = 'Data tidak ditemukan';
+            _umurSuamiController.text = '0';
+            _agamaSuamiController.text = _agamaSuami;
+            _pekerjaanSuamiController.text = 'Data tidak ditemukan';
+          });
+        }
       }
 
       // Pre-fill some data from previous form
