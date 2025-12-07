@@ -138,6 +138,10 @@ class _LaporanPersalinanScreenState extends State<LaporanPersalinanScreen>
 
       await _firebaseService.createLaporanPersalinan(laporan);
 
+      print(
+        'Laporan persalinan saved: id=${laporan.id}, pasienId=${laporan.pasienId}, registrasiPersalinanId=${laporan.registrasiPersalinanId}',
+      );
+
       _catatanController.clear();
 
       if (mounted) {

@@ -247,6 +247,10 @@ class _LaporanPascaPersalinanScreenState
 
       await _firebaseService.createLaporanPascaPersalinan(laporanPasca);
 
+      print(
+        'Laporan pasca persalinan saved: id=${laporanPasca.id}, pasienId=${laporanPasca.pasienId}, laporanPersalinanId=${laporanPasca.laporanPersalinanId}',
+      );
+
       // Clear form
       _clearForm();
 
@@ -257,6 +261,13 @@ class _LaporanPascaPersalinanScreenState
             backgroundColor: Colors.green,
           ),
         );
+
+        // Navigate to keterangan kelahiran after saving
+        Future.delayed(const Duration(seconds: 1), () {
+          if (mounted) {
+            _navigateToKeteranganKelahiran(laporanPasca);
+          }
+        });
       }
     } catch (e) {
       if (mounted) {

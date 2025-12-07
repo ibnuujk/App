@@ -12,7 +12,6 @@ import 'registrasi_persalinan.dart';
 import 'chat_admin.dart';
 import 'data_persalinan.dart';
 import '../widgets/simple_notification_badge.dart';
-import '../screens/notification_screen.dart';
 
 class HomeAdminScreen extends StatefulWidget {
   final UserModel user;
@@ -124,14 +123,21 @@ class _HomeAdminScreenState extends State<HomeAdminScreen>
     );
   }
 
+  void _onTabSelected(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    // Reload data when switching to Laporan tab (index 3)
+    if (index == 3 && DataPersalinanScreen.reloadCallback != null) {
+      DataPersalinanScreen.reloadCallback!();
+    }
+  }
+
   Widget _buildNavItem(IconData icon, String label, int index) {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
-      onTap: () {
-        setState(() {
-          _selectedIndex = index;
-        });
-      },
+      onTap: () => _onTabSelected(index),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),

@@ -10,12 +10,16 @@ import '../models/laporan_pasca_persalinan_model.dart';
 import '../models/keterangan_kelahiran_model.dart';
 import '../utilities/safe_navigation.dart';
 import 'detail_screens.dart';
+import 'patient_birth_list_screen.dart';
 
 class DataPersalinanScreen extends StatefulWidget {
   const DataPersalinanScreen({super.key});
 
   @override
   State<DataPersalinanScreen> createState() => _DataPersalinanScreenState();
+
+  // Static method to trigger reload from outside
+  static void Function()? reloadCallback;
 }
 
 class _DataPersalinanScreenState extends State<DataPersalinanScreen>
@@ -31,15 +35,26 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
     // Initialize Indonesian locale for date formatting
     initializeDateFormatting('id_ID', null);
     _loadPatients();
+
+    // Register reload callback
+    DataPersalinanScreen.reloadCallback = _loadPatients;
   }
 
   @override
   void dispose() {
+    // Unregister reload callback
+    DataPersalinanScreen.reloadCallback = null;
     _searchController.dispose();
     super.dispose();
   }
 
+  // Public method to reload data (can be called from outside)
+  void reloadData() {
+    _loadPatients();
+  }
+
   Future<void> _loadPatients() async {
+    print('Loading patients with delivery data...');
     setState(() {
       _isLoading = true;
     });
@@ -52,6 +67,7 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
               .where('role', isEqualTo: 'pasien')
               .get();
 
+      print('Found ${patientsQuery.docs.length} patients');
       List<UserModel> patientsWithDelivery = [];
 
       for (var doc in patientsQuery.docs) {
@@ -63,6 +79,10 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
         final hasLaporanPasca = await _hasPostDeliveryReport(patient.id);
         final hasKelahiran = await _hasBirthCertificate(patient.id);
 
+        print(
+          'Patient ${patient.nama} (${patient.id}): hasRegistrasi=$hasRegistrasi, hasLaporanPersalinan=$hasLaporanPersalinan, hasLaporanPasca=$hasLaporanPasca, hasKelahiran=$hasKelahiran',
+        );
+
         if (hasRegistrasi ||
             hasLaporanPersalinan ||
             hasLaporanPasca ||
@@ -71,6 +91,7 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
         }
       }
 
+      print('Found ${patientsWithDelivery.length} patients with delivery data');
       setState(() {
         _patients = patientsWithDelivery;
         _isLoading = false;
@@ -91,8 +112,13 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
               .where('pasienId', isEqualTo: patientId)
               .limit(1)
               .get();
-      return query.docs.isNotEmpty;
+      final hasData = query.docs.isNotEmpty;
+      if (hasData) {
+        print('Found registrasi persalinan for patientId: $patientId');
+      }
+      return hasData;
     } catch (e) {
+      print('Error checking registrasi persalinan for $patientId: $e');
       return false;
     }
   }
@@ -105,8 +131,13 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
               .where('pasienId', isEqualTo: patientId)
               .limit(1)
               .get();
-      return query.docs.isNotEmpty;
+      final hasData = query.docs.isNotEmpty;
+      if (hasData) {
+        print('Found laporan persalinan for patientId: $patientId');
+      }
+      return hasData;
     } catch (e) {
+      print('Error checking laporan persalinan for $patientId: $e');
       return false;
     }
   }
@@ -119,8 +150,13 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
               .where('pasienId', isEqualTo: patientId)
               .limit(1)
               .get();
-      return query.docs.isNotEmpty;
+      final hasData = query.docs.isNotEmpty;
+      if (hasData) {
+        print('Found laporan pasca persalinan for patientId: $patientId');
+      }
+      return hasData;
     } catch (e) {
+      print('Error checking laporan pasca persalinan for $patientId: $e');
       return false;
     }
   }
@@ -133,8 +169,13 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
               .where('pasienId', isEqualTo: patientId)
               .limit(1)
               .get();
-      return query.docs.isNotEmpty;
+      final hasData = query.docs.isNotEmpty;
+      if (hasData) {
+        print('Found keterangan kelahiran for patientId: $patientId');
+      }
+      return hasData;
     } catch (e) {
+      print('Error checking keterangan kelahiran for $patientId: $e');
       return false;
     }
   }
@@ -281,14 +322,28 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
                       ),
                     )
                     : filteredPatients.isEmpty
-                    ? _buildEmptyState()
-                    : ListView.builder(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
-                      itemCount: filteredPatients.length,
-                      itemBuilder: (context, index) {
-                        final patient = filteredPatients[index];
-                        return _buildPatientCard(patient);
-                      },
+                    ? RefreshIndicator(
+                      onRefresh: _loadPatients,
+                      color: const Color(0xFFEC407A),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.5,
+                          child: _buildEmptyState(),
+                        ),
+                      ),
+                    )
+                    : RefreshIndicator(
+                      onRefresh: _loadPatients,
+                      color: const Color(0xFFEC407A),
+                      child: ListView.builder(
+                        padding: const EdgeInsets.symmetric(horizontal: 24),
+                        itemCount: filteredPatients.length,
+                        itemBuilder: (context, index) {
+                          final patient = filteredPatients[index];
+                          return _buildPatientCard(patient);
+                        },
+                      ),
                     ),
           ),
         ],
@@ -485,13 +540,19 @@ class _DataPersalinanScreenState extends State<DataPersalinanScreen>
     );
   }
 
-  void _navigateToPatientDetail(UserModel patient) {
-    Navigator.push(
+  void _navigateToPatientDetail(UserModel patient) async {
+    // Navigate to patient detail and wait for result
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => PatientDeliveryDetailScreen(patient: patient),
+        builder: (context) => PatientBirthListScreen(patient: patient),
       ),
     );
+
+    // Reload data when returning from detail screen
+    if (result == true || mounted) {
+      _loadPatients();
+    }
   }
 
   void _showDeletePatientDialog(UserModel patient) {

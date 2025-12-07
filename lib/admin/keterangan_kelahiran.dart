@@ -463,6 +463,10 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
 
       await _firebaseService.createKeteranganKelahiran(keterangan);
 
+      print(
+        'Keterangan kelahiran saved: id=${keterangan.id}, pasienId=${keterangan.pasienId}, laporanPascaPersalinanId=${keterangan.laporanPascaPersalinanId}, kelahiranAnakKe=${keterangan.kelahiranAnakKe}',
+      );
+
       // Clear form
       _clearForm();
 
@@ -476,21 +480,12 @@ class _KeteranganKelahiranScreenState extends State<KeteranganKelahiranScreen> {
           ),
         );
 
-        // Wait for 2 seconds then navigate back to home
+        // Wait for 2 seconds then navigate back
         Future.delayed(const Duration(seconds: 2), () {
           if (mounted) {
-            try {
-              // Try to navigate using named route first
-              if (Navigator.canPop(context)) {
-                Navigator.of(
-                  context,
-                ).pushNamedAndRemoveUntil('/home-admin', (route) => false);
-              }
-            } catch (e) {
-              // Fallback: pop all routes to go back to home
-              if (Navigator.canPop(context)) {
-                Navigator.of(context).popUntil((route) => route.isFirst);
-              }
+            // Pop back to previous screen instead of going to home
+            if (Navigator.canPop(context)) {
+              Navigator.of(context).pop();
             }
           }
         });
