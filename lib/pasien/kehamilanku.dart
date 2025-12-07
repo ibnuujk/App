@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import '../../models/user_model.dart';
 import '../../routes/route_helper.dart';
+import '../../services/firebase_service.dart';
 
 class KehamilankuScreen extends StatefulWidget {
   final UserModel user;
@@ -27,6 +28,8 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<Offset> _slideAnimation;
+
+  final FirebaseService _firebaseService = FirebaseService();
 
   @override
   void initState() {
@@ -318,17 +321,83 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
           onPressed: () => Navigator.pop(context),
         ),
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SlideTransition(
-          position: _slideAnimation,
-          child:
-              widget.user.hpht != null && _gestationalAgeWeeks != null
-                  ? _buildContent()
-                  : _buildNoDataContent(),
-        ),
+      body: StreamBuilder<UserModel?>(
+        stream: _firebaseService.getUserStream(widget.user.id),
+        builder: (context, snapshot) {
+          // Use updated user data if available, otherwise use initial user
+          final currentUser = snapshot.data ?? widget.user;
+
+          // Reload fetal information if user data changes
+          if (snapshot.hasData && snapshot.data != null) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && snapshot.data!.hpht != null) {
+                _loadFetalInformationForUser(snapshot.data!);
+              }
+            });
+          }
+
+          return FadeTransition(
+            opacity: _fadeAnimation,
+            child: SlideTransition(
+              position: _slideAnimation,
+              child: _buildContentWithUser(currentUser),
+            ),
+          );
+        },
       ),
     );
+  }
+
+  void _loadFetalInformationForUser(UserModel user) {
+    if (user.hpht != null) {
+      final now = DateTime.now();
+      final hpht = user.hpht!;
+
+      // Calculate gestational age from HPHT
+      final difference = now.difference(hpht);
+
+      if (difference.inDays < 0) {
+        _gestationalAgeWeeks = 0;
+        _gestationalAgeDays = 0;
+      } else {
+        _gestationalAgeWeeks = difference.inDays ~/ 7;
+        _gestationalAgeDays = difference.inDays % 7;
+      }
+
+      // Calculate estimated due date (40 weeks from HPHT)
+      _estimatedDueDate = hpht.add(const Duration(days: 280));
+
+      // Determine trimester
+      if (_gestationalAgeWeeks! < 13) {
+        _trimester = 'Trimester 1';
+      } else if (_gestationalAgeWeeks! < 27) {
+        _trimester = 'Trimester 2';
+      } else {
+        _trimester = 'Trimester 3';
+      }
+
+      // Get fetal information
+      _fetalSize = _getFetalSizeComparison(_gestationalAgeWeeks!);
+      _fetalLength = _getFetalLength(_gestationalAgeWeeks!);
+      _fetalWeight = _getFetalWeight(_gestationalAgeWeeks!);
+      _developmentInfo = _getDevelopmentInfo(_gestationalAgeWeeks!);
+
+      if (mounted) {
+        setState(() {});
+      }
+    }
+  }
+
+  Widget _buildContentWithUser(UserModel user) {
+    if (user.hpht != null && _gestationalAgeWeeks != null) {
+      return _buildContentWithUserData(user);
+    }
+    return _buildNoDataContent();
+  }
+
+  Widget _buildContentWithUserData(UserModel user) {
+    // This will be the same as _buildContent but using the user parameter
+    return _buildContent(user);
   }
 
   Widget _buildNoDataContent() {
@@ -459,7 +528,8 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
     );
   }
 
-  Widget _buildContent() {
+  Widget _buildContent([UserModel? user]) {
+    final currentUser = user ?? widget.user;
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
@@ -467,7 +537,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // Show miscarriage details if pregnancy status is miscarriage
-            if (widget.user.pregnancyStatus == 'miscarriage') ...[
+            if (currentUser.pregnancyStatus == 'miscarriage') ...[
               const SizedBox(height: 16),
               Container(
                 width: double.infinity,
@@ -502,9 +572,9 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                       ],
                     ),
                     const SizedBox(height: 16),
-                    if (widget.user.pregnancyEndDate != null) ...[
+                    if (currentUser.pregnancyEndDate != null) ...[
                       Text(
-                        'Tanggal: ${_formatDate(widget.user.pregnancyEndDate!)}',
+                        'Tanggal: ${_formatDate(currentUser.pregnancyEndDate!)}',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: const Color(0xFF2D3748),
@@ -512,9 +582,9 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                       ),
                       const SizedBox(height: 8),
                     ],
-                    if (widget.user.pregnancyEndReason != null) ...[
+                    if (currentUser.pregnancyEndReason != null) ...[
                       Text(
-                        'Alasan: ${_getReasonText(widget.user.pregnancyEndReason!)}',
+                        'Alasan: ${_getReasonText(currentUser.pregnancyEndReason!)}',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: const Color(0xFF2D3748),
@@ -522,10 +592,10 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                       ),
                       const SizedBox(height: 8),
                     ],
-                    if (widget.user.pregnancyNotes != null &&
-                        widget.user.pregnancyNotes!.isNotEmpty) ...[
+                    if (currentUser.pregnancyNotes != null &&
+                        currentUser.pregnancyNotes!.isNotEmpty) ...[
                       Text(
-                        'Catatan: ${widget.user.pregnancyNotes}',
+                        'Catatan: ${currentUser.pregnancyNotes}',
                         style: GoogleFonts.poppins(
                           fontSize: 14,
                           color: const Color(0xFF2D3748),
@@ -540,7 +610,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
             const SizedBox(height: 24),
 
             // Pregnancy Information Container - Only show if not miscarriage
-            if (widget.user.pregnancyStatus != 'miscarriage') ...[
+            if (currentUser.pregnancyStatus != 'miscarriage') ...[
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(24),
@@ -587,7 +657,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                               ),
                               const SizedBox(height: 4),
                               Text(
-                                widget.user.hpht != null && _fetalSize != null
+                                currentUser.hpht != null && _fetalSize != null
                                     ? _fetalSize!
                                     : 'Belum ada data',
                                 style: GoogleFonts.poppins(
@@ -626,8 +696,8 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                                     ),
                                   ),
                                   // Status indicator for active pregnancy
-                                  if (widget.user.pregnancyStatus == 'active' ||
-                                      widget.user.pregnancyStatus == null) ...[
+                                  if (currentUser.pregnancyStatus == 'active' ||
+                                      currentUser.pregnancyStatus == null) ...[
                                     const SizedBox(width: 8),
                                     Container(
                                       padding: const EdgeInsets.symmetric(
@@ -674,7 +744,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
             ],
 
             // Information Grid - Only show if not miscarriage
-            if (widget.user.pregnancyStatus != 'miscarriage') ...[
+            if (currentUser.pregnancyStatus != 'miscarriage') ...[
               Container(
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
@@ -745,7 +815,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
 
             // Development Information
             Text(
-              widget.user.pregnancyStatus == 'miscarriage'
+              currentUser.pregnancyStatus == 'miscarriage'
                   ? 'Riwayat Janin'
                   : 'Informasi Perkembangan',
               style: GoogleFonts.poppins(
@@ -781,7 +851,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                       ),
                       const SizedBox(width: 12),
                       Text(
-                        widget.user.pregnancyStatus == 'miscarriage'
+                        currentUser.pregnancyStatus == 'miscarriage'
                             ? 'Riwayat Janin Lalu'
                             : 'Perkembangan Janin',
                         style: GoogleFonts.poppins(
@@ -808,7 +878,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
                       children: [
                         // Current week development info
                         _buildDevelopmentTimelineItem(
-                          widget.user.pregnancyStatus == 'miscarriage'
+                          currentUser.pregnancyStatus == 'miscarriage'
                               ? 'Perkembangan Terakhir'
                               : 'Perkembangan Saat Ini',
                           _developmentInfo!,
@@ -841,7 +911,7 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
 
             // Pregnancy Tips
             Text(
-              widget.user.pregnancyStatus == 'miscarriage'
+              currentUser.pregnancyStatus == 'miscarriage'
                   ? 'Tips Pemulihan'
                   : 'Tips Kehamilan',
               style: GoogleFonts.poppins(
@@ -852,13 +922,13 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
             ),
             const SizedBox(height: 8),
             Text(
-              widget.user.pregnancyStatus == 'miscarriage'
+              currentUser.pregnancyStatus == 'miscarriage'
                   ? 'Untuk membantu Anda tetap semangat'
                   : 'Sesuai dengan $_trimester Anda',
               style: GoogleFonts.poppins(fontSize: 14, color: Colors.grey[600]),
             ),
             const SizedBox(height: 16),
-            _buildPregnancyTips(),
+            _buildPregnancyTips(currentUser),
             const SizedBox(height: 32),
           ],
         ),
@@ -1045,9 +1115,10 @@ class _KehamilankuScreenState extends State<KehamilankuScreen>
     );
   }
 
-  Widget _buildPregnancyTips() {
+  Widget _buildPregnancyTips([UserModel? user]) {
+    final currentUser = user ?? widget.user;
     // If pregnancy status is miscarriage, show recovery tips
-    if (widget.user.pregnancyStatus == 'miscarriage') {
+    if (currentUser.pregnancyStatus == 'miscarriage') {
       List<Map<String, dynamic>> recoveryTips = [
         {
           'title': 'Istirahat Cukup',

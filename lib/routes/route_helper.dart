@@ -95,7 +95,11 @@ class RouteHelper {
         );
 
       case chatAdmin:
-        return MaterialPageRoute(builder: (_) => const ChatAdminScreen());
+        // If navigated from notification, show back button
+        return MaterialPageRoute(
+          builder: (_) => ChatAdminScreen(showBackButton: true),
+          settings: settings,
+        );
 
       case pemeriksaanIbuHamil:
         final user = settings.arguments as UserModel;

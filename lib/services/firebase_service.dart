@@ -164,6 +164,29 @@ class FirebaseService {
     }
   }
 
+  // Stream user data for real-time updates
+  Stream<UserModel?> getUserStream(String userId) {
+    try {
+      return _firestore
+          .collection('users')
+          .doc(userId)
+          .snapshots()
+          .map((doc) {
+            if (doc.exists) {
+              return UserModel.fromMap(doc.data() as Map<String, dynamic>);
+            }
+            return null;
+          })
+          .handleError((error) {
+            print('Error in getUserStream: $error');
+            return null;
+          });
+    } catch (e) {
+      print('Error getting user stream: $e');
+      return Stream.value(null);
+    }
+  }
+
   Future<UserModel?> getUserByEmail(String email) async {
     try {
       await ensureAuthenticated();
@@ -1085,7 +1108,36 @@ class FirebaseService {
       data['status'] = 'pending'; // Default status
 
       // Create the document with auto-generated ID
-      await _firestore.collection('jadwal_konsultasi').add(data);
+      final docRef = await _firestore.collection('jadwal_konsultasi').add(data);
+      final appointmentId = docRef.id;
+
+      // Get patient name for notification
+      String patientName = 'Pasien';
+      try {
+        final patientDoc =
+            await _firestore.collection('users').doc(data['pasienId']).get();
+        if (patientDoc.exists) {
+          final patientData = patientDoc.data();
+          patientName = patientData?['nama'] ?? 'Pasien';
+        }
+      } catch (e) {
+        print('Error getting patient name: $e');
+      }
+
+      // Send notification to admin about new appointment
+      try {
+        await NotificationIntegrationService.notifyAdminNewAppointment(
+          appointmentId: appointmentId,
+          patientName: patientName,
+          appointmentType: data['jenisKonsultasi'] ?? 'Temu Janji',
+          appointmentTime: selectedDateTime,
+          patientId: data['pasienId'],
+        );
+        print('Appointment notification sent to admin');
+      } catch (e) {
+        print('Error sending appointment notification: $e');
+        // Don't fail the appointment creation if notification fails
+      }
 
       print('Jadwal konsultasi created successfully');
     } catch (e) {
@@ -1101,6 +1153,9 @@ class FirebaseService {
 
       await _firestore.collection('jadwal_konsultasi').doc(scheduleId).update({
         'examinationCompleted': true,
+        'hasExamination': true,
+        'status': 'selesai',
+        'examinationDate': DateTime.now().toIso8601String(),
         'completedAt': DateTime.now().toIso8601String(),
       });
 

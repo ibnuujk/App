@@ -824,28 +824,46 @@ class PatientExaminationHistoryScreen extends StatelessWidget {
             ),
       );
 
-      // Create UserModel from patient data
-      final patientInfo = patientData['patientInfo'] as Map<String, dynamic>;
-      final user = UserModel(
-        id: patientInfo['pasienId'] ?? '',
-        email: patientInfo['email'] ?? '',
-        password: '',
-        nama: patientInfo['namaPasien'] ?? '',
-        noHp: patientInfo['noHp'] ?? '',
-        alamat: patientInfo['alamat'] ?? '',
-        tanggalLahir: DateTime.now(), // Default value
-        umur: patientInfo['umur'] ?? 0,
-        role: 'pasien',
-        createdAt: DateTime.now(),
-        hpht:
-            patientInfo['hpht'] != null
-                ? DateTime.tryParse(patientInfo['hpht'])
-                : null,
-        pregnancyStatus: patientInfo['pregnancyStatus'],
-        agamaPasien: patientInfo['agamaPasien'],
-        pekerjaanPasien: patientInfo['pekerjaanPasien'],
-        jenisAsuransi: patientInfo['jenisAsuransi'],
-      );
+      // Get patient ID from examination or patientData
+      final patientInfo = patientData['patientInfo'] as Map<String, dynamic>?;
+      final patientId =
+          examination['pasienId']?.toString() ??
+          patientInfo?['pasienId']?.toString() ??
+          '';
+
+      if (patientId.isEmpty) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'ID pasien tidak ditemukan',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
+
+      // Get complete user data from database
+      final firebaseService = FirebaseService();
+      final user = await firebaseService.getUserById(patientId);
+
+      if (user == null) {
+        Navigator.pop(context);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Data pasien tidak ditemukan',
+              style: GoogleFonts.poppins(),
+            ),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+        return;
+      }
 
       // Create examination list with single examination
       final examinationList = [examination];

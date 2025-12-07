@@ -172,6 +172,7 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
       builder:
           (context) => AddPregnancyExaminationDialog(
             consultationSchedule: widget.consultationSchedule,
+            adminUser: widget.user,
           ),
     ).then((_) {
       // Reload data after dialog closes
@@ -1297,8 +1298,13 @@ class _PemeriksaanIbuHamilScreenState extends State<PemeriksaanIbuHamilScreen> {
 
 class AddPregnancyExaminationDialog extends StatefulWidget {
   final Map<String, dynamic>? consultationSchedule;
+  final UserModel? adminUser; // Admin user for navigation
 
-  const AddPregnancyExaminationDialog({super.key, this.consultationSchedule});
+  const AddPregnancyExaminationDialog({
+    super.key,
+    this.consultationSchedule,
+    this.adminUser,
+  });
 
   @override
   State<AddPregnancyExaminationDialog> createState() =>
@@ -1726,12 +1732,39 @@ class _AddPregnancyExaminationDialogState
       // Save examination data
       await _firebaseService.createPemeriksaanIbuHamil(examinationData);
 
+      // Update pregnancy status in user collection
+      if (_pasienId != null) {
+        try {
+          final endDate =
+              _pregnancyEndDateController.text.isNotEmpty
+                  ? DateFormat(
+                    'dd/MM/yyyy',
+                  ).parse(_pregnancyEndDateController.text)
+                  : DateTime.now();
+
+          await _firebaseService.updatePregnancyStatus(
+            _pasienId!,
+            _pregnancyStatus,
+            _pregnancyEndReason ?? '',
+            _pregnancyNotesController.text,
+            endDate,
+          );
+          print('Pregnancy status updated for user: $_pasienId');
+        } catch (e) {
+          print(
+            'Warning: Could not update pregnancy status in user collection: $e',
+          );
+          // Don't fail the examination save if this fails
+        }
+      }
+
       // Mark consultation schedule as completed if it exists
       if (widget.consultationSchedule != null) {
         try {
           await _firebaseService.markConsultationScheduleAsCompleted(
             widget.consultationSchedule!['id'],
           );
+          print('Consultation schedule marked as completed');
         } catch (e) {
           print(
             'Warning: Could not mark consultation schedule as completed: $e',
@@ -1751,8 +1784,26 @@ class _AddPregnancyExaminationDialogState
         );
       }
 
-      // Close dialog and return to previous screen
-      Navigator.of(context).pop();
+      // Close dialog first and return true to indicate success
+      if (mounted) {
+        Navigator.of(context).pop(true);
+      }
+
+      // Redirect to pemeriksaan menu (PatientPregnancyManagementScreen) if adminUser is provided
+      if (mounted && widget.adminUser != null) {
+        // Use a small delay to ensure dialog is closed first
+        await Future.delayed(const Duration(milliseconds: 100));
+        if (mounted) {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder:
+                  (context) =>
+                      PatientPregnancyManagementScreen(user: widget.adminUser!),
+            ),
+          );
+        }
+      }
     } catch (e) {
       print('Error saving examination: $e');
       if (mounted) {

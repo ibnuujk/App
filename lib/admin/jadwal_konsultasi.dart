@@ -537,11 +537,11 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
       case 'pending':
         return Colors.orange;
       case 'confirmed':
-        return Colors.green;
+        return Colors.blue;
       case 'rejected':
         return Colors.red;
       case 'selesai':
-        return Colors.blue;
+        return Colors.green;
       default:
         return Colors.grey;
     }
@@ -970,8 +970,12 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                   : SliverList(
                     delegate: SliverChildBuilderDelegate((context, index) {
                       final schedule = _consultationSchedules[index];
-                      final isConfirmed = schedule['status'] == 'confirmed';
-                      final isRejected = schedule['status'] == 'rejected';
+                      final status = schedule['status'] ?? 'pending';
+                      final isConfirmed = status == 'confirmed';
+                      final isRejected = status == 'rejected';
+                      final isCompleted =
+                          status == 'selesai' ||
+                          (schedule['hasExamination'] ?? false);
 
                       // Debug: Print schedule details
                       if (kDebugMode) {
@@ -1088,7 +1092,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                               ),
                             ),
                             // Action buttons
-                            if (!isRejected)
+                            if (!isRejected && !isCompleted)
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 16,
@@ -1181,8 +1185,7 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                           ),
                                         ),
                                       ),
-                                    if (isConfirmed &&
-                                        !(schedule['hasExamination'] ?? false))
+                                    if (isConfirmed && !isCompleted)
                                       Expanded(
                                         child: ElevatedButton.icon(
                                           onPressed:
@@ -1211,51 +1214,51 @@ class _JadwalKonsultasiScreenState extends State<JadwalKonsultasiScreen> {
                                           ),
                                         ),
                                       ),
-                                    if (isConfirmed &&
-                                        (schedule['hasExamination'] ?? false))
-                                      Expanded(
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 16,
-                                            vertical: 12,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.green.withValues(
-                                              alpha: 0.1,
-                                            ),
-                                            borderRadius: BorderRadius.circular(
-                                              8,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.green.withValues(
-                                                alpha: 0.3,
-                                              ),
-                                              width: 1,
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.check_circle,
-                                                color: Colors.green,
-                                                size: 16,
-                                              ),
-                                              const SizedBox(width: 8),
-                                              Text(
-                                                'STATUS SELESAI',
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: Colors.green,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                  ],
+                                ),
+                              ),
+                            // Show "Selesai" status if examination is completed
+                            if (isCompleted)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
+                                  vertical: 8,
+                                ),
+                                child: Container(
+                                  width: double.infinity,
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 16,
+                                    vertical: 12,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.green.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.green.withValues(
+                                        alpha: 0.3,
+                                      ),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.check_circle,
+                                        color: Colors.green,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Selesai',
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.w600,
+                                          color: Colors.green,
                                         ),
                                       ),
-                                  ],
+                                    ],
+                                  ),
                                 ),
                               ),
                           ],
@@ -1748,11 +1751,11 @@ class ConsultationScheduleDetailDialog extends StatelessWidget {
       case 'pending':
         return Colors.orange;
       case 'confirmed':
-        return Colors.green;
+        return Colors.blue;
       case 'rejected':
         return Colors.red;
       case 'selesai':
-        return Colors.blue;
+        return Colors.green;
       default:
         return Colors.grey;
     }

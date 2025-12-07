@@ -56,10 +56,26 @@ service cloud.firestore {
     
     // Notifications collection
     match /notifications/{notificationId} {
+      // Helper function to check if user is admin
+      function isAdmin() {
+        return isAuthenticated() && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+      }
+      
+      // Read: user can read their own notifications or admin can read all
       allow read: if isAuthenticated() && 
-        (resource.data.receiverId == request.auth.uid || 
-         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin');
-      allow write: if isAuthenticated();
+        (resource.data.receiverId == request.auth.uid || isAdmin());
+      
+      // Create: authenticated users can create
+      allow create: if isAuthenticated();
+      
+      // Update: user can update their own notifications or admin can update all
+      allow update: if isAuthenticated() && 
+        (resource.data.receiverId == request.auth.uid || isAdmin());
+      
+      // Delete: user can delete their own notifications or admin can delete all
+      allow delete: if isAuthenticated() && 
+        (resource.data.receiverId == request.auth.uid || isAdmin());
     }
     
     // Default rule for other collections

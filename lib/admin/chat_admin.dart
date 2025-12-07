@@ -535,6 +535,24 @@ class _ChatAdminScreenState extends State<ChatAdminScreen> {
                   ),
                   child: Row(
                     children: [
+                      // Back button if showBackButton is true
+                      if (widget.showBackButton)
+                        GestureDetector(
+                          onTap: _safeNavigateBack,
+                          child: Container(
+                            margin: const EdgeInsets.only(right: 12),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.2),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
+                              size: 20,
+                            ),
+                          ),
+                        ),
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(

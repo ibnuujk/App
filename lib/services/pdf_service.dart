@@ -37,8 +37,6 @@ class PdfService {
               pw.SizedBox(height: 20),
               _buildPemeriksaanDalam(pemeriksaanList),
               pw.SizedBox(height: 20),
-              _buildDiagnosis(pemeriksaanList),
-              pw.SizedBox(height: 20),
               _buildCatatan(pemeriksaanList),
               pw.SizedBox(height: 30),
               _buildFooter(),
@@ -109,7 +107,9 @@ class PdfService {
                 'Nama: ',
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               ),
-              pw.Expanded(child: pw.Text(user.nama)),
+              pw.Expanded(
+                child: pw.Text(user.nama.isNotEmpty ? user.nama : '-'),
+              ),
             ],
           ),
           pw.SizedBox(height: 5),
@@ -129,7 +129,9 @@ class PdfService {
                 'Alamat: ',
                 style: pw.TextStyle(fontWeight: pw.FontWeight.bold),
               ),
-              pw.Expanded(child: pw.Text(user.alamat)),
+              pw.Expanded(
+                child: pw.Text(user.alamat.isNotEmpty ? user.alamat : '-'),
+              ),
             ],
           ),
           pw.SizedBox(height: 5),
@@ -618,41 +620,6 @@ class PdfService {
             ),
             padding: const pw.EdgeInsets.all(5),
             child: pw.Text(pemeriksaanDalam, style: pw.TextStyle(fontSize: 10)),
-          ),
-          pw.SizedBox(height: 10),
-        ],
-      ),
-    );
-  }
-
-  static pw.Widget _buildDiagnosis(List<Map<String, dynamic>> pemeriksaanList) {
-    String diagnosis = 'Pemeriksaan normal dapat dilakukan';
-
-    if (pemeriksaanList.isNotEmpty) {
-      final lastExam = pemeriksaanList.first;
-      if (lastExam['diagnosis'] != null &&
-          lastExam['diagnosis'].toString().isNotEmpty) {
-        diagnosis = lastExam['diagnosis'].toString();
-      }
-    }
-
-    return pw.Container(
-      child: pw.Column(
-        crossAxisAlignment: pw.CrossAxisAlignment.start,
-        children: [
-          pw.Text(
-            'DIAGNOSIS:',
-            style: pw.TextStyle(fontWeight: pw.FontWeight.bold, fontSize: 12),
-          ),
-          pw.SizedBox(height: 5),
-          pw.Container(
-            width: double.infinity,
-            height: 60,
-            decoration: pw.BoxDecoration(
-              border: pw.Border.all(color: PdfColors.black),
-            ),
-            padding: const pw.EdgeInsets.all(5),
-            child: pw.Text(diagnosis, style: pw.TextStyle(fontSize: 10)),
           ),
           pw.SizedBox(height: 10),
         ],

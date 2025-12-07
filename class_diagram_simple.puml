@@ -1,0 +1,412 @@
+@startuml Persalinanku App
+!theme plain
+skinparam classAttributeIconSize 0
+skinparam classFontStyle bold
+skinparam packageStyle rectangle
+skinparam linetype ortho
+
+title Persalinanku App
+' ===== MODELS LAYER =====
+package "Models" #LightBlue {
+    class UserModel {
+        - String id
+        - String email
+        - String password
+        - String nama
+        - String noHp
+        - String alamat
+        - DateTime tanggalLahir
+        - int umur
+        - String role
+        - DateTime? hpht
+        - String? pregnancyStatus
+        - String? namaSuami
+        - DateTime createdAt
+        --
+        + Map<String, dynamic> toMap()
+        + UserModel fromMap(Map map)
+        + UserModel copyWith(...)
+    }
+    
+    class ChatModel {
+        - String id
+        - String senderId
+        - String senderName
+        - String senderRole
+        - String message
+        - DateTime timestamp
+        - bool isRead
+        - String conversationId
+        - String recipientId
+        --
+        + Map<String, dynamic> toMap()
+        + ChatModel fromMap(Map map)
+    }
+    
+    class KonsultasiModel {
+        - String id
+        - String pasienId
+        - String pasienNama
+        - String pertanyaan
+        - String? jawaban
+        - String status
+        - DateTime tanggalKonsultasi
+        - DateTime? tanggalJawaban
+        --
+        + Map<String, dynamic> toMap()
+        + KonsultasiModel fromMap(Map map)
+        + KonsultasiModel copyWith(...)
+    }
+    
+    class NotificationModel {
+        - String id
+        - String userId
+        - String receiverId
+        - String title
+        - String message
+        - String type
+        - String? referenceId
+        - bool isRead
+        - DateTime createdAt
+        --
+        + Map<String, dynamic> toMap()
+        + NotificationModel fromMap(Map map)
+        + NotificationModel copyWith(...)
+    }
+    
+    class PersalinanModel {
+        - String id
+        - String pasienId
+        - String pasienNama
+        - String pasienNoHp
+        - int pasienUmur
+        - DateTime tanggalMasuk
+        - String fasilitas
+        - String diagnosaKebidanan
+        - String tindakan
+        - String penolongPersalinan
+        - DateTime createdAt
+        --
+        + Map<String, dynamic> toMap()
+        + PersalinanModel fromMap(Map map)
+    }
+    
+    class ArticleModel {
+        - String id
+        - String title
+        - String description
+        - String websiteUrl
+        - String category
+        - int readTime
+        - int views
+        - bool isActive
+        - DateTime createdAt
+        --
+        + Map<String, dynamic> toMap()
+        + Article fromMap(Map map)
+        + Article copyWith(...)
+    }
+}
+
+' ===== SERVICES LAYER =====
+package "Services" #LightGreen {
+    class FirebaseService {
+        - FirebaseAuth _auth
+        - FirebaseFirestore _firestore
+        - Uuid _uuid
+        --
+        + Future<UserCredential?> signInWithEmailAndPassword()
+        + Future<UserCredential?> createUserWithEmailAndPassword()
+        + Future<void> signOut()
+        + Future<void> createUser(UserModel)
+        + Future<UserModel?> getUserById(String)
+        + Future<void> updateUser(UserModel)
+        + Future<void> createKonsultasi(KonsultasiModel)
+        + Stream<List<KonsultasiModel>> getKonsultasiStream()
+        + Future<void> sendMessage(ChatModel)
+        + Stream<List<ChatModel>> getConversationMessages(String)
+        + Future<void> createJadwalKonsultasi(Map)
+        + Future<void> createPersalinan(PersalinanModel)
+        + String generateId()
+    }
+    
+    class NotificationService {
+        - FlutterLocalNotificationsPlugin _notifications
+        - FirebaseFirestore _firestore
+        - FirebaseAuth _auth
+        --
+        + Future<void> initialize()
+        + Future<void> createNotification(...)
+        + Future<List<NotificationModel>> getNotificationsPaginated(...)
+        + Future<void> markAsRead(String)
+        + Future<void> markAllAsRead()
+        + Future<void> deleteNotification(String)
+        + Future<void> clearAllNotifications()
+        + Future<int> getUnreadCount()
+    }
+    
+    class NotificationIntegrationService {
+        + Future<String?> _getAdminId()
+        + Future<void> notifyAdminNewChat(...)
+        + Future<void> notifyPatientChatReply(...)
+        + Future<void> notifyAdminNewAppointment(...)
+        + Future<void> notifyPatientAppointmentAccepted(...)
+        + Future<void> notifyAdminNewKonsultasi(...)
+        + Future<void> notifyPatientKonsultasiAnswered(...)
+    }
+    
+    class NotificationListenerService {
+        - StreamSubscription? _chatSubscription
+        - StreamSubscription? _scheduleSubscription
+        --
+        + Future<void> initializeAdminListeners(String)
+        + Future<void> initializePatientListeners(String)
+        + static void dispose()
+    }
+    
+    class ArticleService {
+        - FirebaseFirestore _firestore
+        --
+        + Future<List<Article>> getArticles()
+        + Future<Article?> getArticleById(String)
+        + Future<void> createArticle(Article)
+        + Future<void> updateArticle(Article)
+        + Future<void> deleteArticle(String)
+        + Future<void> incrementViews(String)
+    }
+}
+
+' ===== UI LAYER =====
+package "Screens - Admin" #LightYellow {
+    class HomeAdminScreen {
+        - UserModel user
+        - int _currentIndex
+        - List<Widget> _screens
+        --
+        + Widget build(BuildContext)
+        - void _initializeNotificationListeners()
+        - Widget _buildNotificationIcon()
+    }
+    
+    class ChatAdminScreen {
+        - bool showBackButton
+        - UserModel? _selectedPatient
+        - List<ChatModel> _messages
+        - List<UserModel> _patients
+        - TextEditingController _messageController
+        --
+        + Widget build(BuildContext)
+        - Future<void> _loadData()
+        - Future<void> _sendMessage()
+        - void _selectPatient(UserModel)
+    }
+    
+    class DataPasienScreen {
+        - List<UserModel> _patients
+        - bool _isLoading
+        --
+        + Widget build(BuildContext)
+        - Future<void> _loadPatients()
+        - Widget _buildPatientCard(UserModel)
+    }
+    
+    class JadwalKonsultasiScreen {
+        - UserModel user
+        - List<Map> _schedules
+        - bool _isLoading
+        --
+        + Widget build(BuildContext)
+        - Future<void> _loadSchedules()
+        - Future<void> _updateScheduleStatus(String, String)
+    }
+}
+
+package "Screens - Pasien" #LightCoral {
+    class HomePasienScreen {
+        - UserModel user
+        - int _currentIndex
+        - DateTime? _hpht
+        - int _gestationalAge
+        --
+        + Widget build(BuildContext)
+        - void _initializeNotificationListeners()
+        - Widget _buildPregnancyInfo()
+        - Widget _buildNotificationIcon()
+    }
+    
+    class ChatPasienScreen {
+        - UserModel user
+        - List<ChatModel> _messages
+        - TextEditingController _messageController
+        - String _conversationId
+        --
+        + Widget build(BuildContext)
+        - Future<void> _loadMessages()
+        - Future<void> _sendMessage()
+    }
+    
+    class TemuJanjiScreen {
+        - UserModel user
+        - DateTime? _selectedDate
+        - String? _selectedTime
+        - TextEditingController _keluhanController
+        --
+        + Widget build(BuildContext)
+        - Future<void> _submitAppointment()
+        - Future<void> _selectDate()
+        - Future<void> _selectTime()
+    }
+    
+    class KonsultasiPasienScreen {
+        - UserModel user
+        - List<KonsultasiModel> _konsultasi
+        - TextEditingController _questionController
+        --
+        + Widget build(BuildContext)
+        - Future<void> _loadKonsultasi()
+        - Future<void> _submitQuestion()
+    }
+}
+
+package "Screens - Shared" #LightGray {
+    class NotificationScreen {
+        - UserModel? user
+        - List<NotificationModel> _allNotifications
+        - DocumentSnapshot? _lastDocument
+        - bool _isLoadingMore
+        - bool _hasMore
+        - ScrollController _scrollController
+        --
+        + Widget build(BuildContext)
+        - Future<void> _loadMoreNotifications()
+        - Future<void> _refreshNotifications()
+        - void _handleNotificationTap(NotificationModel)
+        - Widget _buildNotificationCard(NotificationModel)
+    }
+    
+    class LoginScreen {
+        - TextEditingController _emailController
+        - TextEditingController _passwordController
+        - bool _isLoading
+        - bool _obscurePassword
+        --
+        + Widget build(BuildContext)
+        - Future<void> _handleLogin()
+        - void _navigateToRegister()
+        - void _navigateToForgotPassword()
+    }
+}
+
+' ===== NAVIGATION LAYER =====
+package "Navigation" #LightPink {
+    class RouteHelper {
+        + {static} String login
+        + {static} String register
+        + {static} String homeAdmin
+        + {static} String homePasien
+        + {static} String chatAdmin
+        + {static} String chatPasien
+        + {static} String notification
+        + {static} Route<dynamic> generateRoute(RouteSettings)
+        + {static} void navigateToLogin(BuildContext)
+        + {static} void navigateToHomeAdmin(BuildContext, UserModel)
+        + {static} void navigateToHomePasien(BuildContext, UserModel)
+        + {static} void navigateToChatAdmin(BuildContext, UserModel)
+        + {static} void navigateToChatPasien(BuildContext, UserModel)
+        + {static} void navigateToNotification(BuildContext, UserModel)
+        + {static} void navigateToTemuJanji(BuildContext, UserModel)
+        + {static} void navigateToKonsultasiPasien(BuildContext, UserModel)
+        + {static} void goBack(BuildContext)
+    }
+}
+
+' ===== RELASI ANTAR CLASS =====
+
+' Models digunakan oleh Services
+FirebaseService ..> UserModel : "Menggunakan"
+FirebaseService ..> ChatModel : "Menggunakan"
+FirebaseService ..> KonsultasiModel : "Menggunakan"
+FirebaseService ..> PersalinanModel : "Menggunakan"
+
+NotificationService ..> NotificationModel : "Menggunakan"
+ArticleService ..> ArticleModel : "Menggunakan"
+
+' Services saling bergantung
+NotificationIntegrationService ..> NotificationService : "Menggunakan"
+NotificationListenerService ..> NotificationService : "Menggunakan"
+NotificationListenerService ..> NotificationIntegrationService : "Menggunakan"
+FirebaseService ..> NotificationIntegrationService : "Menggunakan"
+
+' UI menggunakan Services
+HomeAdminScreen --> FirebaseService : "Menggunakan"
+HomeAdminScreen --> NotificationService : "Menggunakan"
+ChatAdminScreen --> FirebaseService : "Menggunakan"
+DataPasienScreen --> FirebaseService : "Menggunakan"
+JadwalKonsultasiScreen --> FirebaseService : "Menggunakan"
+
+HomePasienScreen --> FirebaseService : "Menggunakan"
+HomePasienScreen --> NotificationService : "Menggunakan"
+ChatPasienScreen --> FirebaseService : "Menggunakan"
+TemuJanjiScreen --> FirebaseService : "Menggunakan"
+KonsultasiPasienScreen --> FirebaseService : "Menggunakan"
+
+NotificationScreen --> NotificationService : "Menggunakan"
+LoginScreen --> FirebaseService : "Menggunakan"
+
+' UI menggunakan Models
+HomeAdminScreen --> UserModel : "Menggunakan"
+ChatAdminScreen --> UserModel : "Menggunakan"
+ChatAdminScreen --> ChatModel : "Menggunakan"
+JadwalKonsultasiScreen --> UserModel : "Menggunakan"
+
+HomePasienScreen --> UserModel : "Menggunakan"
+ChatPasienScreen --> UserModel : "Menggunakan"
+ChatPasienScreen --> ChatModel : "Menggunakan"
+TemuJanjiScreen --> UserModel : "Menggunakan"
+KonsultasiPasienScreen --> UserModel : "Menggunakan"
+KonsultasiPasienScreen --> KonsultasiModel : "Menggunakan"
+NotificationScreen --> UserModel : "Menggunakan"
+NotificationScreen --> NotificationModel : "Menggunakan"
+
+' UI menggunakan RouteHelper untuk navigasi
+HomeAdminScreen --> RouteHelper : "Navigasi"
+ChatAdminScreen --> RouteHelper : "Navigasi"
+HomePasienScreen --> RouteHelper : "Navigasi"
+ChatPasienScreen --> RouteHelper : "Navigasi"
+TemuJanjiScreen --> RouteHelper : "Navigasi"
+KonsultasiPasienScreen --> RouteHelper : "Navigasi"
+NotificationScreen --> RouteHelper : "Navigasi"
+LoginScreen --> RouteHelper : "Navigasi"
+
+' RouteHelper mengarahkan ke Screens
+RouteHelper ..> HomeAdminScreen : "Mengarahkan ke"
+RouteHelper ..> ChatAdminScreen : "Mengarahkan ke"
+RouteHelper ..> DataPasienScreen : "Mengarahkan ke"
+RouteHelper ..> JadwalKonsultasiScreen : "Mengarahkan ke"
+RouteHelper ..> HomePasienScreen : "Mengarahkan ke"
+RouteHelper ..> ChatPasienScreen : "Mengarahkan ke"
+RouteHelper ..> TemuJanjiScreen : "Mengarahkan ke"
+RouteHelper ..> KonsultasiPasienScreen : "Mengarahkan ke"
+RouteHelper ..> NotificationScreen : "Mengarahkan ke"
+RouteHelper ..> LoginScreen : "Mengarahkan ke"
+
+note right of FirebaseService
+  Service utama untuk komunikasi
+  dengan Firebase (Auth & Firestore)
+  Menangani semua operasi CRUD
+end note
+
+note right of NotificationService
+  Service untuk mengelola notifikasi
+  lokal dan Firestore
+  Menangani pagination dan real-time updates
+end note
+
+note right of RouteHelper
+  Helper class untuk navigasi
+  Menggunakan named routes
+  Centralized routing management
+end note
+
+@enduml
+

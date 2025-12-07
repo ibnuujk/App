@@ -261,7 +261,7 @@ class _HPHTFormScreenState extends State<HPHTFormScreen> {
               Icon(Icons.check_circle, color: Colors.green, size: 24),
               const SizedBox(width: 8),
               Text(
-                'HPHT Berhasil Disimpan',
+                'HPHT Disimpan',
                 style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
               ),
             ],

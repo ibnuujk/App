@@ -405,33 +405,117 @@ class NotificationService {
   // Delete notification
   static Future<void> deleteNotification(String notificationId) async {
     try {
-      await _firestore.collection('notifications').doc(notificationId).delete();
+      final currentUserId = _auth.currentUser?.uid;
+      if (currentUserId == null) {
+        throw Exception('User tidak terautentikasi');
+      }
+
+      // Get notification first to check permissions
+      final notificationDoc =
+          await _firestore
+              .collection('notifications')
+              .doc(notificationId)
+              .get();
+
+      if (!notificationDoc.exists) {
+        throw Exception('Notifikasi tidak ditemukan');
+      }
+
+      final notificationData = notificationDoc.data();
+      if (notificationData == null) {
+        throw Exception('Data notifikasi tidak valid');
+      }
+
+      final receiverId = notificationData['receiverId'] as String?;
+
+      // Check if user is admin
+      bool isAdmin = false;
+      try {
+        final userDoc =
+            await _firestore.collection('users').doc(currentUserId).get();
+
+        if (userDoc.exists) {
+          final userData = userDoc.data();
+          isAdmin = userData?['role'] == 'admin';
+        }
+      } catch (e) {
+        print('Error checking admin status: $e');
+        // Continue with delete attempt
+      }
+
+      // Allow delete if user owns the notification or is admin
+      if (receiverId == currentUserId || isAdmin) {
+        await _firestore
+            .collection('notifications')
+            .doc(notificationId)
+            .delete();
+        print('Notification deleted successfully: $notificationId');
+      } else {
+        throw Exception('Tidak memiliki izin untuk menghapus notifikasi ini');
+      }
     } catch (e) {
       print('Error deleting notification: $e');
+      rethrow; // Re-throw to show error to user
     }
   }
 
   // Clear all notifications for current user
   static Future<void> clearAllNotifications() async {
     final currentUserId = _auth.currentUser?.uid;
-    if (currentUserId == null) return;
+    if (currentUserId == null) {
+      throw Exception('User tidak terautentikasi');
+    }
 
     try {
+      // Check if user is admin
+      bool isAdmin = false;
+      try {
+        final userDoc =
+            await _firestore.collection('users').doc(currentUserId).get();
+
+        if (userDoc.exists) {
+          final userData = userDoc.data();
+          isAdmin = userData?['role'] == 'admin';
+        }
+      } catch (e) {
+        print('Error checking admin status: $e');
+      }
+
+      // For admin, delete all notifications they can see (all notifications)
+      // For regular users, delete only their own notifications
+      Query query = _firestore.collection('notifications');
+
+      if (!isAdmin) {
+        query = query.where('receiverId', isEqualTo: currentUserId);
+      }
+
       final batch = _firestore.batch();
       final notifications =
-          await _firestore
-              .collection('notifications')
-              .where('receiverId', isEqualTo: currentUserId) // Use receiverId
-              .limit(500) // Limit untuk performance
-              .get();
+          await query.limit(500).get(); // Limit untuk performance
+
+      if (notifications.docs.isEmpty) {
+        print('No notifications to clear');
+        return;
+      }
 
       for (var doc in notifications.docs) {
-        batch.delete(doc.reference);
+        // For admin, check if they can delete (their own or all)
+        if (isAdmin) {
+          batch.delete(doc.reference);
+        } else {
+          // For regular users, only delete their own
+          final data = doc.data() as Map<String, dynamic>?;
+          if (data != null && data['receiverId'] == currentUserId) {
+            batch.delete(doc.reference);
+          }
+        }
       }
 
       await batch.commit();
+      print('All notifications cleared successfully');
     } catch (e) {
       print('Error clearing all notifications: $e');
+      rethrow;
     }
   }
 

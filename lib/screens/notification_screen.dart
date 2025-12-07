@@ -273,10 +273,106 @@ class _NotificationScreenState extends State<NotificationScreen> {
             onSelected: (value) async {
               switch (value) {
                 case 'mark_all_read':
-                  await NotificationService.markAllAsRead();
+                  try {
+                    await NotificationService.markAllAsRead();
+                    // Refresh notifications
+                    await _refreshNotifications();
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text(
+                            'Semua notifikasi ditandai sebagai dibaca',
+                          ),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Gagal menandai semua: ${e.toString()}',
+                          ),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  }
                   break;
                 case 'clear_all':
-                  await NotificationService.clearAllNotifications();
+                  // Show confirmation dialog
+                  final confirmed = await showDialog<bool>(
+                    context: context,
+                    builder:
+                        (context) => AlertDialog(
+                          title: Text(
+                            'Hapus Semua Notifikasi',
+                            style: GoogleFonts.poppins(
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                          content: Text(
+                            'Apakah Anda yakin ingin menghapus semua notifikasi? Tindakan ini tidak dapat dibatalkan.',
+                            style: GoogleFonts.poppins(),
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () => Navigator.pop(context, false),
+                              child: Text(
+                                'Batal',
+                                style: GoogleFonts.poppins(color: Colors.grey),
+                              ),
+                            ),
+                            ElevatedButton(
+                              onPressed: () => Navigator.pop(context, true),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.red,
+                                foregroundColor: Colors.white,
+                              ),
+                              child: Text(
+                                'Hapus Semua',
+                                style: GoogleFonts.poppins(),
+                              ),
+                            ),
+                          ],
+                        ),
+                  );
+
+                  if (confirmed == true) {
+                    try {
+                      await NotificationService.clearAllNotifications();
+                      // Clear local list
+                      if (mounted) {
+                        setState(() {
+                          _allNotifications.clear();
+                          _lastDocument = null;
+                          _hasMore = false;
+                        });
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Semua notifikasi berhasil dihapus'),
+                            backgroundColor: Colors.green,
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      if (mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Gagal menghapus semua: ${e.toString()}',
+                            ),
+                            backgroundColor: Colors.red,
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    }
+                  }
                   break;
               }
             },
@@ -421,10 +517,87 @@ class _NotificationScreenState extends State<NotificationScreen> {
               case 'mark_read':
                 if (isUnread) {
                   await NotificationService.markAsRead(notification.id);
+                  if (mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Notifikasi ditandai sebagai dibaca'),
+                        backgroundColor: Colors.green,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
                 }
                 break;
               case 'delete':
-                await NotificationService.deleteNotification(notification.id);
+                // Show confirmation dialog
+                final confirmed = await showDialog<bool>(
+                  context: context,
+                  builder:
+                      (context) => AlertDialog(
+                        title: Text(
+                          'Hapus Notifikasi',
+                          style: GoogleFonts.poppins(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        content: Text(
+                          'Apakah Anda yakin ingin menghapus notifikasi ini?',
+                          style: GoogleFonts.poppins(),
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context, false),
+                            child: Text(
+                              'Batal',
+                              style: GoogleFonts.poppins(color: Colors.grey),
+                            ),
+                          ),
+                          ElevatedButton(
+                            onPressed: () => Navigator.pop(context, true),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.red,
+                              foregroundColor: Colors.white,
+                            ),
+                            child: Text('Hapus', style: GoogleFonts.poppins()),
+                          ),
+                        ],
+                      ),
+                );
+
+                if (confirmed == true) {
+                  try {
+                    await NotificationService.deleteNotification(
+                      notification.id,
+                    );
+                    // Remove from local list
+                    if (mounted) {
+                      setState(() {
+                        _allNotifications.removeWhere(
+                          (n) => n.id == notification.id,
+                        );
+                      });
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Notifikasi berhasil dihapus'),
+                          backgroundColor: Colors.green,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                    }
+                  } catch (e) {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Gagal menghapus notifikasi: ${e.toString()}',
+                          ),
+                          backgroundColor: Colors.red,
+                          duration: const Duration(seconds: 3),
+                        ),
+                      );
+                    }
+                  }
+                }
                 break;
             }
           },
