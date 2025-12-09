@@ -940,7 +940,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
         user: widget.user,
         pemeriksaanList: pemeriksaanList,
       );
-      _showSnackBar('✅ Ringkasan pemeriksaan berhasil diunduh!');
+      _showSnackBar('Ringkasan pemeriksaan berhasil diunduh!');
     } catch (e) {
       print('Error downloading PDF: $e');
 
@@ -1005,7 +1005,7 @@ class _PemeriksaanScreenState extends State<PemeriksaanScreen>
 
       // Show success message
       if (mounted) {
-        _showSnackBar('✅ PDF pemeriksaan berhasil diunduh!');
+        _showSnackBar('PDF pemeriksaan berhasil diunduh!');
       }
     } catch (e) {
       print('Error downloading individual examination PDF: $e');

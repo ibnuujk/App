@@ -1,16 +1,15 @@
 class Article {
   final String id;
   final String title;
-  final String
-  description; // Changed from content to description for brief info
-  final String websiteUrl; // New field for website link
-  final String category; // "Trimester 1", "Trimester 2", "Trimester 3"
-  final int readTime; // in minutes
-  final int views; // view counter
-  final bool isActive; // admin toggle
+  final String description;
+  final String websiteUrl;
+  final String category;
+  final int readTime;
+  final int views;
+  final bool isActive;
   final DateTime createdAt;
-  final bool isLiked; // user liked this article
-  final bool isBookmarked; // user bookmarked this article
+  final bool isLiked;
+  final bool isBookmarked;
 
   Article({
     required this.id,

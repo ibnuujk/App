@@ -1238,7 +1238,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Alasan: ${widget.user.pregnancyEndReason != null ? widget.user.pregnancyEndReason! : 'keguguran'}',
+                'Alasan: ${widget.user.pregnancyEndReason != null ? _getReasonText(widget.user.pregnancyEndReason!) : 'keguguran'}',
                 style: GoogleFonts.poppins(
                   fontSize: 14,
                   color: const Color(0xFF2D3748),
@@ -1257,6 +1257,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
       ],
     );
+  }
+
+  String _getReasonText(String reason) {
+    switch (reason) {
+      case 'miscarriage':
+        return 'Keguguran';
+      case 'complication':
+        return 'Komplikasi Medis';
+      case 'birth':
+        return 'Kelahiran';
+      default:
+        return reason;
+    }
   }
 
   Widget _buildPregnancyHistorySection() {
@@ -1371,7 +1384,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ],
                   if (reason != null && reason.isNotEmpty) ...[
                     Text(
-                      'Alasan: $reason',
+                      'Alasan: ${_getReasonText(reason)}',
                       style: GoogleFonts.poppins(
                         fontSize: 12,
                         color: const Color(0xFF2D3748),
