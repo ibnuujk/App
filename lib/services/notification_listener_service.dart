@@ -1,19 +1,26 @@
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'notification_service.dart';
 import 'notification_integration_service.dart';
 
 class NotificationListenerService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // Stream subscriptions
   static StreamSubscription<QuerySnapshot>? _chatSubscription;
   static StreamSubscription<QuerySnapshot>? _scheduleSubscription;
 
+  // Track if this is the initial load to ignore old messages
+  static bool _isInitialChatLoad = true;
+  static bool _isInitialScheduleLoad = true;
+
+  // Track initialization time to ignore old data
+  static DateTime? _initializationTime;
+
   // Initialize listeners for admin
   static void initializeAdminListeners() {
+    // Set initialization time to ignore old data
+    _initializationTime = DateTime.now();
     _listenToNewChatsForAdmin();
     _listenToNewSchedulesForAdmin();
     _listenToScheduleUpdatesForAdmin(); // Tambahkan listener untuk update status
@@ -27,6 +34,12 @@ class NotificationListenerService {
 
   // Listen to new chats for admin
   static void _listenToNewChatsForAdmin() {
+    // Cancel existing subscription if any
+    _chatSubscription?.cancel();
+
+    // Reset initial load flag
+    _isInitialChatLoad = true;
+
     _chatSubscription = _firestore
         .collection('chats')
         .where(
@@ -38,15 +51,52 @@ class NotificationListenerService {
         .snapshots()
         .listen(
           (snapshot) {
+            // Skip all changes from initial load
+            if (_isInitialChatLoad) {
+              // Mark initial load as complete after processing first snapshot
+              _isInitialChatLoad = false;
+              print(
+                'Initial chat load complete, ignoring ${snapshot.docs.length} existing messages',
+              );
+              return;
+            }
+
+            // Only process newly added documents after initial load
+            // Also check if the chat was created after initialization
             for (var change in snapshot.docChanges) {
               if (change.type == DocumentChangeType.added) {
                 final data = change.doc.data() as Map<String, dynamic>;
-                _showChatNotificationForAdmin(
-                  chatId: change.doc.id,
-                  senderName: data['senderName'] ?? 'Pasien',
-                  message: data['message'] ?? '',
-                  senderId: data['senderId'] ?? '',
-                );
+
+                // Check if chat was created after initialization time
+                if (_initializationTime != null) {
+                  final chatCreatedAt =
+                      data['createdAt'] != null
+                          ? (data['createdAt'] as Timestamp).toDate()
+                          : null;
+
+                  // Only show notification if chat was created after initialization
+                  if (chatCreatedAt != null &&
+                      chatCreatedAt.isAfter(_initializationTime!)) {
+                    _showChatNotificationForAdmin(
+                      chatId: change.doc.id,
+                      senderName: data['senderName'] ?? 'Pasien',
+                      message: data['message'] ?? '',
+                      senderId: data['senderId'] ?? '',
+                    );
+                  } else {
+                    print(
+                      'Ignoring old chat from ${data['senderName']} created before initialization',
+                    );
+                  }
+                } else {
+                  // Fallback: show notification if initialization time is not set
+                  _showChatNotificationForAdmin(
+                    chatId: change.doc.id,
+                    senderName: data['senderName'] ?? 'Pasien',
+                    message: data['message'] ?? '',
+                    senderId: data['senderId'] ?? '',
+                  );
+                }
               }
             }
           },
@@ -80,23 +130,70 @@ class NotificationListenerService {
 
   // Listen to new schedules for admin
   static void _listenToNewSchedulesForAdmin() {
+    // Cancel existing subscription if any
+    _scheduleSubscription?.cancel();
+
+    // Reset initial load flag
+    _isInitialScheduleLoad = true;
+
     _scheduleSubscription = _firestore
         .collection('konsultasi')
         .where('status', isEqualTo: 'pending')
         .snapshots()
         .listen(
           (snapshot) {
+            // Skip all changes from initial load
+            if (_isInitialScheduleLoad) {
+              // Mark initial load as complete after processing first snapshot
+              _isInitialScheduleLoad = false;
+              print(
+                'Initial schedule load complete, ignoring ${snapshot.docs.length} existing schedules',
+              );
+              return;
+            }
+
+            // Only process newly added documents after initial load
+            // Also check if the schedule was created after initialization
             for (var change in snapshot.docChanges) {
               if (change.type == DocumentChangeType.added) {
                 final data = change.doc.data() as Map<String, dynamic>;
-                _showScheduleNotificationForAdmin(
-                  scheduleId: change.doc.id,
-                  patientName: data['pasienNama'] ?? 'Pasien',
-                  scheduleType: data['jenisKonsultasi'] ?? 'Konsultasi',
-                  scheduleTime:
-                      (data['tanggalKonsultasi'] as Timestamp).toDate(),
-                  patientId: data['pasienId'] ?? '',
-                );
+
+                // Check if schedule was created after initialization time
+                if (_initializationTime != null) {
+                  final scheduleCreatedAt =
+                      data['createdAt'] != null
+                          ? (data['createdAt'] as Timestamp).toDate()
+                          : data['tanggalKonsultasi'] != null
+                          ? (data['tanggalKonsultasi'] as Timestamp).toDate()
+                          : null;
+
+                  // Only show notification if schedule was created after initialization
+                  if (scheduleCreatedAt != null &&
+                      scheduleCreatedAt.isAfter(_initializationTime!)) {
+                    _showScheduleNotificationForAdmin(
+                      scheduleId: change.doc.id,
+                      patientName: data['pasienNama'] ?? 'Pasien',
+                      scheduleType: data['jenisKonsultasi'] ?? 'Konsultasi',
+                      scheduleTime:
+                          (data['tanggalKonsultasi'] as Timestamp).toDate(),
+                      patientId: data['pasienId'] ?? '',
+                    );
+                  } else {
+                    print(
+                      'Ignoring old schedule from ${data['pasienNama']} created before initialization',
+                    );
+                  }
+                } else {
+                  // Fallback: show notification if initialization time is not set
+                  _showScheduleNotificationForAdmin(
+                    scheduleId: change.doc.id,
+                    patientName: data['pasienNama'] ?? 'Pasien',
+                    scheduleType: data['jenisKonsultasi'] ?? 'Konsultasi',
+                    scheduleTime:
+                        (data['tanggalKonsultasi'] as Timestamp).toDate(),
+                    patientId: data['pasienId'] ?? '',
+                  );
+                }
               }
             }
           },
@@ -261,6 +358,10 @@ class NotificationListenerService {
   static void dispose() {
     _chatSubscription?.cancel();
     _scheduleSubscription?.cancel();
+    // Reset flags and initialization time
+    _isInitialChatLoad = true;
+    _isInitialScheduleLoad = true;
+    _initializationTime = null;
   }
 
   // Dispose specific listener

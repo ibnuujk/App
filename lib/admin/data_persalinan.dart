@@ -764,15 +764,20 @@ class _PatientDeliveryDetailScreenState
               .where('pasienId', isEqualTo: widget.patient.id)
               .get();
 
-      _keteranganKelahiran =
-          query.docs
-              .map(
-                (doc) => KeteranganKelahiranModel.fromMap({
-                  'id': doc.id,
-                  ...doc.data(),
-                }),
-              )
-              .toList();
+      _keteranganKelahiran = <KeteranganKelahiranModel>[];
+      for (final doc in query.docs) {
+        try {
+          final keterangan = KeteranganKelahiranModel.fromMap({
+            'id': doc.id,
+            ...doc.data(),
+          });
+          _keteranganKelahiran.add(keterangan);
+        } catch (e) {
+          print('Error parsing keterangan kelahiran doc ${doc.id}: $e');
+          print('Doc data: ${doc.data()}');
+          // Continue with next document instead of failing completely
+        }
+      }
     } catch (e) {
       print('Error loading keterangan kelahiran: $e');
     }

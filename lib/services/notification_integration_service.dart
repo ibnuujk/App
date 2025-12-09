@@ -1,10 +1,8 @@
 import '../services/notification_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 
 class NotificationIntegrationService {
   static final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  static final FirebaseAuth _auth = FirebaseAuth.instance;
 
   // ===== ADMIN ID MANAGEMENT =====
 
@@ -42,14 +40,29 @@ class NotificationIntegrationService {
       // Buat notifikasi untuk admin
       final adminId = await _getAdminId();
       if (adminId != null) {
-        await NotificationService.createNotification(
-          userId: adminId,
-          title: 'Chat Baru dari $patientName',
-          message: _truncateMessage(message),
-          type: 'chat',
-          referenceId: chatId,
-        );
-        print('Chat notification sent to admin: $patientName');
+        // Check if notification already exists for this chat
+        final existingNotification =
+            await _firestore
+                .collection('notifications')
+                .where('receiverId', isEqualTo: adminId)
+                .where('type', isEqualTo: 'chat')
+                .where('referenceId', isEqualTo: chatId)
+                .limit(1)
+                .get();
+
+        // Only create notification if it doesn't exist
+        if (existingNotification.docs.isEmpty) {
+          await NotificationService.createNotification(
+            userId: adminId,
+            title: 'Chat Baru dari $patientName',
+            message: _truncateMessage(message),
+            type: 'chat',
+            referenceId: chatId,
+          );
+          print('Chat notification sent to admin: $patientName');
+        } else {
+          print('Chat notification already exists for chatId: $chatId');
+        }
       }
     } catch (e) {
       print('Error sending chat notification to admin: $e');

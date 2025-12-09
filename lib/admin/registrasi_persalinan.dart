@@ -6,7 +6,7 @@ import '../../models/persalinan_model.dart';
 import '../../models/user_model.dart';
 import '../../services/firebase_service.dart';
 import 'laporan_persalinan.dart';
-import 'dart:async'; // Added for StreamSubscription
+import 'dart:async';
 
 class RegistrasiPersalinanScreen extends StatefulWidget {
   const RegistrasiPersalinanScreen({super.key});
@@ -80,8 +80,17 @@ class _RegistrasiPersalinanScreenState
           .listen(
             (patients) {
               if (mounted) {
+                // Remove duplicates based on ID
+                final uniquePatients = <String, UserModel>{};
+                for (var patient in patients) {
+                  if (!uniquePatients.containsKey(patient.id)) {
+                    uniquePatients[patient.id] = patient;
+                  }
+                }
+                final deduplicatedPatients = uniquePatients.values.toList();
+
                 setState(() {
-                  _patients = patients;
+                  _patients = deduplicatedPatients;
                   _isLoadingPatients = false;
                   _errorMessage = null; // Clear any previous errors
                   _checkAllDataLoaded();
@@ -400,13 +409,16 @@ class _RegistrasiPersalinanScreenState
 
   void _showAddEditDialog([PersalinanModel? report]) {
     final _formKey = GlobalKey<FormState>();
-    UserModel? _selectedPatient =
-        report != null
-            ? _patients.firstWhere(
-              (p) => p.id == report.pasienId,
-              orElse: () => _patients.first,
-            )
-            : null;
+    // Initialize selected patient - ensure it's from the current _patients list
+    UserModel? _selectedPatient;
+    if (report != null && _patients.isNotEmpty) {
+      try {
+        _selectedPatient = _patients.firstWhere((p) => p.id == report.pasienId);
+      } catch (e) {
+        // Patient not found in current list, set to null
+        _selectedPatient = null;
+      }
+    }
 
     final _namaSuamiController = TextEditingController(
       text: report?.namaSuami ?? '',
@@ -567,7 +579,19 @@ class _RegistrasiPersalinanScreenState
 
                                   // Patient Selection
                                   DropdownButtonFormField<UserModel>(
-                                    value: _selectedPatient,
+                                    value:
+                                        _selectedPatient != null &&
+                                                _patients.isNotEmpty &&
+                                                _patients.any(
+                                                  (p) =>
+                                                      p.id ==
+                                                      _selectedPatient!.id,
+                                                )
+                                            ? _patients.firstWhere(
+                                              (p) =>
+                                                  p.id == _selectedPatient!.id,
+                                            )
+                                            : null,
                                     isExpanded: true,
                                     decoration: InputDecoration(
                                       labelText: 'Pilih Pasien',
@@ -604,7 +628,7 @@ class _RegistrasiPersalinanScreenState
                                     ),
                                     items:
                                         _patients.map((patient) {
-                                          return DropdownMenuItem(
+                                          return DropdownMenuItem<UserModel>(
                                             value: patient,
                                             child: Text(
                                               '${patient.nama} - ${patient.noHp}',
@@ -1475,13 +1499,18 @@ class _RegistrasiPersalinanScreenState
     );
   }
 
-  void _navigateToLaporanPersalinan(PersalinanModel report) {
-    Navigator.push(
+  void _navigateToLaporanPersalinan(PersalinanModel report) async {
+    final result = await Navigator.push(
       context,
       MaterialPageRoute(
         builder: (context) => LaporanPersalinanScreen(registrasiData: report),
       ),
     );
+
+    // If any data was saved in the chain, reload the reports list
+    if (result == true && mounted) {
+      _loadReports();
+    }
   }
 
   void _showDetailDialog(PersalinanModel report) {
@@ -1656,7 +1685,6 @@ class _RegistrasiPersalinanScreenState
     );
   }
 
-  // Patient Management Dialog
   void _showPatientManagementDialog() {
     showDialog(
       context: context,

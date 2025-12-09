@@ -330,14 +330,24 @@ class _PatientBirthListScreenState extends State<PatientBirthListScreen>
 
       print('Found ${query.docs.length} keterangan kelahiran documents');
 
-      final result =
-          query.docs.map((doc) {
-            final data = doc.data();
-            print(
-              'Keterangan kelahiran doc: id=${doc.id}, pasienId=${data['pasienId']}, kelahiranAnakKe=${data['kelahiranAnakKe']}, namaAnak=${data['namaAnak']}',
-            );
-            return KeteranganKelahiranModel.fromMap({'id': doc.id, ...data});
-          }).toList();
+      final result = <KeteranganKelahiranModel>[];
+      for (final doc in query.docs) {
+        try {
+          final data = doc.data();
+          print(
+            'Keterangan kelahiran doc: id=${doc.id}, pasienId=${data['pasienId']}, kelahiranAnakKe=${data['kelahiranAnakKe']}, namaAnak=${data['namaAnak']}',
+          );
+          final keterangan = KeteranganKelahiranModel.fromMap({
+            'id': doc.id,
+            ...data,
+          });
+          result.add(keterangan);
+        } catch (e) {
+          print('Error parsing keterangan kelahiran doc ${doc.id}: $e');
+          print('Doc data: ${doc.data()}');
+          // Continue with next document instead of failing completely
+        }
+      }
 
       print('Successfully loaded ${result.length} keterangan kelahiran models');
       return result;

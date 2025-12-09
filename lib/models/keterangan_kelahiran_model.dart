@@ -1,3 +1,5 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class KeteranganKelahiranModel {
   final String id;
   final String laporanPascaPersalinanId;
@@ -54,16 +56,34 @@ class KeteranganKelahiranModel {
     this.updatedAt,
   });
 
+  // Helper method to parse DateTime from Firestore (handles both Timestamp and String)
+  static DateTime _parseDateTime(dynamic value) {
+    if (value == null) return DateTime.now();
+    if (value is Timestamp) {
+      return value.toDate();
+    }
+    if (value is DateTime) {
+      return value;
+    }
+    if (value is String) {
+      try {
+        return DateTime.parse(value);
+      } catch (e) {
+        print('Error parsing DateTime string: $value, error: $e');
+        return DateTime.now();
+      }
+    }
+    print('Unknown DateTime type: ${value.runtimeType}, value: $value');
+    return DateTime.now();
+  }
+
   factory KeteranganKelahiranModel.fromMap(Map<String, dynamic> map) {
     return KeteranganKelahiranModel(
       id: map['id'] ?? '',
       laporanPascaPersalinanId: map['laporanPascaPersalinanId'] ?? '',
       pasienId: map['pasienId'] ?? '',
       namaAnak: map['namaAnak'] ?? '',
-      hariTanggalLahir:
-          map['hariTanggalLahir'] != null
-              ? DateTime.parse(map['hariTanggalLahir'])
-              : DateTime.now(),
+      hariTanggalLahir: _parseDateTime(map['hariTanggalLahir']),
       jamLahir: map['jamLahir'] ?? '',
       tempatLahir: map['tempatLahir'] ?? '',
       jenisKelamin: map['jenisKelamin'] ?? '',
@@ -79,12 +99,9 @@ class KeteranganKelahiranModel {
       agamaSuami: map['agamaSuami'] ?? '',
       pekerjaanSuami: map['pekerjaanSuami'] ?? '',
       alamat: map['alamat'] ?? '',
-      createdAt:
-          map['createdAt'] != null
-              ? DateTime.parse(map['createdAt'])
-              : DateTime.now(),
+      createdAt: _parseDateTime(map['createdAt']),
       updatedAt:
-          map['updatedAt'] != null ? DateTime.parse(map['updatedAt']) : null,
+          map['updatedAt'] != null ? _parseDateTime(map['updatedAt']) : null,
     );
   }
 
