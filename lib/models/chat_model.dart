@@ -2,12 +2,12 @@ class ChatModel {
   final String id;
   final String senderId;
   final String senderName;
-  final String senderRole; // 'admin' atau 'pasien'
+  final String senderRole;
   final String message;
   final DateTime timestamp;
   final bool isRead;
-  final String conversationId; // To group messages between patient and admin
-  final String recipientId; // Who the message is intended for
+  final String conversationId;
+  final String recipientId;
 
   ChatModel({
     required this.id,

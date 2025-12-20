@@ -634,7 +634,6 @@ class _NotificationScreenState extends State<NotificationScreen> {
           if (isUnread) {
             await NotificationService.markAsRead(notification.id);
           }
-          // TODO: Navigate to related screen based on notification type
           _handleNotificationTap(context, notification);
         },
       ),

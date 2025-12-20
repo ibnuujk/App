@@ -7,28 +7,24 @@ class UserModel {
   final String alamat;
   final DateTime tanggalLahir;
   final int umur;
-  final String role; // 'admin' atau 'pasien'
+  final String role;
   final DateTime createdAt;
-  final DateTime? hpht; // Hari Pertama Haid Terakhir
-  final String?
-  pregnancyStatus; // 'active', 'miscarriage', 'complication', 'completed'
+  final DateTime? hpht;
+  final String? pregnancyStatus;
   final DateTime? pregnancyEndDate;
-  final String? pregnancyEndReason; // 'miscarriage', 'complication', 'birth'
-  final String? pregnancyNotes; // Catatan tambahan dari bidan
-  final DateTime? newHpht; // HPHT baru untuk kehamilan berikutnya
-  final List<Map<String, dynamic>>
-  pregnancyHistory; // Riwayat kehamilan sebelumnya
+  final String? pregnancyEndReason;
+  final String? pregnancyNotes;
+  final DateTime? newHpht;
+  final List<Map<String, dynamic>> pregnancyHistory;
 
-  // New fields for husband information
   final String? namaSuami;
   final String? pekerjaanSuami;
   final int? umurSuami;
   final String? agamaSuami;
 
-  // New fields for patient information
   final String? agamaPasien;
   final String? pekerjaanPasien;
-  final String? jenisAsuransi; // 'bpjs' atau 'umum'
+  final String? jenisAsuransi;
 
   UserModel({
     required this.id,

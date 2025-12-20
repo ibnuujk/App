@@ -1,6 +1,6 @@
 class LaporanPascaPersalinanModel {
   final String id;
-  final String laporanPersalinanId; // Link to laporan persalinan
+  final String laporanPersalinanId;
   final String pasienId;
   final String pasienNama;
 
@@ -15,15 +15,15 @@ class LaporanPascaPersalinanModel {
   final String pendarahanKalaIV;
 
   // Keadaan Anak
-  final String kelahiranAnak; // hidup/mati
-  final String? sebabMati; // jika mati
-  final String jenisKelamin; // laki-laki/perempuan
+  final String kelahiranAnak;
+  final String? sebabMati;
+  final String jenisKelamin;
   final String beratBadan;
   final String panjangBadan;
   final String lingkarKepala;
   final String lingkarDada;
-  final String kelainan; // ya/tidak
-  final String? detailKelainan; // jika ada kelainan
+  final String kelainan;
+  final String? detailKelainan;
 
   // APGAR Score
   final String apgarSkor;
@@ -40,7 +40,7 @@ class LaporanPascaPersalinanModel {
   // Keadaan Penderita Keluar
   final DateTime tanggalKeluar;
   final String jamKeluar;
-  final String kondisiKeluar; // sembuh/meninggal/dipindahkan/keluar_paksa
+  final String kondisiKeluar;
   final String? sebabMeninggal;
   final String? namaRS;
   final String? sebabKeluarPaksa;

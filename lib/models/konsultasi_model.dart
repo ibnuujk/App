@@ -4,7 +4,7 @@ class KonsultasiModel {
   final String pasienNama;
   final String pertanyaan;
   final String? jawaban;
-  final String status; // 'pending', 'answered'
+  final String status;
   final DateTime tanggalKonsultasi;
   final DateTime? tanggalJawaban;
 
